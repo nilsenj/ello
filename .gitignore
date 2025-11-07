@@ -1,0 +1,109 @@
+# ─────────────────────────────────────────────────────────────
+# Node / Workspace (pnpm / yarn / npm)
+# ─────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+.pnp.*
+.npm/
+.nyc_output/
+.pnp.cjs
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+lerna-debug.log*
+package-lock.json
+
+# Keep pnpm lockfile committed!
+#! pnpm-lock.yaml
+
+# ─────────────────────────────────────────────────────────────
+# Build artifacts & caches
+# ─────────────────────────────────────────────────────────────
+dist/
+build/
+.tmp/
+temp/
+.tmp-*
+*.tsbuildinfo
+.eslintcache
+.cache/
+coverage/
+reports/
+
+# Angular caches (apps/web)
+.angular/
+apps/web/.angular/
+apps/web/dist/
+
+# API build output (apps/api)
+apps/api/dist/
+
+# Vite / Rollup (if used anywhere)
+.vite/
+vite.svg
+
+# Turborepo (if you add it later)
+.turbo/
+
+# ─────────────────────────────────────────────────────────────
+# Prisma (API) & DB dev files
+# ─────────────────────────────────────────────────────────────
+# Keep migrations tracked; ignore transient local DB files only.
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+apps/api/prisma/*.sqlite
+# If Prisma client is ever generated outside node_modules
+**/.prisma/
+
+# ─────────────────────────────────────────────────────────────
+# Environment files
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Sometimes people keep per-app examples too
+!apps/**/.env.example
+!apps/**/.env.local.example
+
+# ─────────────────────────────────────────────────────────────
+# Logs
+# ─────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+*.out
+*.err
+
+# ─────────────────────────────────────────────────────────────
+# IDE / Editors
+# ─────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# ─────────────────────────────────────────────────────────────
+# OS / Misc
+# ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+*.swp
+*.swo
+*.orig
+*.local
+
+# ─────────────────────────────────────────────────────────────
+# Docker (optional local volumes & artifacts)
+# ─────────────────────────────────────────────────────────────
+docker-data/
+*.pid

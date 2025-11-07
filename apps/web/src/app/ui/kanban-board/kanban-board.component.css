@@ -1,0 +1,78 @@
+:host {
+    --ink-base: #172b4d;
+    --ink-sub: #44546F;
+    --list-bg: #f1f2f4;
+    --card-bg: #fff;
+}
+
+.text-ink-base {
+    color: var(--ink-base);
+}
+
+.text-ink-sub {
+    color: var(--ink-sub);
+}
+
+.bg-list-bg {
+    background: var(--list-bg);
+}
+
+.bg-card-bg {
+    background: var(--card-bg);
+}
+
+/* CSS styles for the label filter select component */
+.label-filter-select {
+    position: relative;
+    display: inline-block;
+}
+
+.label-filter-select select {
+    appearance: none;
+    padding: 8px 25px 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.label-filter-select select:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+}
+
+.label-filter-select select::after {
+    content: '\25BC';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* kill native arrow everywhere */
+.ui-select {
+    -webkit-appearance: none; /* Safari/Chrome/iOS */
+    -moz-appearance: none;    /* Firefox */
+    appearance: none;         /* Standard */
+    background-image: none;   /* Some browsers draw a bg arrow */
+}
+
+/* Old IE/Edge legacy */
+.ui-select::-ms-expand {
+    display: none;
+}
+
+/* Optional: make sure the text doesn’t overlap the custom chevron */
+.ui-select {
+    padding-right: 2rem; /* matches the pr-8 in Tailwind (just in case) */
+}
+
+/* High-contrast modes: keep it visible/focusable */
+@media (forced-colors: active) {
+    .ui-select {
+        border: 1px solid CanvasText;
+    }
+}

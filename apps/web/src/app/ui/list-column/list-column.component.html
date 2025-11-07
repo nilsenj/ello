@@ -1,0 +1,44 @@
+<div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card">
+    <div class="px-2 py-1 font-semibold text-ink-base">{{ title() }}</div>
+
+    <!-- Always-catch drop zone, even when empty -->
+    <div
+            cdkDropList
+            [cdkDropListData]="cards()"
+            cdkDropListOrientation="vertical"
+            class="dropzone space-y-2"
+            [class.empty]="cards().length === 0"
+            (cdkDropListDropped)="onDrop($event)">
+
+        <!-- Visible target when there are no cards -->
+        <div *ngIf="cards().length === 0" class="empty-placeholder">
+            Drop cards here
+        </div>
+
+        <!-- Render filtered if provided, otherwise full -->
+        <trello-card
+                *ngFor="let c of (filtered ?? cards()); trackBy: trackCard"
+                cdkDrag
+                [card]="c"
+                [listId]="list.id">
+        </trello-card>
+    </div>
+
+    <div class="mt-2">
+        <ng-container *ngIf="!adding(); else editor">
+            <button
+                    class="w-full text-left text-sm text-ink-sub hover:text-ink-base px-2 py-1 rounded hover:bg-white"
+                    (click)="adding.set(true)">+ Add a card</button>
+        </ng-container>
+        <ng-template #editor>
+            <div class="bg-white rounded p-2 shadow-card">
+        <textarea [(ngModel)]="newTitle" rows="3" class="w-full rounded border border-gray-300 text-sm px-2 py-1"
+                  placeholder="Enter a title for this card..."></textarea>
+                <div class="mt-2 flex items-center gap-2">
+                    <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm" (click)="createCard()">Add card</button>
+                    <button class="text-ink-sub" (click)="cancel()">✕</button>
+                </div>
+            </div>
+        </ng-template>
+    </div>
+</div>

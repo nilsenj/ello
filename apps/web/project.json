@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "sourceRoot": "apps/web/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm -F web run serve"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm -F web run build"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'lint placeholder'"
+      }
+    }
+  }
+}

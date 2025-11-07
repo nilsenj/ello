@@ -1,0 +1,35 @@
+{
+  "name": "api",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fastify/cors": "^8",
+    "@fastify/multipart": "^7",
+    "@prisma/client": "^6.19.0",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "fastify": "^4",
+    "fractional-indexing": "^3.2.0",
+    "zod": "^4.1.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "@fastify/multipart": "^8"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.19.2"
+  },
+  "scripts": {
+    "serve": "tsx watch src/main.ts",
+    "build": "echo \"(bundling optional; using tsx for dev)\"",
+    "prepare": "prisma generate --schema=./prisma/schema.prisma",
+    "db:generate": "pnpm -F api prisma generate --schema=apps/api/prisma/schema.prisma",
+    "db:migrate": "pnpm -F api prisma migrate dev --schema=apps/api/prisma/schema.prisma",
+    "db:seed": "pnpm -F api ts-node src/seed.ts",
+    "prisma": "prisma",
+    "seed": "tsx -r dotenv/config src/seed.ts"
+  }
+}

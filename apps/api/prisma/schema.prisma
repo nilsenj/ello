@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Users & Memberships =====
+model User {
+  id            String            @id @default(cuid())
+  email         String            @unique
+  name          String?
+  avatar        String?
+  password      String
+  createdAt     DateTime          @default(now())
+
+  workspaces    WorkspaceMember[]
+  boards        BoardMember[]
+  cardAssignees CardMember[]
+  comments      Comment[]
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  description String?
+  members     WorkspaceMember[]
+  boards      Board[]
+}
+
+model WorkspaceMember {
+  id           String     @id @default(cuid())
+  role         Role
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId  String
+
+  @@unique([userId, workspaceId])
+}
+
+model Board {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  isArchived  Boolean    @default(false)
+  background  String?
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+  lists       List[]
+  labels      Label[]
+  members     BoardMember[]
+  activities  Activity[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([workspaceId, name])
+}
+
+model BoardMember {
+  id      String  @id @default(cuid())
+  role    Role
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  board   Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId String
+
+  @@unique([userId, boardId])
+}
+
+// ===== Lists / Cards / Labels =====
+model List {
+  id        String  @id @default(cuid())
+  name      String
+
+  // Deprecated: kept temporarily for compatibility, will be removed later
+  position  Int?
+
+  // New: string rank for O(1) reorder
+  rank      String  @default("n")
+
+  board     Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  wipLimit  Int?
+  cards     Card[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([boardId, rank])
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+
+  // Deprecated: kept temporarily
+  position    Int?
+
+  // New rank
+  rank        String   @default("n")
+
+  list        List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId      String
+  startDate   DateTime?
+  dueDate     DateTime?
+  estimate    Float?
+  priority    Priority  @default(medium)
+  isArchived  Boolean   @default(false)
+  labels      CardLabel[]
+  assignees   CardMember[]
+  checklists  Checklist[]
+  attachments Attachment[]
+  comments    Comment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([listId, rank])
+}
+
+model Label {
+  id         String      @id @default(cuid())
+  name       String
+  color      String
+  // ordering & archive
+  rank       String      @default("n")
+  isArchived Boolean     @default(false)
+
+  board      Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId    String
+  cards      CardLabel[]
+
+  // allow same name if color differs; give the DB constraint a stable name
+  @@unique([boardId, name, color], map: "label_board_name_color_unique")
+  @@index([boardId, rank], map: "label_board_rank_idx")
+}
+
+model CardLabel {
+  cardId    String
+  labelId   String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label     Label    @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  // NEW: audit
+  createdAt DateTime @default(now())
+
+  @@id([cardId, labelId])
+}
+
+model CardMember {
+  cardId String
+  userId String
+  card   Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, userId])
+}
+
+// ===== Checklists / Attachments / Comments / Activity =====
+model Checklist {
+  id       String   @id @default(cuid())
+  title    String
+  position Int
+  card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId   String
+  items    ChecklistItem[]
+}
+
+model ChecklistItem {
+  id          String    @id @default(cuid())
+  text        String
+  done        Boolean   @default(false)
+  position    Int
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  checklistId String
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  name      String?
+  url       String
+  mime      String?
+  bytes     Int?
+  createdBy String?
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId    String
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId    String
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+}
+
+// ===== Enums =====
+enum Role {
+  owner
+  admin
+  member
+  viewer
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
+}

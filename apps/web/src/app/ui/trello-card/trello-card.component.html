@@ -1,0 +1,100 @@
+<div
+        class="bg-card-bg rounded-md px-3 py-2 text-sm shadow-card border border-black/0 hover:border-black/5"
+        aria-label="Card"
+>
+    <!-- Labels row -->
+    <div class="mb-2 flex flex-wrap gap-1" *ngIf="labelIds(card).length > 0">
+    <span
+            *ngFor="let lid of labelIds(card)"
+            class="inline-block h-2 w-10 rounded"
+            [style.backgroundColor]="labelColor(lid)"
+            [attr.title]="labelName(lid)">
+    </span>
+    </div>
+
+    <!-- Title / Inline edit -->
+    <ng-container *ngIf="!editing; else editMode">
+        <div class="text-ink-base">{{ card.title }}</div>
+    </ng-container>
+    <ng-template #editMode>
+        <div class="space-y-2">
+            <input
+                    class="w-full rounded-md bg-white px-2 py-1 text-sm outline-none focus:ring"
+                    [(ngModel)]="titleDraft"
+                    (keydown)="onEditKeydown($event)"
+                    placeholder="Card title…"/>
+            <div class="flex gap-2">
+                <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-xs"
+                        [disabled]="!(titleDraft?.trim())"
+                        (click)="saveEdit()">Save</button>
+                <button class="rounded-md bg-transparent px-3 py-1 text-xs text-ink-sub hover:underline"
+                        (click)="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- Footer actions -->
+    <div class="mt-2 flex items-center gap-2 text-xs text-ink-sub">
+    <span class="inline-flex items-center gap-1">
+      <span class="inline-block w-2 h-2 rounded-full bg-accent-green"></span>
+      low
+    </span>
+        <span *ngIf="card.description" class="inline-block">• desc</span>
+
+        <div class="ml-auto flex items-center gap-1">
+            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showLabels = !showLabels; $event.stopPropagation()">
+                Labels
+            </button>
+            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showMore = !showMore; $event.stopPropagation()">
+                •••
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick assign labels -->
+    <div *ngIf="showLabels"
+         class="mt-2 bg-white rounded p-2 shadow border relative"
+         clickOutside
+         (clickOutside)="showLabels = false"
+         (click)="$event.stopPropagation()">
+        <button type="button"
+                class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
+                (click)="showLabels = false">×</button>
+
+        <button *ngFor="let lb of store.labels()"
+                class="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="toggleLabel(lb.id)">
+            <span class="inline-block h-3 w-3 rounded" [style.backgroundColor]="lb.color"></span>
+            <span class="text-sm">{{ lb.name }}</span>
+            <span class="ml-auto text-[11px]" *ngIf="has(lb.id)">✓</span>
+        </button>
+    </div>
+
+    <!-- More menu: edit / move / delete -->
+    <div *ngIf="showMore"
+         class="mt-2 bg-white rounded p-2 shadow border relative"
+         clickOutside
+         (clickOutside)="showMore = false"
+         (click)="$event.stopPropagation()">
+        <button type="button"
+                class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
+                (click)="showMore = false">×</button>
+
+        <div class="flex flex-col gap-1">
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="startEdit()">Edit title</button>
+
+            <div class="h-px bg-gray-200 my-1"></div>
+
+            <div class="px-2 text-[10px] uppercase tracking-wide text-gray-400">Move</div>
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveTop()">Move to top</button>
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveUp()">Move up</button>
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveDown()">Move down</button>
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveBottom()">Move to bottom</button>
+
+            <div class="h-px bg-gray-200 my-1"></div>
+
+            <button class="w-full text-left px-2 py-1 rounded hover:bg-red-50 text-red-600"
+                    (click)="delete()">Delete card</button>
+        </div>
+    </div>
+</div>

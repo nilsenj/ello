@@ -1,0 +1,43 @@
+{
+  "name": "kanban-nx",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "postinstall": "nx run-many -t prepare --all || true",
+    "prepare": "husky install",
+    "build": "pnpm -w nx run-many -t build --all",
+    "format": "nx format:write",
+    "lint": "nx run-many -t lint --all",
+    "test": "nx run-many -t test --all",
+    "db:generate": "pnpm -F api prisma generate --schema=./prisma/schema.prisma",
+    "db:migrate": "pnpm -F api prisma migrate dev --schema=./prisma/schema.prisma",
+    "db:seed": "pnpm -F api run seed",
+    "dev": "pnpm -w nx run-many -t serve --projects web,api",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down -v"
+  },
+  "devDependencies": {
+    "@nrwl/angular": "19.8.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.10",
+    "nx": "19.8.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md}": "nx format:write --uncommitted"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "4.21.3",
+      "vite": "^7.2.2",
+      "vite-node": "^2.0.0",
+      "@analogjs/vite-plugin-angular": "1.22.5",
+      "typescript": "5.5.4",
+      "@fastify/multipart": "^8.0.0"
+    }
+  },
+  "dependencies": {
+    "@angular/cdk": "^18.2.14"
+  }
+}
