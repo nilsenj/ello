@@ -1,7 +1,14 @@
 import {Component, effect, inject, OnInit} from '@angular/core';
 import {NgFor, NgIf} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {CdkDragDrop, CdkDropListGroup, moveItemInArray, transferArrayItem,} from '@angular/cdk/drag-drop';
+import {
+    CdkDrag,
+    CdkDragDrop, CdkDragPlaceholder, CdkDragPreview,
+    CdkDropList,
+    CdkDropListGroup,
+    moveItemInArray,
+    transferArrayItem,
+} from '@angular/cdk/drag-drop';
 import type {Card, ListDto} from '../../types';
 import {BoardStore} from '../../store/board-store.service';
 import {BoardsService} from '../../data/boards.service';
@@ -11,11 +18,14 @@ import {ListColumnComponent} from "../list-column/list-column.component";
 import {CardModalService} from "../card-modal/card-modal.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {CardModalComponent} from "../card-modal/card-modal.component";
+import {
+    DragDropModule
+} from '@angular/cdk/drag-drop';
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -43,6 +53,7 @@ export class KanbanBoardComponent implements OnInit {
     activeLabel = ''; // used by header label filter
     editingCard: Record<string, boolean> = {};
     cardTitles: Record<string, string> = {};
+    trackList = (_: number, l: ListDto) => l.id;
 
     constructor() {
         this.boardsApi.loadBoards();
@@ -176,6 +187,23 @@ export class KanbanBoardComponent implements OnInit {
         } else if (ev.key === 'Escape') {
             this.showNewCard[listId] = false;
             (ev.target as HTMLTextAreaElement).blur();
+        }
+    }
+
+    async onListDropped(event: CdkDragDrop<ListDto[]>) {
+        const lists = [...this.store.lists()];
+        if (event.previousIndex === event.currentIndex) return;
+
+        moveItemInArray(lists, event.previousIndex, event.currentIndex);
+        // optimistic local update
+        this.store.setLists?.(lists);
+
+        try {
+            const orderedIds = lists.map(l => l.id);
+            await this.listsApi.reorderLists(orderedIds);
+        } catch {
+            // optional: reload on failure
+            await this.refresh();
         }
     }
 

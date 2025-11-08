@@ -15,40 +15,40 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": ".env.example",
-        "hash": "11710807200313730003"
-      },
-      {
-        "file": "tsconfig.base.json",
-        "hash": "10258939139953668561"
-      },
-      {
-        "file": "README.md",
-        "hash": "10527340750855060289"
-      },
-      {
-        "file": "pnpm-lock.yaml",
-        "hash": "6683828752919868793"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "6562147615219035863"
-      },
-      {
-        "file": "docker-compose.yml",
-        "hash": "17143880532587014091"
+        "file": "package.json",
+        "hash": "14832369157653750616"
       },
       {
         "file": "pnpm-workspace.yaml",
         "hash": "4187941375446552466"
       },
       {
+        "file": ".env.example",
+        "hash": "11710807200313730003"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "6562147615219035863"
+      },
+      {
+        "file": "README.md",
+        "hash": "10527340750855060289"
+      },
+      {
         "file": "nx.json",
         "hash": "11493607022105348433"
       },
       {
-        "file": "package.json",
-        "hash": "14832369157653750616"
+        "file": "tsconfig.base.json",
+        "hash": "10258939139953668561"
+      },
+      {
+        "file": "docker-compose.yml",
+        "hash": "17143880532587014091"
+      },
+      {
+        "file": "pnpm-lock.yaml",
+        "hash": "6683828752919868793"
       }
     ],
     "projectFileMap": {
@@ -143,7 +143,7 @@
         },
         {
           "file": "apps/web/src/app/data/lists.service.ts",
-          "hash": "16224615667683095922",
+          "hash": "726179072884421986",
           "deps": [
             "npm:@angular/core",
             "npm:rxjs@7.8.2",
@@ -221,15 +221,15 @@
         },
         {
           "file": "apps/web/src/app/ui/kanban-board/kanban-board.component.css",
-          "hash": "5640855823729251925"
+          "hash": "8645534433134997442"
         },
         {
           "file": "apps/web/src/app/ui/kanban-board/kanban-board.component.html",
-          "hash": "9641209057643430381"
+          "hash": "17401606768949610007"
         },
         {
           "file": "apps/web/src/app/ui/kanban-board/kanban-board.component.ts",
-          "hash": "5613419884940523910",
+          "hash": "7287257918745206824",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -244,11 +244,11 @@
         },
         {
           "file": "apps/web/src/app/ui/list-column/list-column.component.html",
-          "hash": "1914769702262017222"
+          "hash": "17760117089343972282"
         },
         {
           "file": "apps/web/src/app/ui/list-column/list-column.component.ts",
-          "hash": "3867806114266550514",
+          "hash": "9329963542619586701",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -396,7 +396,7 @@
         },
         {
           "file": "apps/api/src/routes/boards.ts",
-          "hash": "14272959025101815301",
+          "hash": "3874393308095507597",
           "deps": [
             "npm:fastify",
             "npm:@prisma/client"

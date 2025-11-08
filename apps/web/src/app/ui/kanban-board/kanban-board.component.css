@@ -76,3 +76,27 @@
         border: 1px solid CanvasText;
     }
 }
+
+
+/* Column shell adds subtle motion */
+.list-shell { transition: transform 230ms cubic-bezier(.2,.8,.2,1); }
+.cdk-drop-list-dragging .list-shell:not(.cdk-drag-placeholder) {
+    transition: transform 230ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* Drag preview (what follows your cursor) */
+.list-preview {
+    background: rgba(17,24,39,.96); /* gray-900-ish */
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 16px 44px rgba(0,0,0,.45);
+    transform: rotate(1deg) scale(1.02);
+}
+
+/* Placeholder to keep layout stable */
+.list-placeholder {
+    background: repeating-linear-gradient(45deg,#0d131f,#0d131f 8px,#0f1523 8px,#0f1523 16px);
+    border: 1px dashed rgba(255,255,255,.25);
+}
+
+/* Make the preview rounded */
+.cdk-drag-preview { border-radius: 12px; }

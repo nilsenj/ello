@@ -19,9 +19,9 @@
         <div class="relative">
             <select
                     class="ui-select peer pr-8 pl-3 py-1.5 text-sm rounded-md
-           bg-white/95 text-gray-800 shadow-sm border border-white/20
-           hover:bg-white focus:bg-white focus:border-white
-           focus:ring-2 focus:ring-white/40 outline-none transition"
+               bg-white/95 text-gray-800 shadow-sm border border-white/20
+               hover:bg-white focus:bg-white focus:border-white
+               focus:ring-2 focus:ring-white/40 outline-none transition"
                     [(ngModel)]="activeLabel"
                     (ngModelChange)="updateActiveLabel($event)"
             >
@@ -32,7 +32,7 @@
             <!-- Custom chevron -->
             <svg
                     class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4
-           text-gray-500 peer-focus:text-gray-700"
+               text-gray-500 peer-focus:text-gray-700"
                     viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd"
                       d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
@@ -53,12 +53,42 @@
 
 <!-- Lists -->
 <div class="p-4 overflow-x-auto">
-    <div cdkDropListGroup class="flex gap-4 min-h-[70vh]">
-        <list-column
-                *ngFor="let l of lists()"
-                [list]="l"
-                [filtered]="cards(l.id)">
-        </list-column>
+    <!-- Horizontal list reordering -->
+    <div
+            cdkDropList
+            [cdkDropListData]="lists()"
+            [cdkDropListOrientation]="'horizontal'"
+            (cdkDropListDropped)="onListDropped($event)"
+            class="flex gap-4 min-h-[70vh]"
+    >
+        <!-- Each column is a draggable item -->
+        <div
+                *ngFor="let l of lists(); trackBy: trackList"
+                cdkDrag
+                cdkDragLockAxis="x"
+                class="list-shell w-72 shrink-0"
+        >
+            <!-- drag preview -->
+            <ng-template cdkDragPreview>
+                <div class="list-preview w-72 rounded-xl">
+                    <div class="h-9 flex items-center px-3 font-semibold">
+                        {{ l.title || l.name }}
+                    </div>
+                    <div class="h-40 opacity-70"></div>
+                </div>
+            </ng-template>
+
+            <!-- placeholder -->
+            <ng-template cdkDragPlaceholder>
+                <div class="list-placeholder w-72 h-[320px] rounded-xl"></div>
+            </ng-template>
+
+            <!-- Your actual column (cards DnD remains inside) -->
+            <list-column
+                    [list]="l"
+                    [filtered]="cards(l.id)">
+            </list-column>
+        </div>
 
         <!-- Add list -->
         <section class="w-72 shrink-0 rounded-xl bg-white/30 p-3 text-white/95">

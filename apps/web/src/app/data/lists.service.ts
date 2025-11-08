@@ -31,6 +31,14 @@ export class ListsService {
         this.store.setLists(normalized); // <-- write into the store that the UI uses
     }
 
+    async reorderLists(listIds: string[]): Promise<void> {
+        const boardId = this.store.currentBoardId?.();
+        if (!boardId) return;
+        await firstValueFrom(
+            this.http.post<void>(`/api/boards/${boardId}/lists/reorder`, { listIds })
+        );
+    }
+
     async updateListName(listId: string, name: string) {
         await firstValueFrom(this.http.patch(`/api/lists/${listId}`, { name }));
         this.store.renameListLocally(listId, name);

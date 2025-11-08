@@ -1,10 +1,12 @@
 <div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card">
-    <div class="px-2 py-1 font-semibold text-ink-base">{{ title() }}</div>
+    <div class="px-2 py-1 font-semibold text-ink-base" cdkDragHandle>{{ title() }}</div>
 
     <!-- Always-catch drop zone, even when empty -->
     <div
             cdkDropList
             [cdkDropListData]="cards()"
+            [id]="dropListId()"
+            [cdkDropListConnectedTo]="connectedTo()"
             cdkDropListOrientation="vertical"
             class="dropzone space-y-2"
             [class.empty]="cards().length === 0"
@@ -19,6 +21,7 @@
         <trello-card
                 *ngFor="let c of (filtered ?? cards()); trackBy: trackCard"
                 cdkDrag
+                [cdkDragData]="c"
                 [card]="c"
                 [listId]="list.id">
         </trello-card>
