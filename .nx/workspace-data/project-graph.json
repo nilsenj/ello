@@ -13077,7 +13077,7 @@
       },
       {
         "source": "npm:@babel/core@7.25.2",
-        "target": "npm:@babel/generator@7.26.10",
+        "target": "npm:@babel/generator@7.28.5",
         "type": "static"
       },
       {
@@ -13154,7 +13154,7 @@
       },
       {
         "source": "npm:@babel/core@7.26.10",
-        "target": "npm:@babel/generator@7.26.10",
+        "target": "npm:@babel/generator@7.28.5",
         "type": "static"
       },
       {
@@ -13965,7 +13965,7 @@
     "npm:@babel/plugin-transform-async-generator-functions@7.28.0": [
       {
         "source": "npm:@babel/plugin-transform-async-generator-functions@7.28.0",
-        "target": "npm:@babel/core@7.28.5",
+        "target": "npm:@babel/core@7.26.10",
         "type": "static"
       },
       {
@@ -13981,6 +13981,11 @@
       {
         "source": "npm:@babel/plugin-transform-async-generator-functions@7.28.0",
         "target": "npm:@babel/traverse",
+        "type": "static"
+      },
+      {
+        "source": "npm:@babel/plugin-transform-async-generator-functions@7.28.0",
+        "target": "npm:@babel/core@7.28.5",
         "type": "static"
       }
     ],
@@ -14009,7 +14014,7 @@
     "npm:@babel/plugin-transform-async-to-generator@7.27.1": [
       {
         "source": "npm:@babel/plugin-transform-async-to-generator@7.27.1",
-        "target": "npm:@babel/core@7.28.5",
+        "target": "npm:@babel/core@7.26.10",
         "type": "static"
       },
       {
@@ -14025,6 +14030,11 @@
       {
         "source": "npm:@babel/plugin-transform-async-to-generator@7.27.1",
         "target": "npm:@babel/helper-remap-async-to-generator",
+        "type": "static"
+      },
+      {
+        "source": "npm:@babel/plugin-transform-async-to-generator@7.27.1",
+        "target": "npm:@babel/core@7.28.5",
         "type": "static"
       }
     ],
@@ -15203,12 +15213,12 @@
       },
       {
         "source": "npm:@babel/preset-env@7.26.9",
-        "target": "npm:@babel/plugin-transform-async-generator-functions@7.26.8",
+        "target": "npm:@babel/plugin-transform-async-generator-functions@7.28.0",
         "type": "static"
       },
       {
         "source": "npm:@babel/preset-env@7.26.9",
-        "target": "npm:@babel/plugin-transform-async-to-generator@7.25.9",
+        "target": "npm:@babel/plugin-transform-async-to-generator@7.27.1",
         "type": "static"
       },
       {
@@ -19580,7 +19590,7 @@
     "npm:copy-webpack-plugin@12.0.2": [
       {
         "source": "npm:copy-webpack-plugin@12.0.2",
-        "target": "npm:fast-glob@3.3.2",
+        "target": "npm:fast-glob@3.3.3",
         "type": "static"
       },
       {
@@ -19855,7 +19865,7 @@
       },
       {
         "source": "npm:css-loader@7.1.2",
-        "target": "npm:semver@7.6.3",
+        "target": "npm:semver@7.7.3",
         "type": "static"
       },
       {
@@ -22458,7 +22468,7 @@
       },
       {
         "source": "npm:istanbul-lib-instrument",
-        "target": "npm:semver@7.6.3",
+        "target": "npm:semver@7.7.3",
         "type": "static"
       }
     ],
@@ -22885,7 +22895,7 @@
       },
       {
         "source": "npm:less@4.2.0",
-        "target": "npm:tslib@2.6.3",
+        "target": "npm:tslib@2.8.1",
         "type": "static"
       },
       {
@@ -24520,7 +24530,7 @@
       },
       {
         "source": "npm:postcss-loader@8.1.1",
-        "target": "npm:semver@7.6.3",
+        "target": "npm:semver@7.7.3",
         "type": "static"
       },
       {
@@ -27092,6 +27102,11 @@
         "source": "npm:webpack-dev-middleware@7.4.5",
         "target": "npm:webpack@5.102.1",
         "type": "static"
+      },
+      {
+        "source": "npm:webpack-dev-middleware@7.4.5",
+        "target": "npm:webpack@5.94.0",
+        "type": "static"
       }
     ],
     "npm:webpack-dev-server": [
@@ -27532,7 +27547,7 @@
       },
       {
         "source": "npm:webpack@5.94.0",
-        "target": "npm:watchpack@2.4.1",
+        "target": "npm:watchpack@2.4.4",
         "type": "static"
       },
       {

@@ -30,6 +30,21 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return cards.map(shapeCard);
     });
 
+    // ADD: read one card with relations
+    app.get('/api/cards/:id', async (req: FastifyRequest<{ Params: CardParams }>) => {
+        const { id } = req.params;
+        return prisma.card.findUnique({
+            where: { id },
+            include: {
+                labels: true,                     // if you keep a virtual relation
+                assignees: { include: { user: true } },
+                checklists: { include: { items: true } },
+                attachments: true,
+                comments: { include: { author: true }, orderBy: { createdAt: 'desc' } },
+            },
+        });
+    });
+
     // list-scoped: create (RETURN labelIds)
     app.post('/api/lists/:listId/cards', async (req: FastifyRequest<{ Params: ListParams; Body: CreateCardBody }>) => {
         const { listId } = req.params;
@@ -87,5 +102,28 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
     app.delete('/api/cards/:id', (req: FastifyRequest<{ Params: CardParams }>) => {
         const { id } = req.params;
         return prisma.card.delete({ where: { id } });
+    });
+
+    // ADD: patch extended fields
+    type PatchCardBody = Partial<{
+        title: string;
+        description: string;
+        startDate: string | null;
+        dueDate: string | null;
+        priority: 'low' | 'medium' | 'high' | 'urgent';
+        isArchived: boolean;
+    }>;
+
+    app.patch('/api/cards/:id/extended', (req: FastifyRequest<{ Params: CardParams; Body: PatchCardBody }>) => {
+        const { id } = req.params;
+        const { startDate, dueDate, ...rest } = req.body;
+        return prisma.card.update({
+            where: { id },
+            data: {
+                ...rest,
+                startDate: startDate ? new Date(startDate) : null,
+                dueDate:   dueDate ? new Date(dueDate) : null,
+            },
+        });
     });
 }

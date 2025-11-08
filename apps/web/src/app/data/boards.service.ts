@@ -16,10 +16,13 @@ export class BoardsService {
     ) {
     }
 
-    async loadBoards() {
+    async loadBoards(opts: { autoSelect?: boolean } = {}) {
+        const { autoSelect = false } = opts;
         const boards = await this.api.get<Board[]>('/api/boards').catch(() => []);
         this.store.setBoards(boards ?? []);
-        if (boards?.length) await this.selectBoard(boards[0].id);
+        if (autoSelect && boards?.length) {
+            await this.selectBoard(boards[0].id);
+        }
     }
 
     async selectBoard(boardId: string) {

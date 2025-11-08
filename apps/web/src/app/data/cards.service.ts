@@ -59,7 +59,7 @@ export class CardsService {
         // optimistic update
         (this.store.addLabelToCardLocally ?? this.store.addLabelToCard)?.(cardId, labelId);
         try {
-            await firstValueFrom(this.http.post(`/api/cards/${cardId}/labels`, { labelId }));
+            await firstValueFrom(this.http.post(`/api/cards/${cardId}/labels`, {labelId}));
         } catch (err) {
             // rollback on failure
             (this.store.removeLabelFromCardLocally ?? this.store.removeLabelFromCard)?.(cardId, labelId);
@@ -77,5 +77,20 @@ export class CardsService {
             (this.store.addLabelToCardLocally ?? this.store.addLabelToCard)?.(cardId, labelId);
             throw err;
         }
+    }
+
+    async getCard(id: string) {
+        return this.api.get<any>(`/api/cards/${id}`);
+    }
+
+    async patchCardExtended(id: string, body: Partial<{
+        title: string;
+        description: string;
+        startDate: string | null;
+        dueDate: string | null;
+        priority: string;
+        isArchived: boolean;
+    }>) {
+        return this.api.patch(`/api/cards/${id}/extended`, body);
     }
 }

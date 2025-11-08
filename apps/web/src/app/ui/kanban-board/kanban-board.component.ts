@@ -1,35 +1,33 @@
-import { Component, effect, inject } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import {
-    CdkDrag,
-    CdkDropList,
-    CdkDragDrop,
-    moveItemInArray,
-    transferArrayItem,
-    CdkDropListGroup,       // ⬅️ add this
-} from '@angular/cdk/drag-drop';
-import type { Card, ListDto } from '../../types';
-import { BoardStore } from '../../store/board-store.service';
-import { BoardsService } from '../../data/boards.service';
-import { ListsService } from '../../data/lists.service';
-import { CardsService } from '../../data/cards.service';
-import {ClickOutsideDirective} from "../../shared/click-outside.directive";
+import {Component, effect, inject, OnInit} from '@angular/core';
+import {NgFor, NgIf} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {CdkDragDrop, CdkDropListGroup, moveItemInArray, transferArrayItem,} from '@angular/cdk/drag-drop';
+import type {Card, ListDto} from '../../types';
+import {BoardStore} from '../../store/board-store.service';
+import {BoardsService} from '../../data/boards.service';
+import {ListsService} from '../../data/lists.service';
+import {CardsService} from '../../data/cards.service';
 import {ListColumnComponent} from "../list-column/list-column.component";
+import {CardModalService} from "../card-modal/card-modal.service";
+import {ActivatedRoute, Router} from "@angular/router";
+import {CardModalComponent} from "../card-modal/card-modal.component";
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDrag, CdkDropList, CdkDropListGroup, ClickOutsideDirective, ListColumnComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
-export class KanbanBoardComponent {
+export class KanbanBoardComponent implements OnInit {
     // store + services
     store = inject(BoardStore);
     boardsApi = inject(BoardsService);
     listsApi = inject(ListsService);
     cardsApi = inject(CardsService);
+    modal = inject(CardModalService);
+    route = inject(ActivatedRoute);
+    router = inject(Router);
 
     // popovers per card
     showLabels: Record<string, boolean> = {};
@@ -49,6 +47,12 @@ export class KanbanBoardComponent {
     constructor() {
         this.boardsApi.loadBoards();
 
+        // Deep-link: open when ?card=ID is present
+        this.route.queryParamMap.subscribe(q => {
+            const id = q.get('card');
+            if (id) this.modal.open(id);
+        });
+
         effect(() => {
             const lists = this.store.lists();
             for (const l of lists) {
@@ -58,7 +62,16 @@ export class KanbanBoardComponent {
                     if (!(c.id in this.cardTitles)) this.cardTitles[c.id] = c.title ?? '';
                 }
             }
+
+            const isOpen = this.modal.isOpen();
+            const id = this.modal.cardId();
+            const qp = isOpen && id ? {card: id} : {};
+            this.router.navigate([], {queryParams: qp, queryParamsHandling: 'merge'});
         });
+    }
+
+    // whenever modal opens/closes, sync query param
+    ngOnInit() {
     }
 
     // projections
@@ -81,6 +94,7 @@ export class KanbanBoardComponent {
     closeLabels(cardId: string) {
         if (this.showLabels[cardId]) this.showLabels[cardId] = false;
     }
+
     closeAllLabelMenus() {
         for (const k of Object.keys(this.showLabels)) this.showLabels[k] = false;
     }
@@ -170,12 +184,18 @@ export class KanbanBoardComponent {
         this.editingCard[card.id] = true;
         this.cardTitles[card.id] = card.title ?? '';
     }
-    cancelEditCard(cardId: string) { this.editingCard[cardId] = false; }
+
+    cancelEditCard(cardId: string) {
+        this.editingCard[cardId] = false;
+    }
 
     async saveEditCard(card: Card) {
         const next = (this.cardTitles[card.id] ?? '').trim();
-        if (!next || next === card.title) { this.editingCard[card.id] = false; return; }
-        await this.cardsApi.updateCard(card.id, { title: next });
+        if (!next || next === card.title) {
+            this.editingCard[card.id] = false;
+            return;
+        }
+        await this.cardsApi.updateCard(card.id, {title: next});
         // optimistic local patch if available
         this.store.patchCardTitleLocally?.(card.id, next);
         this.editingCard[card.id] = false;
@@ -205,7 +225,7 @@ export class KanbanBoardComponent {
         }
         const id = event.container.data[event.currentIndex].id;
         const before = event.container.data[event.currentIndex - 1]?.id ?? null;
-        const after  = event.container.data[event.currentIndex + 1]?.id ?? null;
+        const after = event.container.data[event.currentIndex + 1]?.id ?? null;
         await this.cardsApi.moveCard(id, toListId, before, after);
     }
 
@@ -220,6 +240,7 @@ export class KanbanBoardComponent {
         if (Array.isArray(c?.cardLabels)) return (c.cardLabels as any[]).map(x => x?.labelId).filter(Boolean);
         return [];
     }
+
     colorOf = (labelId: string) => this.store.labels().find(lb => lb.id === labelId)?.color ?? '#ccc';
 
     hasLabel = (c: Card, lid: string) => this.labelIds(c).includes(lid);

@@ -1,11 +1,12 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CardsService } from '../../data/cards.service';
+import {Component, Input} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {CardsService} from '../../data/cards.service';
 import {ClickOutsideDirective} from "../click-outside.directive";
 import {Card} from "../../types";
 import {BoardStore} from "../../store/board-store.service";
 import {FormsModule} from "@angular/forms";
 import {LabelsService} from "../../data/labels.service";
+import {CardModalService} from "../card-modal/card-modal.service";
 
 @Component({
     standalone: true,
@@ -14,15 +15,28 @@ import {LabelsService} from "../../data/labels.service";
     templateUrl: './trello-card.component.html',
 })
 export class TrelloCardComponent {
-    @Input({ required: true }) card!: Card;
-    @Input({ required: true }) listId!: string;
+    @Input({required: true}) card!: Card;
+    @Input({required: true}) listId!: string;
 
     showLabels = false;
     showMore = false;
-    editing    = false;
+    editing = false;
     titleDraft = '';
-    constructor(public store: BoardStore, private cardsApi: CardsService, private labelsApi: LabelsService) {}
 
+    constructor(
+        public store: BoardStore,
+        private cardsApi: CardsService,
+        private labelsApi: LabelsService,
+        private modal: CardModalService) {
+    }
+
+    openModal(ev: MouseEvent) {
+        // Don’t open if user clicked a control inside
+        const target = ev.target as HTMLElement;
+        if (target.closest('button, a, input, textarea, [data-stop-open]')) return;
+        ev.stopPropagation();
+        this.modal.open(this.card.id);
+    }
 
     startEdit() {
         this.titleDraft = this.card.title ?? '';
@@ -41,7 +55,7 @@ export class TrelloCardComponent {
             this.editing = false;
             return;
         }
-        await this.cardsApi.updateCard(this.card.id, { title: next });
+        await this.cardsApi.updateCard(this.card.id, {title: next});
         this.store.patchCardTitleLocally?.(this.card.id, next);
         this.editing = false;
     }
@@ -78,6 +92,7 @@ export class TrelloCardComponent {
         const list = this.store.lists().find((l: { id: string }) => l.id === this.listId);
         return list ? (list.cards ?? []) : [];
     }
+
     private indexInList() {
         return this.getListCards().findIndex(c => c.id === this.card.id);
     }
@@ -87,7 +102,7 @@ export class TrelloCardComponent {
         if (!cards.length) return;
 
         const beforeId = undefined;                        // no item before
-        const afterId  = cards[0]?.id === this.card.id ? cards[1]?.id : cards[0]?.id;
+        const afterId = cards[0]?.id === this.card.id ? cards[1]?.id : cards[0]?.id;
 
         await this.cardsApi.moveCard(this.card.id, this.listId, beforeId, afterId);
         // local optimistic update
@@ -105,7 +120,7 @@ export class TrelloCardComponent {
 
         const lastIdx = cards.length - 1;
         const beforeId = cards[lastIdx]?.id === this.card.id ? cards[lastIdx - 1]?.id : cards[lastIdx]?.id;
-        const afterId  = undefined;                        // no item after
+        const afterId = undefined;                        // no item after
 
         await this.cardsApi.moveCard(this.card.id, this.listId, beforeId, afterId);
         // local optimistic update
@@ -124,7 +139,7 @@ export class TrelloCardComponent {
 
         // target is one above
         const beforeId = cards[idx - 2]?.id;  // item before the target slot
-        const afterId  = cards[idx - 1]?.id;  // the item that will be right after us
+        const afterId = cards[idx - 1]?.id;  // the item that will be right after us
 
         await this.cardsApi.moveCard(this.card.id, this.listId, beforeId, afterId);
         // local optimistic update
@@ -140,7 +155,7 @@ export class TrelloCardComponent {
 
         // target is one below
         const beforeId = cards[idx + 1]?.id;  // the item that will be right before us
-        const afterId  = cards[idx + 2]?.id;  // the item after the target slot (may be undefined)
+        const afterId = cards[idx + 2]?.id;  // the item after the target slot (may be undefined)
 
         await this.cardsApi.moveCard(this.card.id, this.listId, beforeId, afterId);
         // local optimistic update
@@ -157,6 +172,6 @@ export class TrelloCardComponent {
 
 
     onEditKeydown($event: KeyboardEvent) {
-        
+
     }
 }

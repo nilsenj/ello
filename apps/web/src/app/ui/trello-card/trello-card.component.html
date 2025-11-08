@@ -1,6 +1,7 @@
 <div
-        class="bg-card-bg rounded-md px-3 py-2 text-sm shadow-card border border-black/0 hover:border-black/5"
+        class="bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
         aria-label="Card"
+        (click)="openModal($event)"
 >
     <!-- Labels row -->
     <div class="mb-2 flex flex-wrap gap-1" *ngIf="labelIds(card).length > 0">

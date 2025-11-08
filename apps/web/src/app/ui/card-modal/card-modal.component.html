@@ -1,0 +1,77 @@
+<div *ngIf="modal.isOpen()" class="cm-backdrop" (click)="close()"></div>
+
+<div *ngIf="modal.isOpen()" class="cm-panel" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="cm-header">
+        <input class="cm-title"
+               [(ngModel)]="titleDraft"
+               (blur)="saveTitle()"
+               (keydown.enter)="saveTitle()"
+               placeholder="Card title"/>
+        <button class="cm-close" (click)="close()">×</button>
+    </div>
+
+    <div class="cm-body" *ngIf="!loading(); else loadingTpl">
+        <!-- Labels -->
+        <section>
+            <div class="cm-section-title">Labels</div>
+
+            <!-- use default [] for ngFor -->
+            <div class="cm-labels">
+                <button *ngFor="let lb of (store.labels() || [])"
+                        class="cm-label"
+                        [style.--c]="lb.color"
+                        (click)="toggleLabel(lb.id)">
+                    <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
+                    <span>{{ lb.name }}</span>
+                    <span class="cm-check" *ngIf="hasLabel(lb.id)">✓</span>
+                </button>
+            </div>
+
+            <!-- guard length access -->
+            <div class="cm-current" *ngIf="(labelIds?.length ?? 0) > 0">
+    <span *ngFor="let lid of labelIds"
+          class="cm-pill"
+          [style.backgroundColor]="labelColor(lid)"
+          [attr.title]="labelName(lid)"></span>
+            </div>
+        </section>
+
+        <!-- Description -->
+        <section>
+            <div class="cm-section-title">Description</div>
+            <textarea class="cm-textarea" rows="6" [(ngModel)]="descDraft" (blur)="saveDescription()"
+                      placeholder="Add a more detailed description..."></textarea>
+        </section>
+
+        <!-- Due date -->
+        <section>
+            <div class="cm-section-title">Due date</div>
+            <input type="datetime-local"
+                   class="cm-input"
+                   [ngModel]="data()?.dueDate ? (data()?.dueDate | date:'yyyy-MM-ddTHH:mm') : null"
+                   (ngModelChange)="setDueDate($event || null)"/>
+        </section>
+
+        <!-- Checklists (skeleton) -->
+        <section>
+            <div class="cm-section-title">Checklists</div>
+            <div class="cm-muted">To be implemented: add checklist, add items, toggle done, reorder.</div>
+        </section>
+
+        <!-- Attachments (skeleton) -->
+        <section>
+            <div class="cm-section-title">Attachments</div>
+            <div class="cm-muted">To be implemented: upload, preview, remove.</div>
+        </section>
+
+        <!-- Activity (skeleton) -->
+        <section>
+            <div class="cm-section-title">Activity</div>
+            <div class="cm-muted">To be implemented: list of actions & comments.</div>
+        </section>
+    </div>
+
+    <ng-template #loadingTpl>
+        <div class="cm-loading">Loading…</div>
+    </ng-template>
+</div>
