@@ -5,6 +5,7 @@ import type {Board} from '../types';
 import {BoardStore} from '../store/board-store.service';
 import {ListsService} from './lists.service';
 import {LabelsService} from "./labels.service";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable({providedIn: 'root'})
 export class BoardsService {
@@ -13,6 +14,7 @@ export class BoardsService {
         private store: BoardStore,
         private listsApi: ListsService,
         private labelsApi: LabelsService,
+        private http: HttpClient
     ) {
     }
 
@@ -31,5 +33,9 @@ export class BoardsService {
             this.listsApi.loadLists(boardId),
             this.labelsApi.loadLabels(boardId),
         ]);
+    }
+
+    async getMembers(boardId: string) {
+        return this.http.get<{ id:string; name:string; avatar?:string }[]>(`/api/boards/${boardId}/members`).toPromise();
     }
 }

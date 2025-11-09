@@ -6,6 +6,7 @@ import {registerBoardRoutes} from './routes/boards.js';
 import {registerCardRoutes} from './routes/cards.js';
 import {registerImportRoutes} from "./routes/import.js";
 import {registerLabelRoutes} from "./routes/labels.js";
+import authPlugin from './plugins/auth.js';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,7 @@ async function bootstrap() {
     const app = Fastify({logger: true});
 
     await app.register(fastifyCors, {origin: true});
+    await app.register(authPlugin, { prisma });
 
     // Register routes
     await registerBoardRoutes(app, prisma);

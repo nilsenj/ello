@@ -15,8 +15,8 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "package.json",
-        "hash": "14832369157653750616"
+        "file": "tsconfig.base.json",
+        "hash": "10258939139953668561"
       },
       {
         "file": "pnpm-workspace.yaml",
@@ -27,31 +27,183 @@
         "hash": "11710807200313730003"
       },
       {
-        "file": ".gitignore",
-        "hash": "6562147615219035863"
-      },
-      {
-        "file": "README.md",
-        "hash": "10527340750855060289"
-      },
-      {
         "file": "nx.json",
         "hash": "11493607022105348433"
       },
       {
-        "file": "tsconfig.base.json",
-        "hash": "10258939139953668561"
+        "file": ".gitignore",
+        "hash": "6562147615219035863"
+      },
+      {
+        "file": "pnpm-lock.yaml",
+        "hash": "17930677679350091623"
       },
       {
         "file": "docker-compose.yml",
         "hash": "17143880532587014091"
       },
       {
-        "file": "pnpm-lock.yaml",
-        "hash": "6683828752919868793"
+        "file": "README.md",
+        "hash": "10527340750855060289"
+      },
+      {
+        "file": "package.json",
+        "hash": "14832369157653750616"
       }
     ],
     "projectFileMap": {
+      "api": [
+        {
+          "file": "apps/api/package.json",
+          "hash": "11460557249982661250",
+          "deps": [
+            "npm:@types/bcryptjs",
+            "npm:@types/jsonwebtoken",
+            "npm:@types/node@24.10.0",
+            "npm:prisma",
+            "npm:tsx",
+            "npm:@fastify/cors",
+            "npm:@fastify/multipart",
+            "npm:@prisma/client",
+            "npm:bcryptjs",
+            "npm:csv-parse",
+            "npm:dotenv@17.2.3",
+            "npm:fastify",
+            "npm:fastify-plugin@5.1.0",
+            "npm:fractional-indexing",
+            "npm:jsonwebtoken",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106215826_init/migration.sql",
+          "hash": "13749220032901006315"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106232319_add_updatedat/migration.sql",
+          "hash": "2392548919565472977"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106232827_pnpm_f_api_tsx_r_dotenv_config_src_scripts_backfill_rank_ts/migration.sql",
+          "hash": "1366105824191729927"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251107193815_label_order_archive/migration.sql",
+          "hash": "6792651899624204169"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251107203202_label_unique_3col/migration.sql",
+          "hash": "4758138774637475377"
+        },
+        {
+          "file": "apps/api/prisma/migrations/migration_lock.toml",
+          "hash": "872437952673290735"
+        },
+        {
+          "file": "apps/api/prisma/schema.prisma",
+          "hash": "6881550891931257598"
+        },
+        {
+          "file": "apps/api/project.json",
+          "hash": "14565464744280114995"
+        },
+        {
+          "file": "apps/api/src/main.ts",
+          "hash": "16510307781255059003",
+          "deps": [
+            "npm:fastify",
+            "npm:@fastify/cors",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/plugins/auth.ts",
+          "hash": "6167540925097356572",
+          "deps": [
+            "npm:fastify-plugin@5.1.0",
+            "npm:bcryptjs",
+            "npm:jsonwebtoken",
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/rank.ts",
+          "hash": "17551602584162012561"
+        },
+        {
+          "file": "apps/api/src/routes/boards.ts",
+          "hash": "14471100814225962168",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/cards.ts",
+          "hash": "9371112088729918691",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/import.ts",
+          "hash": "2462438114655152018",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client",
+            "npm:@fastify/multipart",
+            "npm:csv-parse"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/labels.ts",
+          "hash": "18225248664379289989",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/lists.ts",
+          "hash": "2650737015765543571",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/scripts/backfill-rank.ts",
+          "hash": "17791702681499550805",
+          "deps": [
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/seed.ts",
+          "hash": "14439287105409029037",
+          "deps": [
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/rank.ts",
+          "hash": "5761137886384326907"
+        },
+        {
+          "file": "apps/api/tsconfig.json",
+          "hash": "16102163062181804005"
+        },
+        {
+          "file": "apps/api/src/lib/authz.ts",
+          "hash": "9262868350528721618",
+          "deps": [
+            "npm:@prisma/client",
+            "npm:fastify"
+          ]
+        }
+      ],
       "web": [
         {
           "file": "apps/web/index.html",
@@ -101,6 +253,22 @@
           ]
         },
         {
+          "file": "apps/web/src/app/app.routes.ts",
+          "hash": "13637218107478413609",
+          "deps": [
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/core/auth-header.interceptor.ts",
+          "hash": "9628320674972694755",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
+          ]
+        },
+        {
           "file": "apps/web/src/app/data.service.ts",
           "hash": "7891324946238897300",
           "deps": [
@@ -120,14 +288,15 @@
         },
         {
           "file": "apps/web/src/app/data/boards.service.ts",
-          "hash": "817800950735676520",
+          "hash": "10588172455135608802",
           "deps": [
-            "npm:@angular/core"
+            "npm:@angular/core",
+            "npm:@angular/common"
           ]
         },
         {
           "file": "apps/web/src/app/data/cards.service.ts",
-          "hash": "11079846843787343254",
+          "hash": "14944765409679817964",
           "deps": [
             "npm:@angular/core",
             "npm:rxjs@7.8.2",
@@ -159,6 +328,16 @@
           ]
         },
         {
+          "file": "apps/web/src/app/pages/board-page.component.ts",
+          "hash": "6076595562448866299",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/router",
+            "npm:@angular/forms"
+          ]
+        },
+        {
           "file": "apps/web/src/app/shared/click-outside.directive.ts",
           "hash": "3773916295168801419",
           "deps": [
@@ -174,7 +353,7 @@
         },
         {
           "file": "apps/web/src/app/types.ts",
-          "hash": "57279645661929262"
+          "hash": "10247459159868941827"
         },
         {
           "file": "apps/web/src/app/ui/board-view.component.ts",
@@ -188,15 +367,15 @@
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.css",
-          "hash": "2098371488381677017"
+          "hash": "6065380617410316670"
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.html",
-          "hash": "14124631775381766682"
+          "hash": "14667151266885990466"
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.ts",
-          "hash": "14252035984095713253",
+          "hash": "2985200554762655164",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -275,7 +454,7 @@
         },
         {
           "file": "apps/web/src/main.ts",
-          "hash": "11520835222459438983",
+          "hash": "794853447194165153",
           "deps": [
             "npm:zone.js",
             "npm:@angular/compiler",
@@ -312,151 +491,6 @@
             "npm:@analogjs/vite-plugin-angular",
             "npm:vite-tsconfig-paths"
           ]
-        },
-        {
-          "file": "apps/web/src/app/app.routes.ts",
-          "hash": "13637218107478413609",
-          "deps": [
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/pages/board-page.component.ts",
-          "hash": "6076595562448866299",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/common",
-            "npm:@angular/router",
-            "npm:@angular/forms"
-          ]
-        }
-      ],
-      "api": [
-        {
-          "file": "apps/api/package.json",
-          "hash": "11866454151359738207",
-          "deps": [
-            "npm:@types/node@24.10.0",
-            "npm:prisma",
-            "npm:tsx",
-            "npm:@fastify/cors",
-            "npm:@fastify/multipart",
-            "npm:@prisma/client",
-            "npm:csv-parse",
-            "npm:dotenv@17.2.3",
-            "npm:fastify",
-            "npm:fractional-indexing",
-            "npm:zod"
-          ]
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106215826_init/migration.sql",
-          "hash": "13749220032901006315"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106232319_add_updatedat/migration.sql",
-          "hash": "2392548919565472977"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106232827_pnpm_f_api_tsx_r_dotenv_config_src_scripts_backfill_rank_ts/migration.sql",
-          "hash": "1366105824191729927"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251107193815_label_order_archive/migration.sql",
-          "hash": "6792651899624204169"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251107203202_label_unique_3col/migration.sql",
-          "hash": "4758138774637475377"
-        },
-        {
-          "file": "apps/api/prisma/migrations/migration_lock.toml",
-          "hash": "872437952673290735"
-        },
-        {
-          "file": "apps/api/prisma/schema.prisma",
-          "hash": "17726069372920058430"
-        },
-        {
-          "file": "apps/api/project.json",
-          "hash": "14565464744280114995"
-        },
-        {
-          "file": "apps/api/src/main.ts",
-          "hash": "1960464120703087685",
-          "deps": [
-            "npm:fastify",
-            "npm:@fastify/cors",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/rank.ts",
-          "hash": "17551602584162012561"
-        },
-        {
-          "file": "apps/api/src/routes/boards.ts",
-          "hash": "3874393308095507597",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/cards.ts",
-          "hash": "16726911362426775262",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/import.ts",
-          "hash": "2462438114655152018",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client",
-            "npm:@fastify/multipart",
-            "npm:csv-parse"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/labels.ts",
-          "hash": "18225248664379289989",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/lists.ts",
-          "hash": "2650737015765543571",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/scripts/backfill-rank.ts",
-          "hash": "17791702681499550805",
-          "deps": [
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/seed.ts",
-          "hash": "14439287105409029037",
-          "deps": [
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/utils/rank.ts",
-          "hash": "5761137886384326907"
-        },
-        {
-          "file": "apps/api/tsconfig.json",
-          "hash": "6816868419458552670"
         }
       ]
     }

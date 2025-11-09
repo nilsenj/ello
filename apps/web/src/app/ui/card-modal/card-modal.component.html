@@ -3,72 +3,159 @@
 <div *ngIf="modal.isOpen()" class="cm-panel" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
     <div class="cm-header">
         <input class="cm-title"
-               [(ngModel)]="titleDraft"
+               [ngModel]="titleDraft()"
+               (ngModelChange)="titleDraft.set($event)"
                (blur)="saveTitle()"
                (keydown.enter)="saveTitle()"
-               placeholder="Card title"/>
+        />
         <button class="cm-close" (click)="close()">×</button>
     </div>
 
     <div class="cm-body" *ngIf="!loading(); else loadingTpl">
-        <!-- Labels -->
-        <section>
-            <div class="cm-section-title">Labels</div>
 
-            <!-- use default [] for ngFor -->
-            <div class="cm-labels">
-                <button *ngFor="let lb of (store.labels() || [])"
-                        class="cm-label"
-                        [style.--c]="lb.color"
-                        (click)="toggleLabel(lb.id)">
-                    <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
-                    <span>{{ lb.name }}</span>
-                    <span class="cm-check" *ngIf="hasLabel(lb.id)">✓</span>
-                </button>
-            </div>
+        <!-- Left column -->
+        <div class="cm-col cm-col-main">
+            <!-- Description -->
+            <section>
+                <div class="cm-section-title">Description</div>
+                <textarea class="cm-textarea" rows="6"
+                          [ngModel]="descDraft()"
+                          placeholder="Add a more detailed description..."
+                          (ngModelChange)="descDraft.set($event)"
+                          (blur)="saveDescription()"></textarea>
+            </section>
 
-            <!-- guard length access -->
-            <div class="cm-current" *ngIf="(labelIds?.length ?? 0) > 0">
-    <span *ngFor="let lid of labelIds"
-          class="cm-pill"
-          [style.backgroundColor]="labelColor(lid)"
-          [attr.title]="labelName(lid)"></span>
-            </div>
-        </section>
+            <!-- Checklists -->
+            <section>
+                <div class="cm-section-title flex items-center gap-2">
+                    Checklists
+                    <button class="cm-btn" (click)="addChecklist()">+ Add checklist</button>
+                </div>
 
-        <!-- Description -->
-        <section>
-            <div class="cm-section-title">Description</div>
-            <textarea class="cm-textarea" rows="6" [(ngModel)]="descDraft" (blur)="saveDescription()"
-                      placeholder="Add a more detailed description..."></textarea>
-        </section>
+                <div class="cm-checklist" *ngFor="let cl of checklists()">
+                    <div class="cm-checklist-header">
+                        <input class="cm-input"
+                               [ngModel]="cl.title"
+                               (ngModelChange)="renameChecklist(cl.id, $event)"/>
+                    </div>
 
-        <!-- Due date -->
-        <section>
-            <div class="cm-section-title">Due date</div>
-            <input type="datetime-local"
-                   class="cm-input"
-                   [ngModel]="data()?.dueDate ? (data()?.dueDate | date:'yyyy-MM-ddTHH:mm') : null"
-                   (ngModelChange)="setDueDate($event || null)"/>
-        </section>
+                    <ul class="cm-checklist-items">
+                        <li *ngFor="let it of cl.items" class="cm-checklist-item">
+                            <label class="cm-checkbox">
+                                <input type="checkbox" [checked]="it.done"
+                                       (change)="toggleChecklistItem(cl.id, it.id, $event.target.checked)"/>
+                                <span [class.line-through]="it.done">{{ it.text }}</span>
+                            </label>
+                        </li>
+                    </ul>
 
-        <!-- Checklists (skeleton) -->
-        <section>
-            <div class="cm-section-title">Checklists</div>
-            <div class="cm-muted">To be implemented: add checklist, add items, toggle done, reorder.</div>
-        </section>
+                    <button class="cm-btn" (click)="addChecklistItem(cl.id)">Add item</button>
+                </div>
+            </section>
 
-        <!-- Attachments (skeleton) -->
-        <section>
-            <div class="cm-section-title">Attachments</div>
-            <div class="cm-muted">To be implemented: upload, preview, remove.</div>
-        </section>
+            <!-- Comments -->
+            <section>
+                <div class="cm-section-title">Comments</div>
 
-        <!-- Activity (skeleton) -->
-        <section>
-            <div class="cm-section-title">Activity</div>
-            <div class="cm-muted">To be implemented: list of actions & comments.</div>
-        </section>
+                <div class="cm-comment-editor">
+                    <textarea rows="3" class="cm-textarea"
+                              [ngModel]="commentDraft()"
+                              (ngModelChange)="commentDraft.set($event)"
+                              placeholder="Write a comment…"></textarea>
+                    <div class="mt-2">
+                        <button class="cm-btn-primary"
+                                type="button"
+                                [disabled]="isCommentBlank()"
+                                (click)="addComment()">Comment
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cm-comments">
+                    <div *ngFor="let c of comments()" class="cm-comment">
+                        <div class="cm-comment-meta">
+                            <span class="cm-author">{{ c.author?.name || 'User' }}</span>
+                            <span class="cm-dot">•</span>
+                            <span class="cm-date">{{ c.createdAt | date:'medium' }}</span>
+                            <button class="cm-link ml-auto" (click)="deleteComment(c.id)">Delete</button>
+                        </div>
+                        <div class="cm-comment-text">{{ c.text }}</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right column (side panel) -->
+        <div class="cm-col cm-col-side">
+
+            <!-- Labels -->
+            <section>
+                <div class="cm-section-title">Labels</div>
+
+                <div class="cm-labels">
+                    <button *ngFor="let lb of (store.labels() || [])"
+                            class="cm-label"
+                            [class.is-selected]="selectedLabelIds().has(lb.id)"
+                            [attr.aria-pressed]="selectedLabelIds().has(lb.id)"
+                            [style.--c]="lb.color"
+                            (click)="toggleLabel(lb.id)">
+                        <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
+                        <span>{{ lb.name }}</span>
+                        <span class="cm-check" *ngIf="selectedLabelIds().has(lb.id)">✓</span>
+                    </button>
+                </div>
+
+                <!-- current labels pills (reactive set → array) -->
+                <div class="cm-current" *ngIf="selectedLabelIds().size > 0">
+                    <span *ngFor="let lid of Array.from(selectedLabelIds()); trackBy: trackId"
+                          class="cm-pill"
+                          [style.backgroundColor]="labelColor(lid)"
+                          [attr.title]="labelName(lid)"></span>
+                </div>
+            </section>
+
+
+            <!-- Dates -->
+            <section>
+                <div class="cm-section-title">Dates</div>
+                <label class="cm-field">
+                    <span class="cm-field-label">Start</span>
+                    <input type="datetime-local" class="cm-input"
+                           [ngModel]="startDraft()"
+                           (ngModelChange)="startDraft.set($event || null); setDates('start', $event || null)"/>
+                </label>
+
+                <label class="cm-field">
+                    <span class="cm-field-label">Due</span>
+                    <input type="datetime-local" class="cm-input"
+                           [ngModel]="dueDraft()"
+                           (ngModelChange)="dueDraft.set($event || null); setDates('due', $event || null)"/>
+                </label>
+            </section>
+
+            <!-- Members -->
+            <section>
+                <div class="cm-section-title">Members</div>
+                <div class="cm-members">
+                    <button *ngFor="let m of members()"
+                            class="cm-member"
+                            [class.is-selected]="hasMember(m.id)"
+                            (click)="toggleMember(m.id)">
+                        <img *ngIf="m.avatar" [src]="m.avatar" class="cm-avatar" alt=""/>
+                        <span class="cm-avatar cm-avatar-fallback" *ngIf="!m.avatar">{{ m.name?.[0] || 'U' }}</span>
+                        <span class="cm-member-name">{{ m.name || 'User' }}</span>
+                        <span class="cm-check" *ngIf="hasMember(m.id)">✓</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Attachments (placeholder) -->
+            <section>
+                <div class="cm-section-title">Attachments</div>
+                <div class="cm-muted">Upload/preview/remove to be implemented.</div>
+            </section>
+        </div>
+
     </div>
 
     <ng-template #loadingTpl>

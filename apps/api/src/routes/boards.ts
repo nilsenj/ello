@@ -86,4 +86,17 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
 
         return reply.code(204).send();
     });
+
+    // List board members (id, name, avatar) for side panel
+    app.get('/api/boards/:id/members', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const { id } = req.params;
+
+        const rows = await prisma.boardMember.findMany({
+            where: { boardId: id },
+            include: { user: { select: { id: true, name: true, avatar: true } } },
+            orderBy: { role: 'asc' },
+        });
+
+        return rows.map(r => ({ id: r.user.id, name: r.user.name ?? 'User', avatar: r.user.avatar ?? undefined }));
+    });
 }

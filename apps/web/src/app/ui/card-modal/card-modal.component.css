@@ -66,15 +66,19 @@
 }
 
 .cm-label {
+    box-shadow: 0 0 0 3px transparent;
     display: flex;
+    position: relative;
     align-items: center;
     gap: .5rem;
     padding: .4rem .5rem;
     border-radius: .5rem;
-    border: 1px solid #e5e7eb;
+    border: none;
     background: #fff;
     cursor: pointer;
 }
+
+.cm-label .cm-check { font-weight: 700; }
 
 .cm-label:hover {
     background: #f8fafc;
@@ -139,4 +143,319 @@
 .cm-muted {
     color: #94a3b8;
     font-size: .9rem;
+}
+
+
+/* Backdrop */
+.cm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in oklab, black 50%, transparent);
+    backdrop-filter: blur(2px);
+    z-index: 50;
+}
+
+/* Panel: full height with side gaps; 50–60% width on desktop, full width on small */
+.cm-panel {
+    position: fixed;
+    z-index: 51;
+    /* side gaps */
+    inset: 24px; /* top/right/bottom/left gap */
+    margin: 0 auto; /* center horizontally */
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15),
+    0 2px 8px rgba(0, 0, 0, .08);
+
+    /* sizing */
+    max-width: 1200px;
+    width: min(60vw, 1100px); /* 50–60% of viewport on desktop */
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 48px); /* full height minus gaps */
+    overflow: hidden; /* header sticky + scroll body */
+}
+
+/* Narrow screens: full width with small gaps */
+@media (max-width: 1024px) {
+    .cm-panel {
+        inset: 12px;
+        width: auto; /* use available width between gaps */
+        max-width: none;
+        border-radius: 10px;
+    }
+}
+
+/* Header (can be sticky for nice UX) */
+.cm-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.cm-title {
+    flex: 1 1 auto;
+    font-size: 18px;
+    font-weight: 600;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 10px;
+    outline: none;
+}
+
+.cm-title:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
+}
+
+.cm-close {
+    border: 0;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.cm-close:hover {
+    background: #f5f5f5;
+}
+
+/* Body: scrollable and split columns */
+.cm-body {
+    overflow: auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 320px; /* main + side panel */
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .cm-body {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+/* Columns */
+.cm-col {
+    min-width: 0;
+}
+
+.cm-col-side {
+    align-self: start;
+}
+
+/* Sections */
+.cm-section-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.cm-textarea, .cm-input {
+    width: 100%;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 10px;
+    outline: none;
+}
+
+.cm-textarea:focus, .cm-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
+}
+
+/* Buttons */
+.cm-btn {
+    border: 1px solid #e6e6e6;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.cm-btn:hover {
+    background: #f2f2f2;
+}
+
+.cm-btn-primary {
+    border: 0;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.cm-btn-primary:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* Labels list + visual selected state */
+.cm-labels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+@media (max-width: 420px) {
+    .cm-labels {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cm-label {
+    --c: #ddd; /* color from style attr */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: none;
+    background: color-mix(in oklab, var(--c), #fff 70%);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.cm-label:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+.cm-label.is-selected,
+.cm-label[aria-pressed="true"] {
+    /*outline-offset: 2px;*/
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), #fff 70%);
+}
+
+.cm-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    flex: 0 0 12px;
+}
+
+.cm-check {
+    margin-left: auto;
+    font-weight: 700;
+    opacity: .9;
+}
+
+/* Current label pills row */
+.cm-current {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cm-pill {
+    height: 8px;
+    width: 36px;
+    border-radius: 999px;
+}
+
+/* Checklist */
+.cm-checklist {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.cm-checklist-items {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.cm-checklist-item .line-through {
+    text-decoration: line-through;
+    color: #9aa0a6;
+}
+
+/* Comments */
+.cm-comment-editor {
+    margin-top: 8px;
+}
+
+.cm-comments {
+    margin-top: 12px;
+    display: grid;
+    gap: 12px;
+}
+
+.cm-comment {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.cm-comment-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    color: #667085;
+}
+
+.cm-link {
+    border: 0;
+    background: none;
+    color: #2563eb;
+}
+
+.cm-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+/* Members */
+.cm-members {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.cm-member {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 6px 10px;
+    background: #fafafa;
+}
+
+.cm-member.is-selected {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.cm-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    object-fit: cover;
+}
+
+.cm-avatar-fallback {
+    display: inline-grid;
+    place-items: center;
+    background: #e5e7eb;
+    font-weight: 600;
 }

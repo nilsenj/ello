@@ -3195,6 +3195,15 @@
         "hash": "sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw=="
       }
     },
+    "npm:@types/bcryptjs": {
+      "type": "npm",
+      "name": "npm:@types/bcryptjs",
+      "data": {
+        "version": "3.0.0",
+        "packageName": "@types/bcryptjs",
+        "hash": "sha512-WRZOuCuaz8UcZZE4R5HXTco2goQSI2XxjGY3hbM/xDvwmqFWd4ivooImsMx65OKM6CtNKbnZ5YL+YwAwK7c1dg=="
+      }
+    },
     "npm:@types/body-parser": {
       "type": "npm",
       "name": "npm:@types/body-parser",
@@ -3339,6 +3348,15 @@
         "hash": "sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA=="
       }
     },
+    "npm:@types/jsonwebtoken": {
+      "type": "npm",
+      "name": "npm:@types/jsonwebtoken",
+      "data": {
+        "version": "9.0.10",
+        "packageName": "@types/jsonwebtoken",
+        "hash": "sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA=="
+      }
+    },
     "npm:@types/mime": {
       "type": "npm",
       "name": "npm:@types/mime",
@@ -3346,6 +3364,15 @@
         "version": "1.3.5",
         "packageName": "@types/mime",
         "hash": "sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w=="
+      }
+    },
+    "npm:@types/ms": {
+      "type": "npm",
+      "name": "npm:@types/ms",
+      "data": {
+        "version": "2.1.0",
+        "packageName": "@types/ms",
+        "hash": "sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA=="
       }
     },
     "npm:@types/mute-stream": {
@@ -4284,6 +4311,15 @@
         "hash": "sha512-x+VAiMRL6UPkx+kudNvxTl6hB2XNNCG2r+7wixVfIYwu/2HKRXimwQyaumLjMveWvT2Hkd/cAJw+QBMfJ/EKVw=="
       }
     },
+    "npm:bcryptjs": {
+      "type": "npm",
+      "name": "npm:bcryptjs",
+      "data": {
+        "version": "3.0.3",
+        "packageName": "bcryptjs",
+        "hash": "sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g=="
+      }
+    },
     "npm:big.js": {
       "type": "npm",
       "name": "npm:big.js",
@@ -4381,6 +4417,15 @@
         "version": "1.2.1",
         "packageName": "btoa",
         "hash": "sha512-SB4/MIGlsiVkMcHmT+pSmIPoNDoHg+7cMzmt3Uxt628MTz2487DKSqK/fuhFBrkuqrYv5UCEnACpF4dTFNKc/g=="
+      }
+    },
+    "npm:buffer-equal-constant-time": {
+      "type": "npm",
+      "name": "npm:buffer-equal-constant-time",
+      "data": {
+        "version": "1.0.1",
+        "packageName": "buffer-equal-constant-time",
+        "hash": "sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA=="
       }
     },
     "npm:buffer-from": {
@@ -5499,6 +5544,15 @@
         "hash": "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA=="
       }
     },
+    "npm:ecdsa-sig-formatter": {
+      "type": "npm",
+      "name": "npm:ecdsa-sig-formatter",
+      "data": {
+        "version": "1.0.11",
+        "packageName": "ecdsa-sig-formatter",
+        "hash": "sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ=="
+      }
+    },
     "npm:ee-first": {
       "type": "npm",
       "name": "npm:ee-first",
@@ -6084,13 +6138,22 @@
         "hash": "sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA=="
       }
     },
-    "npm:fastify-plugin": {
+    "npm:fastify-plugin@4.5.1": {
       "type": "npm",
-      "name": "npm:fastify-plugin",
+      "name": "npm:fastify-plugin@4.5.1",
       "data": {
         "version": "4.5.1",
         "packageName": "fastify-plugin",
         "hash": "sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ=="
+      }
+    },
+    "npm:fastify-plugin@5.1.0": {
+      "type": "npm",
+      "name": "npm:fastify-plugin@5.1.0",
+      "data": {
+        "version": "5.1.0",
+        "packageName": "fastify-plugin",
+        "hash": "sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw=="
       }
     },
     "npm:fastify": {
@@ -7524,6 +7587,33 @@
         "hash": "sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg=="
       }
     },
+    "npm:jsonwebtoken": {
+      "type": "npm",
+      "name": "npm:jsonwebtoken",
+      "data": {
+        "version": "9.0.2",
+        "packageName": "jsonwebtoken",
+        "hash": "sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ=="
+      }
+    },
+    "npm:jwa": {
+      "type": "npm",
+      "name": "npm:jwa",
+      "data": {
+        "version": "1.4.2",
+        "packageName": "jwa",
+        "hash": "sha512-eeH5JO+21J78qMvTIDdBXidBd6nG2kZjg5Ohz/1fpa28Z4CcsWUzJ1ZZyFq/3z3N17aZy+ZuBoHljASbL1WfOw=="
+      }
+    },
+    "npm:jws": {
+      "type": "npm",
+      "name": "npm:jws",
+      "data": {
+        "version": "3.2.2",
+        "packageName": "jws",
+        "hash": "sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA=="
+      }
+    },
     "npm:karma-source-map-support": {
       "type": "npm",
       "name": "npm:karma-source-map-support",
@@ -7803,6 +7893,60 @@
         "hash": "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow=="
       }
     },
+    "npm:lodash.includes": {
+      "type": "npm",
+      "name": "npm:lodash.includes",
+      "data": {
+        "version": "4.3.0",
+        "packageName": "lodash.includes",
+        "hash": "sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w=="
+      }
+    },
+    "npm:lodash.isboolean": {
+      "type": "npm",
+      "name": "npm:lodash.isboolean",
+      "data": {
+        "version": "3.0.3",
+        "packageName": "lodash.isboolean",
+        "hash": "sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg=="
+      }
+    },
+    "npm:lodash.isinteger": {
+      "type": "npm",
+      "name": "npm:lodash.isinteger",
+      "data": {
+        "version": "4.0.4",
+        "packageName": "lodash.isinteger",
+        "hash": "sha512-DBwtEWN2caHQ9/imiNeEA5ys1JoRtRfY3d7V9wkqtbycnAmTvRRmbHKDV4a0EYc678/dia0jrte4tjYwVBaZUA=="
+      }
+    },
+    "npm:lodash.isnumber": {
+      "type": "npm",
+      "name": "npm:lodash.isnumber",
+      "data": {
+        "version": "3.0.3",
+        "packageName": "lodash.isnumber",
+        "hash": "sha512-QYqzpfwO3/CWf3XP+Z+tkQsfaLL/EnUlXWVkIk5FUPc4sBdTehEqZONuyRt2P67PXAk+NXmTBcc97zw9t1FQrw=="
+      }
+    },
+    "npm:lodash.isplainobject": {
+      "type": "npm",
+      "name": "npm:lodash.isplainobject",
+      "data": {
+        "version": "4.0.6",
+        "packageName": "lodash.isplainobject",
+        "hash": "sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA=="
+      }
+    },
+    "npm:lodash.isstring": {
+      "type": "npm",
+      "name": "npm:lodash.isstring",
+      "data": {
+        "version": "4.0.1",
+        "packageName": "lodash.isstring",
+        "hash": "sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw=="
+      }
+    },
     "npm:lodash.memoize": {
       "type": "npm",
       "name": "npm:lodash.memoize",
@@ -7819,6 +7963,15 @@
         "version": "4.6.2",
         "packageName": "lodash.merge",
         "hash": "sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ=="
+      }
+    },
+    "npm:lodash.once": {
+      "type": "npm",
+      "name": "npm:lodash.once",
+      "data": {
+        "version": "4.1.1",
+        "packageName": "lodash.once",
+        "hash": "sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg=="
       }
     },
     "npm:lodash.uniq": {
@@ -16797,7 +16950,7 @@
     },
     {
       "source": "npm:@fastify/cors",
-      "target": "npm:fastify-plugin",
+      "target": "npm:fastify-plugin@4.5.1",
       "type": "static"
     },
     {
@@ -16832,7 +16985,7 @@
     },
     {
       "source": "npm:@fastify/multipart",
-      "target": "npm:fastify-plugin",
+      "target": "npm:fastify-plugin@4.5.1",
       "type": "static"
     },
     {
@@ -18486,6 +18639,11 @@
       "type": "static"
     },
     {
+      "source": "npm:@types/bcryptjs",
+      "target": "npm:bcryptjs",
+      "type": "static"
+    },
+    {
       "source": "npm:@types/body-parser",
       "target": "npm:@types/connect",
       "type": "static"
@@ -18588,6 +18746,16 @@
     {
       "source": "npm:@types/istanbul-reports",
       "target": "npm:@types/istanbul-lib-report",
+      "type": "static"
+    },
+    {
+      "source": "npm:@types/jsonwebtoken",
+      "target": "npm:@types/ms",
+      "type": "static"
+    },
+    {
+      "source": "npm:@types/jsonwebtoken",
+      "target": "npm:@types/node@24.10.0",
       "type": "static"
     },
     {
@@ -20558,6 +20726,11 @@
     {
       "source": "npm:dunder-proto",
       "target": "npm:gopd",
+      "type": "static"
+    },
+    {
+      "source": "npm:ecdsa-sig-formatter",
+      "target": "npm:safe-buffer@5.2.1",
       "type": "static"
     },
     {
@@ -22703,6 +22876,81 @@
     {
       "source": "npm:jsonfile@6.2.0",
       "target": "npm:graceful-fs",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:jws",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.includes",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.isboolean",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.isinteger",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.isnumber",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.isplainobject",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.isstring",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:lodash.once",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:ms@2.1.3",
+      "type": "static"
+    },
+    {
+      "source": "npm:jsonwebtoken",
+      "target": "npm:semver@7.7.3",
+      "type": "static"
+    },
+    {
+      "source": "npm:jwa",
+      "target": "npm:buffer-equal-constant-time",
+      "type": "static"
+    },
+    {
+      "source": "npm:jwa",
+      "target": "npm:ecdsa-sig-formatter",
+      "type": "static"
+    },
+    {
+      "source": "npm:jwa",
+      "target": "npm:safe-buffer@5.2.1",
+      "type": "static"
+    },
+    {
+      "source": "npm:jws",
+      "target": "npm:jwa",
+      "type": "static"
+    },
+    {
+      "source": "npm:jws",
+      "target": "npm:safe-buffer@5.2.1",
       "type": "static"
     },
     {
@@ -26933,41 +27181,6 @@
     {
       "source": "npm:webpack-dev-middleware@7.4.5",
       "target": "npm:webpack@5.102.1",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:colorette",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:memfs@4.50.0",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:mime-types@3.0.1",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:on-finished",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:range-parser",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:schema-utils@4.3.3",
-      "type": "static"
-    },
-    {
-      "source": "npm:webpack-dev-middleware@7.4.5",
-      "target": "npm:webpack@5.94.0",
       "type": "static"
     },
     {

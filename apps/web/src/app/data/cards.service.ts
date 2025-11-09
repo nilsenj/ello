@@ -1,10 +1,10 @@
 import {Injectable} from '@angular/core';
 import {ApiBaseService} from './api-base.service';
-import type {Card} from '../types';
+import type {Card, CommentDto} from '../types';
 import {ListsService} from './lists.service';
 import {firstValueFrom} from 'rxjs';
 import {BoardStore} from "../store/board-store.service";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 
 @Injectable({providedIn: 'root'})
 export class CardsService {
@@ -92,5 +92,44 @@ export class CardsService {
         isArchived: boolean;
     }>) {
         return this.api.patch(`/api/cards/${id}/extended`, body);
+    }
+
+    async assignMember(cardId: string, userId: string) {
+        return this.http.post(`/api/cards/${cardId}/assignees`, { userId }).toPromise();
+    }
+    async unassignMember(cardId: string, userId: string) {
+        return this.http.delete(`/api/cards/${cardId}/assignees/${userId}`).toPromise();
+    }
+
+    async addChecklist(cardId: string, body: { title: string }) {
+        return this.http.post(`/api/cards/${cardId}/checklists`, body).toPromise() as Promise<any>;
+    }
+    async updateChecklist(checklistId: string, body: { title: string }) {
+        return this.http.patch(`/api/checklists/${checklistId}`, body).toPromise();
+    }
+    async addChecklistItem(checklistId: string, body: { text: string }) {
+        return this.http.post(`/api/checklists/${checklistId}/items`, body).toPromise() as Promise<any>;
+    }
+    async updateChecklistItem(itemId: string, body: { done?: boolean; text?: string }) {
+        return this.http.patch(`/api/checklist-items/${itemId}`, body).toPromise();
+    }
+
+    addComment(cardId: string, body: { text: string }) {
+        return firstValueFrom(
+            this.http.post<CommentDto>(`/api/cards/${cardId}/comments`, body, this.withUser())
+        );
+    }
+
+    deleteComment(commentId: string) {
+        return firstValueFrom(
+            this.http.delete<void>(`/api/comments/${commentId}`)
+        );
+    }
+
+    private withUser(headers?: HttpHeaders) {
+        const id = localStorage.getItem('userId') || 'demo-user';
+        let h = headers || new HttpHeaders();
+        h = h.set('x-user-id', id);
+        return { headers: h };
     }
 }

@@ -20,6 +20,8 @@ model User {
   boards        BoardMember[]
   cardAssignees CardMember[]
   comments      Comment[]
+  refreshTokens RefreshToken[]    // <—
+
 }
 
 model Workspace {
@@ -207,6 +209,15 @@ model Activity {
   createdAt DateTime @default(now())
   board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId   String
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 // ===== Enums =====
