@@ -1,137 +1,202 @@
+/* Backdrop */
 .cm-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, .45);
-    backdrop-filter: saturate(180%) blur(2px);
+    background: color-mix(in oklab, black 50%, transparent);
+    backdrop-filter: blur(2px);
     z-index: 50;
 }
 
+/* Panel: centered, full-height with gaps; desktop width */
 .cm-panel {
     position: fixed;
-    inset: auto 0 0 auto; /* right sheet style */
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(720px, 100%);
+    z-index: 51;
+    inset: 24px;
+    margin: 0 auto;
     background: #fff;
-    z-index: 60;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, .2);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15),
+    0 2px 8px rgba(0, 0, 0, .08);
+    max-width: 1200px;
+    width: min(60vw, 1100px);
     display: flex;
     flex-direction: column;
+    min-height: calc(100vh - 48px);
+    overflow: hidden;
 }
 
+/* Priority palette (applies when .cm-panel has pri-*) */
+.cm-panel.pri-low {
+    --pri-dot: #16a34a;
+    --pri-bg: color-mix(in oklab, var(--pri-dot), #fff 85%);
+    --pri-fg: #065f46;
+    --pri-ring: color-mix(in oklab, var(--pri-dot), #fff 60%);
+}
+
+.cm-panel.pri-medium {
+    --pri-dot: #2563eb;
+    --pri-bg: color-mix(in oklab, var(--pri-dot), #fff 85%);
+    --pri-fg: #0b3aa5;
+    --pri-ring: color-mix(in oklab, var(--pri-dot), #fff 60%);
+}
+
+.cm-panel.pri-high {
+    --pri-dot: #ea580c;
+    --pri-bg: color-mix(in oklab, var(--pri-dot), #fff 85%);
+    --pri-fg: #7c2d12;
+    --pri-ring: color-mix(in oklab, var(--pri-dot), #fff 55%);
+}
+
+.cm-panel.pri-urgent {
+    --pri-dot: #dc2626;
+    --pri-bg: color-mix(in oklab, var(--pri-dot), #fff 85%);
+    --pri-fg: #7f1d1d;
+    --pri-ring: color-mix(in oklab, var(--pri-dot), #fff 50%);
+}
+
+@media (max-width: 1024px) {
+    .cm-panel {
+        inset: 12px;
+        width: auto;
+        max-width: none;
+        border-radius: 10px;
+    }
+}
+
+/* Header (priority-aware) */
 .cm-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+    padding: 16px 20px;
     display: flex;
+    gap: 12px;
     align-items: center;
-    gap: .5rem;
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
+    position: relative; /* needed for accent positioning */
+    /* soft priority glow instead of a border */
+    box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot, transparent), transparent 88%);
 }
 
+/* Left vertical accent for priority */
+.cm-header-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: -2px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--pri-dot, transparent);
+}
+
+/* Priority pill */
+.cm-header-pill {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--pri-fg, #111827);
+    background: var(--pri-bg, transparent);
+    border: 1px solid var(--pri-ring, transparent);
+    text-transform: capitalize;
+}
+
+/* Title */
 .cm-title {
-    flex: 1;
-    font-size: 1.125rem;
+    flex: 1 1 auto;
+    font-size: 18px;
     font-weight: 600;
-    border: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 10px;
     outline: none;
-    background: transparent;
+    /* subtle underline when a priority exists */
+    background: none;
 }
 
+.cm-title:focus {
+    /*box-shadow: 0 0 0 3px var(--pri-ring, rgba(59,130,246,.2));*/
+}
+
+/* Optional: gentle pulse for urgent */
+.cm-panel.pri-urgent .cm-header {
+    animation: priPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes priPulse {
+    0%, 100% {
+        box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot), transparent 88%);
+    }
+    50% {
+        box-shadow: 0 6px 18px color-mix(in oklab, var(--pri-dot), transparent 80%);
+    }
+}
+
+/* Close */
 .cm-close {
     border: 0;
     background: transparent;
-    font-size: 1.5rem;
+    font-size: 22px;
     line-height: 1;
-    padding: .25rem .5rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
-.cm-body {
-    padding: 1rem 1.25rem;
-    overflow: auto;
+.cm-close:hover {
+    background: #f5f5f5;
 }
 
+/* Body: grid columns */
+.cm-body {
+    overflow: auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .cm-body {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.cm-col {
+    min-width: 0;
+}
+
+.cm-col-side {
+    align-self: start;
+}
+
+/* Sections */
 .cm-section-title {
     font-size: .75rem;
     text-transform: uppercase;
     color: #64748b;
     letter-spacing: .06em;
     margin: .75rem 0 .5rem;
+    font-weight: 600;
 }
 
-.cm-labels {
-    display: grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap: .25rem;
+/* Inputs / Textareas */
+.cm-textarea, .cm-input {
+    width: 100%;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    padding: 8px 10px;
+    outline: none;
 }
 
-.cm-label {
-    box-shadow: 0 0 0 3px transparent;
-    display: flex;
-    position: relative;
-    align-items: center;
-    gap: .5rem;
-    padding: .4rem .5rem;
-    border-radius: .5rem;
-    border: none;
-    background: #fff;
-    cursor: pointer;
-}
-
-.cm-label .cm-check { font-weight: 700; }
-
-.cm-label:hover {
-    background: #f8fafc;
-}
-
-.cm-dot {
-    width: .75rem;
-    height: .75rem;
-    border-radius: 999px;
-}
-
-.cm-check {
-    margin-left: auto;
-    font-size: .8rem;
-    color: #111827;
-}
-
-.cm-current {
-    display: flex;
-    gap: .25rem;
-    margin-top: .5rem;
-}
-
-.cm-pill {
-    display: inline-block;
-    width: 2rem;
-    height: .5rem;
-    border-radius: 999px;
+.cm-textarea:focus, .cm-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
 }
 
 .cm-textarea {
-    width: 100%;
-    border: 1px solid #e5e7eb;
-    border-radius: .5rem;
-    padding: .5rem;
-    outline: none;
-}
-
-.cm-textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
-}
-
-.cm-input {
-    border: 1px solid #e5e7eb;
-    border-radius: .5rem;
-    padding: .35rem .5rem;
-    outline: none;
-}
-
-.cm-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+    min-height: 96px;
 }
 
 .cm-loading {
@@ -145,131 +210,6 @@
     font-size: .9rem;
 }
 
-
-/* Backdrop */
-.cm-backdrop {
-    position: fixed;
-    inset: 0;
-    background: color-mix(in oklab, black 50%, transparent);
-    backdrop-filter: blur(2px);
-    z-index: 50;
-}
-
-/* Panel: full height with side gaps; 50–60% width on desktop, full width on small */
-.cm-panel {
-    position: fixed;
-    z-index: 51;
-    /* side gaps */
-    inset: 24px; /* top/right/bottom/left gap */
-    margin: 0 auto; /* center horizontally */
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .15),
-    0 2px 8px rgba(0, 0, 0, .08);
-
-    /* sizing */
-    max-width: 1200px;
-    width: min(60vw, 1100px); /* 50–60% of viewport on desktop */
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 48px); /* full height minus gaps */
-    overflow: hidden; /* header sticky + scroll body */
-}
-
-/* Narrow screens: full width with small gaps */
-@media (max-width: 1024px) {
-    .cm-panel {
-        inset: 12px;
-        width: auto; /* use available width between gaps */
-        max-width: none;
-        border-radius: 10px;
-    }
-}
-
-/* Header (can be sticky for nice UX) */
-.cm-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #fff;
-    padding: 16px 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.cm-title {
-    flex: 1 1 auto;
-    font-size: 18px;
-    font-weight: 600;
-    border: 1px solid #e6e6e6;
-    border-radius: 8px;
-    padding: 8px 10px;
-    outline: none;
-}
-
-.cm-title:focus {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
-}
-
-.cm-close {
-    border: 0;
-    background: transparent;
-    font-size: 22px;
-    line-height: 1;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-}
-
-.cm-close:hover {
-    background: #f5f5f5;
-}
-
-/* Body: scrollable and split columns */
-.cm-body {
-    overflow: auto;
-    padding: 20px;
-    display: grid;
-    grid-template-columns: 1fr 320px; /* main + side panel */
-    gap: 24px;
-}
-
-@media (max-width: 1024px) {
-    .cm-body {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-}
-
-/* Columns */
-.cm-col {
-    min-width: 0;
-}
-
-.cm-col-side {
-    align-self: start;
-}
-
-/* Sections */
-.cm-section-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.cm-textarea, .cm-input {
-    width: 100%;
-    border: 1px solid #e6e6e6;
-    border-radius: 8px;
-    padding: 8px 10px;
-    outline: none;
-}
-
-.cm-textarea:focus, .cm-input:focus {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
-}
-
 /* Buttons */
 .cm-btn {
     border: 1px solid #e6e6e6;
@@ -277,6 +217,7 @@
     border-radius: 8px;
     padding: 6px 10px;
     font-size: 13px;
+    cursor: pointer;
 }
 
 .cm-btn:hover {
@@ -290,6 +231,7 @@
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 13px;
+    cursor: pointer;
 }
 
 .cm-btn-primary:disabled {
@@ -297,7 +239,7 @@
     cursor: not-allowed;
 }
 
-/* Labels list + visual selected state */
+/* Labels list + selected state */
 .cm-labels {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -311,7 +253,7 @@
 }
 
 .cm-label {
-    --c: #ddd; /* color from style attr */
+    --c: #ddd; /* color provided inline via [style.--c] */
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -322,7 +264,7 @@
     cursor: pointer;
     user-select: none;
     position: relative;
-    transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease;
+    transition: transform .06s ease, box-shadow .15s ease;
 }
 
 .cm-label:hover {
@@ -332,21 +274,15 @@
 
 .cm-label.is-selected,
 .cm-label[aria-pressed="true"] {
-    /*outline-offset: 2px;*/
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), #fff 70%);
 }
 
+/* Color dot (labels) */
 .cm-dot {
     width: 12px;
     height: 12px;
     border-radius: 999px;
     flex: 0 0 12px;
-}
-
-.cm-check {
-    margin-left: auto;
-    font-weight: 700;
-    opacity: .9;
 }
 
 /* Current label pills row */
@@ -416,7 +352,8 @@
     color: #2563eb;
 }
 
-.cm-dot {
+/* Tiny meta separator dot (avoid conflict with .cm-dot above) */
+.cm-meta-dot {
     width: 4px;
     height: 4px;
     border-radius: 999px;
@@ -458,4 +395,411 @@
     place-items: center;
     background: #e5e7eb;
     font-weight: 600;
+}
+
+/* chip for compact “already set” info */
+.cm-chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs hover:bg-gray-50;
+}
+
+/* “Add to card” palette buttons */
+.cm-add {
+    @apply w-full rounded-md border px-3 py-2 text-sm text-left hover:bg-gray-50;
+}
+
+/* card-modal.component.css */
+.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide,
+.cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
+.mr-1 {
+    margin-right: .375rem;
+}
+
+/* if not using Tailwind's mr-1 */
+
+.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide,
+.cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
+.mr-1 {
+    margin-right: .375rem;
+}
+
+.cm-attachments {
+    display: grid;
+    gap: 12px;
+}
+
+.cm-attachment {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.cm-attachment-thumb {
+    position: relative;
+    width: 120px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cm-attachment-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cm-attachment-icon {
+    opacity: .7;
+}
+
+.cm-attachment-cover {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    font-size: 11px;
+    background: #111827;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.cm-attachment-body {
+    display: grid;
+    gap: 6px;
+}
+
+.cm-attachment-name {
+    font-weight: 600;
+}
+
+.cm-attachment-meta {
+    color: #6b7280;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cm-attachment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.cm-header-cover {
+    width: 100%;
+    max-height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.cm-attachment-video, .cm-attachment-audio, .cm-attachment-pdf {
+    width: 100%;
+    max-height: 220px;
+    border: 0;
+}
+
+.cm-attachment-pdf {
+    height: 220px;
+}
+
+/* Badge next to title count */
+.cm-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Drag & drop zone */
+.cm-dropzone {
+    border: 1.5px dashed #d1d5db;
+    border-radius: 10px;
+    background: #fafafa;
+    padding: 10px 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.cm-dropzone.is-active {
+    border-color: #2563eb;
+    background: #f0f6ff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.cm-dropzone:focus-visible {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+
+.cm-dropzone-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cm-dropzone-icon .lucide {
+    width: 18px;
+    height: 18px;
+    opacity: .85;
+}
+
+.cm-dropzone-text strong {
+    font-weight: 700;
+}
+
+.cm-dropzone-text .cm-muted {
+    margin-top: 2px;
+}
+
+/* Uploading row */
+.cm-uploading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    font-size: 13px;
+}
+
+.cm-spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    border: 2px solid #cbd5e1;
+    border-top-color: #2563eb;
+    animation: cmSpin .9s linear infinite;
+}
+
+@keyframes cmSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Attachment card tweaks */
+.cm-attachment {
+    position: relative;
+}
+
+.cm-attachment-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+/* File extension badge */
+.cm-ext-badge {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #334155;
+    background: #e2e8f0;
+    letter-spacing: .02em;
+}
+
+/* Hover overlay on thumb */
+.cm-attachment-thumb {
+    isolation: isolate;
+}
+
+.cm-attachment-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(17, 24, 39, .45);
+    opacity: 0;
+    transition: opacity .15s ease;
+    z-index: 1;
+}
+
+.cm-attachment-thumb:hover .cm-attachment-overlay {
+    opacity: 1;
+}
+
+.cm-overlay-btn {
+    border: 0;
+    background: #ffffff;
+    color: #111827;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+    cursor: pointer;
+}
+
+.cm-overlay-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* Tiny inline progress */
+.cm-progress {
+    width: 100%;
+    height: 4px;
+    background: #eef2f7;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.cm-progress-bar {
+    height: 100%;
+    background: #2563eb;
+    border-radius: inherit;
+    transition: width .15s ease;
+}
+
+/* Empty state */
+.cm-empty {
+    border: 1px dashed #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fafafa;
+    text-align: center;
+    color: #64748b;
+}
+
+.cm-empty-icon .lucide {
+    width: 20px;
+    height: 20px;
+    opacity: .8;
+}
+
+.cm-empty-text {
+    font-weight: 700;
+    color: #334155;
+    margin-top: 4px;
+}
+
+.cm-empty-sub {
+    font-size: 12px;
+    margin-top: 2px;
+    color: #94a3b8;
+}
+
+/* Attachment actions: compact pill bar */
+.cm-actionbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    width: fit-content;
+}
+
+.cm-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    line-height: 1;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s ease, box-shadow .15s ease, transform .06s ease;
+}
+.cm-action:hover { background: #f3f4f6; }
+.cm-action:active { transform: translateY(1px); }
+.cm-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+}
+
+.cm-action .lucide { width: 1em; height: 1em; }
+
+/* “Danger” button */
+.cm-action--danger {
+    color: #b91c1c;
+    border-color: #fee2e2;
+    background: #fff;
+}
+.cm-action--danger:hover { background: #fef2f2; }
+.cm-action--danger:focus-visible { box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
+
+/* Disabled state (e.g., already cover) */
+.cm-action:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    background: #f9fafb;
+}
+
+/* Responsive: collapse labels on very narrow widths */
+@media (max-width: 420px) {
+    .cm-actionbar { gap: 6px; padding: 4px; }
+    .cm-action { padding: 6px; }
+    .cm-action span { display: none; } /* icon-only on tiny screens */
+}
+
+
+/* Wider side column, slightly narrower main (desktop) */
+.cm-body {
+    /* was: grid-template-columns: 1fr 320px; */
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 34vw, 560px);
+}
+
+/* Make the whole panel a bit wider on large screens */
+.cm-panel {
+    /* was: width: min(60vw, 1100px); max-width:1200px */
+    width: min(72vw, 1200px);
+    max-width: 1200px;
+}
+
+/* Ensure columns can shrink without overflow */
+.cm-col { min-width: 0; }
+.cm-col-main { min-width: 0; }
+.cm-col-side { min-width: 0; }
+
+/* Give attachment rows a touch more breathing room so text wraps cleaner */
+.cm-attachment {
+    /* was: 120px + 1fr */
+    grid-template-columns: 140px 1fr;
+}
+.cm-attachment-thumb {
+    width: 140px;               /* keep aspect + larger visual anchor */
+    height: 92px;
+}
+
+/* Tighten main column typography just a bit to compensate for width shift */
+.cm-description {
+    line-height: 1.55;
+}
+
+/* Responsive: single column stays as-is on tablets/phones */
+@media (max-width: 1024px) {
+    .cm-panel { width: auto; }  /* keep your existing mobile behavior */
+    .cm-body { grid-template-columns: 1fr; }
 }

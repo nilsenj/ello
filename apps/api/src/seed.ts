@@ -1,10 +1,54 @@
 // apps/api/src/seed.ts
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaClient, Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
 const prisma = new PrismaClient();
 
+/* ========== AUTH USERS ========== */
+async function seedAuthUsers() {
+  const rounds = Number(process.env.BCRYPT_ROUNDS || 12);
+
+  const users = [
+    { email: 'admin@ello.dev', name: 'Admin',     password: 'admin123', role: 'owner' as Role },
+    { email: 'user@ello.dev',  name: 'Demo User', password: 'user123',  role: 'member' as Role },
+  ];
+
+  const created: Record<'admin' | 'demo', { id: string; email: string }> = {} as any;
+
+  for (const u of users) {
+    const hash = await bcrypt.hash(u.password, rounds);
+
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, password: hash },
+      create: { email: u.email, name: u.name, password: hash },
+      select: { id: true, email: true },
+    });
+
+    // Create/refresh a long-lived dev refresh token (idempotent)
+    const token = `dev-${user.id}-refresh`;
+    const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000); // +30d
+
+    await prisma.refreshToken.upsert({
+      where: { token },
+      update: { expiresAt, userId: user.id },
+      create: { token, userId: user.id, expiresAt },
+    });
+
+    if (u.email.startsWith('admin')) created.admin = user as any;
+    if (u.email.startsWith('user'))  created.demo  = user as any;
+
+    console.log(`Seeded user: ${u.email} (pw: ${u.password})`);
+  }
+
+  return created;
+}
+
+/* ========== WORKSPACE / BOARD HELPERS ========== */
 async function ensureWorkspace(name: string) {
   return prisma.workspace.upsert({
-    where: { name }, // Workspace.name is unique
+    where: { name },
     update: {},
     create: { name },
     select: { id: true, name: true },
@@ -12,7 +56,6 @@ async function ensureWorkspace(name: string) {
 }
 
 async function ensureBoard(workspaceId: string, name: string) {
-  // Requires @@unique([workspaceId, name]) in Board (you added this)
   return prisma.board.upsert({
     where: { workspaceId_name: { workspaceId, name } },
     update: {},
@@ -22,26 +65,18 @@ async function ensureBoard(workspaceId: string, name: string) {
 }
 
 async function ensureLists(boardId: string, names: string[]) {
-  // rank: 'n', 'nn', 'nnn' ... simple increasing ranks
-  let ranks: string[] = [];
-  for (let i = 0; i < names.length; i++) ranks.push('n'.repeat(i + 1));
+  const ranks = names.map((_, i) => 'n'.repeat(i + 1));
 
+  // Stable upserts by synthetic IDs (idempotent)
   await prisma.$transaction(
       names.map((name, i) =>
           prisma.list.upsert({
-            where: { // unique safeguard: one per board+name
-              // If you don't have a unique, you can change to findFirst + create
-              // but using an explicit composite is best:
-              // @@unique([boardId, name]) in List (optional but handy)
-              // For now, fallback to synthetic where that can’t exist → findFirst below
-              id: '___never___' // force upsert create; or do findFirst + create
-            },
+            where: { id: `seed_list_${boardId}_${i}`.slice(0, 48) },
             update: {},
-            create: { name, boardId, rank: ranks[i] }
+            create: { id: `seed_list_${boardId}_${i}`.slice(0, 48), name, boardId, rank: ranks[i] },
           })
       )
   ).catch(async () => {
-    // If you don't have a unique on (boardId,name), do idempotent createMany with ignoreDuplicates
     await prisma.list.createMany({
       data: names.map((name, i) => ({ name, boardId, rank: ranks[i] })),
       skipDuplicates: true,
@@ -49,7 +84,7 @@ async function ensureLists(boardId: string, names: string[]) {
   });
 }
 
-const DEFAULT_LABELS: { name: string; color: string }[] = [
+const DEFAULT_LABELS = [
   { name: 'green',  color: '#61BD4F' },
   { name: 'yellow', color: '#F2D600' },
   { name: 'orange', color: '#FF9F1A' },
@@ -60,16 +95,13 @@ const DEFAULT_LABELS: { name: string; color: string }[] = [
   { name: 'lime',   color: '#51E898' },
   { name: 'sky',    color: '#00C2E0' },
   { name: 'black',  color: '#344563' },
-];
+] as const;
 
 async function ensureLabels(boardId: string) {
-  // Label has @@unique([boardId, name])
   await prisma.$transaction(
       DEFAULT_LABELS.map(l =>
           prisma.label.upsert({
-            where: {
-              boardId_name_color: { boardId, name: l.name, color: l.color },
-            },
+            where: { boardId_name_color: { boardId, name: l.name, color: l.color } },
             update: { color: l.color },
             create: { name: l.name, color: l.color, boardId },
           })
@@ -78,65 +110,83 @@ async function ensureLabels(boardId: string) {
 }
 
 async function addDemoCardsWithLabels(boardId: string) {
-  // Fetch lists and a couple of labels to attach to cards
   const lists = await prisma.list.findMany({ where: { boardId }, orderBy: { rank: 'asc' } });
-  if (lists.length === 0) return;
-
+  if (lists.length < 3) return;
   const [backlog, todo, inprogress] = [lists[0], lists[1], lists[2]];
 
   const labels = await prisma.label.findMany({
     where: { boardId, name: { in: ['green', 'yellow', 'red'] } },
   });
-  const green = labels.find(l => l.name === 'green');
-  const yellow = labels.find(l => l.name === 'yellow');
-  const red = labels.find(l => l.name === 'red');
 
-  // Helper to create card w/ optional labels by name
   const mk = async (listId: string, title: string, labelNames: string[] = []) => {
+    const id = `seed_${listId}_${title}`.replace(/\s+/g, '_').slice(0, 48);
     const created = await prisma.card.upsert({
-      where: { id: `seed_${listId}_${title}`.slice(0, 24) }, // stable id to keep upsert idempotent (shorten to avoid >25 chars)
+      where: { id },
       update: {},
-      create: {
-        id: `seed_${listId}_${title}`.slice(0, 24),
-        title,
-        listId,
-        rank: 'n',
-      },
+      create: { id, title, listId, rank: 'n' },
+      select: { id: true },
     });
 
     if (labelNames.length) {
-      const toConnect = labels.filter(l => labelNames.includes(l.name)).map(l => ({ cardId: created.id, labelId: l.id }));
-      // connect ignoring duplicates
+      const toConnect = labels
+          .filter(l => labelNames.includes(l.name))
+          .map(l => ({ cardId: created.id, labelId: l.id }));
       await prisma.cardLabel.createMany({ data: toConnect, skipDuplicates: true });
     }
   };
 
   await mk(backlog.id, 'Collect requirements', ['green']);
-  await mk(todo.id, 'Design wireframes', ['yellow']);
-  await mk(inprogress.id, 'Implement auth', ['red', 'yellow']);
+  await mk(todo.id,    'Design wireframes',    ['yellow']);
+  await mk(inprogress.id, 'Implement auth',    ['red', 'yellow']);
 }
 
-async function main() {
-  // 1) Workspace
-  const ws = await ensureWorkspace('Demo Workspace');
+/* ========== MEMBERSHIP HELPERS ========== */
+async function ensureWorkspaceMember(workspaceId: string, userId: string, role: Role) {
+  await prisma.workspaceMember.upsert({
+    where: { userId_workspaceId: { userId, workspaceId } },
+    update: { role },
+    create: { userId, workspaceId, role },
+  });
+}
 
-  // 2) Boards
-  const demoBoard = await ensureBoard(ws.id, 'Demo Board');
+async function ensureBoardMember(boardId: string, userId: string, role: Role) {
+  await prisma.boardMember.upsert({
+    where: { userId_boardId: { userId, boardId } },
+    update: { role },
+    create: { userId, boardId, role },
+  });
+}
+
+/* ========== MAIN ========== */
+async function main() {
+  // 0) Users (auth + refresh tokens)
+  const { admin, demo } = await seedAuthUsers();
+
+  // 1) Workspace & boards
+  const ws = await ensureWorkspace('Demo Workspace');
+  const demoBoard    = await ensureBoard(ws.id, 'Demo Board');
   const productBoard = await ensureBoard(ws.id, 'Product Launch');
 
-  // 3) Lists per board
+  // 2) Link users to workspace/boards with roles
+  await ensureWorkspaceMember(ws.id, admin.id, 'owner');
+  await ensureWorkspaceMember(ws.id, demo.id,  'member');
+
+  for (const b of [demoBoard, productBoard]) {
+    await ensureBoardMember(b.id, admin.id, 'owner');
+    await ensureBoardMember(b.id, demo.id,  'member');
+  }
+
+  // 3) Lists, labels, demo cards
   const defaultLists = ['Backlog', 'To Do', 'In Progress', 'Review', 'Done'];
   await ensureLists(demoBoard.id, defaultLists);
   await ensureLists(productBoard.id, defaultLists);
 
-  // 4) Labels per board
   await ensureLabels(demoBoard.id);
   await ensureLabels(productBoard.id);
 
-  // 5) A few cards + labels on Demo Board
   await addDemoCardsWithLabels(demoBoard.id);
 
-  console.log('✅ Seed completed: workspace, boards, lists, labels, and demo cards.');
+  console.log('✅ Seed completed: users + memberships + workspace/boards/lists/labels/cards.');
 }
 
 main()

@@ -2,14 +2,28 @@
 import type {FastifyInstance, FastifyRequest} from 'fastify';
 import type {PrismaClient} from '@prisma/client';
 import {between} from '../utils/rank.js';
+import {ensureUser} from '../utils/ensure-user.js';
 
 type ListParams = { listId: string };
 type CreateCardBody = { title: string; description?: string };
 type CardParams = { id: string };
 type MoveBody = { beforeId?: string | null; afterId?: string | null; toListId: string };
 type CommentCreateBody = { text: string };
+type PatchCardBody = Partial<{
+    title: string;
+    description: string;
+    startDate: string | null;  // ISO
+    dueDate: string | null;    // ISO
+    priority: 'low' | 'medium' | 'high' | 'urgent' | null;
+    risk: 'low' | 'medium' | 'high' | null;
+    estimate: number | null;
+    isArchived: boolean;
+    isDone: boolean;
+}>;
 
-// helper: shape card → include labelIds
+// --- helpers ---------------------------------------------------------------
+const has = (o: any, k: string) => Object.prototype.hasOwnProperty.call(o ?? {}, k);
+
 const shapeCard = (c: any) => ({
     id: c.id,
     title: c.title,
@@ -19,44 +33,104 @@ const shapeCard = (c: any) => ({
     labelIds: (c.labels ?? []).map((x: any) => x.labelId),
 });
 
+
+// Accepts ISO string (or date-only 'YYYY-MM-DD'), returns Date or null
+function toDateOrNull(v: unknown): Date | null {
+    if (v === null) return null;
+    if (typeof v !== 'string') return null;
+    // Support date-only values by normalizing to 00:00:00 local (or choose UTC)
+    const iso = /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T00:00:00` : v;
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+async function boardIdByList(prisma: PrismaClient, listId: string) {
+    const row = await prisma.list.findUnique({
+        where: {id: listId},
+        select: {boardId: true},
+    });
+    return row?.boardId ?? null;
+}
+
+async function boardIdByCard(prisma: PrismaClient, cardId: string) {
+    const row = await prisma.card.findUnique({
+        where: {id: cardId},
+        select: {list: {select: {boardId: true}}},
+    });
+    return row?.list?.boardId ?? null;
+}
+
+async function assertBoardMember(prisma: PrismaClient, boardId: string | null, userId: string) {
+    if (!boardId) {
+        const err: any = new Error('Not Found');
+        err.statusCode = 404;
+        throw err;
+    }
+    const member = await prisma.boardMember.findFirst({
+        where: {boardId, userId},
+        select: {id: true},
+    });
+    if (!member) {
+        const err: any = new Error('Forbidden');
+        err.statusCode = 403;
+        throw err;
+    }
+}
+
+// --- routes ----------------------------------------------------------------
+
 export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaClient) {
-    // list-scoped: read (RETURN labelIds)
+    // list-scoped: read (RETURN labelIds) — members only
     app.get('/api/lists/:listId/cards', async (req: FastifyRequest<{ Params: ListParams }>) => {
+        const user = ensureUser(req);
         const {listId} = req.params;
+
+        const bId = await boardIdByList(prisma, listId);
+        await assertBoardMember(prisma, bId, user.id);
+
         const cards = await prisma.card.findMany({
             where: {listId},
             orderBy: {rank: 'asc'},
-            include: {labels: {select: {labelId: true}}}, // <— include junctions
+            include: {labels: {select: {labelId: true}}},
         });
         return cards.map(shapeCard);
     });
 
-    // ADD: read one card with relations
+    // read one card with relations — members only
     app.get('/api/cards/:id', async (req: FastifyRequest<{ Params: CardParams }>) => {
+        const user = ensureUser(req);
         const {id} = req.params;
+
+        const bId = await boardIdByCard(prisma, id);
+        await assertBoardMember(prisma, bId, user.id);
+
         return prisma.card.findUnique({
             where: {id},
             include: {
-                labels: { select: { labelId: true } },
+                labels: {select: {labelId: true}},
                 assignees: {include: {user: true}},
                 checklists: {include: {items: true}},
                 attachments: true,
-                comments: { include: { author: true }, orderBy: { createdAt: 'desc' } },
+                comments: {include: {author: true}, orderBy: {createdAt: 'desc'}},
             },
         });
     });
 
-    // list-scoped: create (RETURN labelIds)
+    // create card in list — members only
     app.post('/api/lists/:listId/cards', async (req: FastifyRequest<{ Params: ListParams; Body: CreateCardBody }>) => {
+        const user = ensureUser(req);
         const {listId} = req.params;
         const {title, description} = req.body;
 
-        const before = await prisma.card.findFirst({
+        const bId = await boardIdByList(prisma, listId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        const prev = await prisma.card.findFirst({
             where: {listId},
             orderBy: {rank: 'desc'},
             select: {rank: true},
         });
-        const newRank = between(before?.rank ?? null, null); // append
+        const newRank = between(prev?.rank ?? null, null);
 
         const created = await prisma.card.create({
             data: {listId, title, description, rank: newRank},
@@ -65,22 +139,38 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return shapeCard(created);
     });
 
-    // edit (RETURN labelIds)
+    // edit card — members only
     app.patch('/api/cards/:id', async (req: FastifyRequest<{ Params: CardParams; Body: Partial<CreateCardBody> }>) => {
+        const user = ensureUser(req);
         const {id} = req.params;
-        const data = req.body;
+
+        const bId = await boardIdByCard(prisma, id);
+        await assertBoardMember(prisma, bId, user.id);
+
         const updated = await prisma.card.update({
             where: {id},
-            data,
+            data: req.body,
             include: {labels: {select: {labelId: true}}},
         });
         return shapeCard(updated);
     });
 
-    // move/reorder (RETURN labelIds)
+    // move/reorder — members only
     app.post('/api/cards/:id/move', async (req: FastifyRequest<{ Params: CardParams; Body: MoveBody }>) => {
+        const user = ensureUser(req);
         const {id} = req.params;
         const {toListId, beforeId, afterId} = req.body;
+
+        const srcBoardId = await boardIdByCard(prisma, id);
+        const dstBoardId = await boardIdByList(prisma, toListId);
+        await assertBoardMember(prisma, srcBoardId, user.id);
+        await assertBoardMember(prisma, dstBoardId, user.id);
+
+        if (srcBoardId !== dstBoardId) {
+            const err: any = new Error('Moving across boards is not allowed');
+            err.statusCode = 400;
+            throw err;
+        }
 
         const before = beforeId
             ? await prisma.card.findUnique({where: {id: beforeId}, select: {rank: true}})
@@ -100,55 +190,102 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return shapeCard(moved);
     });
 
-    app.delete('/api/cards/:id', (req: FastifyRequest<{ Params: CardParams }>) => {
+    // delete — members only
+    app.delete('/api/cards/:id', async (req: FastifyRequest<{ Params: CardParams }>) => {
+        const user = ensureUser(req);
         const {id} = req.params;
+
+        const bId = await boardIdByCard(prisma, id);
+        await assertBoardMember(prisma, bId, user.id);
+
         return prisma.card.delete({where: {id}});
     });
 
-    // ADD: patch extended fields
-    type PatchCardBody = Partial<{
-        title: string;
-        description: string;
-        startDate: string | null;
-        dueDate: string | null;
-        priority: 'low' | 'medium' | 'high' | 'urgent';
-        isArchived: boolean;
-    }>;
+    // ---- extended fields -----------------------------------------------------
 
-    app.patch('/api/cards/:id/extended', (req: FastifyRequest<{ Params: CardParams; Body: PatchCardBody }>) => {
+    app.patch('/api/cards/:id/extended', async (
+        req: FastifyRequest<{ Params: CardParams; Body: PatchCardBody }>
+    ) => {
+        const user = ensureUser(req);
         const {id} = req.params;
-        const {startDate, dueDate, ...rest} = req.body;
-        return prisma.card.update({
-            where: {id},
-            data: {
-                ...rest,
-                startDate: startDate ? new Date(startDate) : null,
-                dueDate: dueDate ? new Date(dueDate) : null,
-            },
-        });
+
+        const bId = await boardIdByCard(prisma, id);
+        await assertBoardMember(prisma, bId, user.id);
+
+        const body = req.body ?? {};
+        const data: Record<string, any> = {};
+
+        // Copy simple fields if present
+        if (has(body, 'title')) data.title = body.title;
+        if (has(body, 'description')) data.description = body.description;
+        if (has(body, 'priority')) data.priority = body.priority;
+        if (has(body, 'isArchived')) data.isArchived = body.isArchived;
+        if (has(body, 'risk')) data.risk = body.risk;
+        if (has(body, 'estimate')) data.estimate = body.estimate;
+        if (has(body, 'isDone')) data.isDone = !!body.isDone;
+
+        // Dates: only touch them if keys are present
+        if (has(body, 'startDate')) data.startDate = toDateOrNull(body.startDate as any);
+        if (has(body, 'dueDate')) data.dueDate = toDateOrNull(body.dueDate as any);
+
+        return prisma.card.update({where: {id}, data});
     });
 
-    // ---------------- Assignees ----------------
+    // ---- labels (added to match UI) ------------------------------------------
+
+    app.post('/api/cards/:cardId/labels', async (
+        req: FastifyRequest<{ Params: { cardId: string }; Body: { labelId: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const {cardId} = req.params;
+        const {labelId} = req.body ?? {};
+        if (!labelId) return reply.code(400).send({error: 'labelId required'});
+
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        await prisma.cardLabel.upsert({
+            where: {cardId_labelId: {cardId, labelId}},
+            update: {},
+            create: {cardId, labelId},
+        });
+        return reply.code(204).send();
+    });
+
+    app.delete('/api/cards/:cardId/labels/:labelId', async (
+        req: FastifyRequest<{ Params: { cardId: string; labelId: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const {cardId, labelId} = req.params;
+
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        await prisma.cardLabel.delete({where: {cardId_labelId: {cardId, labelId}}}).catch(() => {
+        });
+        return reply.code(204).send();
+    });
+
+    // ---- assignees -----------------------------------------------------------
+
     type AssignBody = { userId: string };
 
-    app.post('/api/cards/:cardId/assignees', async (req: FastifyRequest<{
-        Params: { cardId: string },
-        Body: AssignBody
-    }>, reply) => {
+    app.post('/api/cards/:cardId/assignees', async (
+        req: FastifyRequest<{ Params: { cardId: string }; Body: AssignBody }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {cardId} = req.params;
-        const {userId} = req.body;
+        const {userId} = req.body ?? {};
         if (!userId) return reply.code(400).send({error: 'userId required'});
 
-        // Optional safety: ensure user is member of the card's board
-        const card = await prisma.card.findUnique({
-            where: {id: cardId},
-            select: {list: {select: {boardId: true}}}
-        });
-        if (!card) return reply.code(404).send({error: 'Card not found'});
-        const member = await prisma.boardMember.findFirst({
-            where: {boardId: card.list.boardId, userId}
-        });
-        if (!member) return reply.code(400).send({error: 'User is not a member of this board'});
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        const targetIsMember = await prisma.boardMember.findFirst({where: {boardId: bId!, userId}});
+        if (!targetIsMember) return reply.code(400).send({error: 'Assignee must be a member of this board'});
 
         await prisma.cardMember.upsert({
             where: {cardId_userId: {cardId, userId}},
@@ -158,33 +295,42 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return reply.code(204).send();
     });
 
-    app.delete('/api/cards/:cardId/assignees/:userId', async (req: FastifyRequest<{
-        Params: { cardId: string, userId: string }
-    }>, reply) => {
+    app.delete('/api/cards/:cardId/assignees/:userId', async (
+        req: FastifyRequest<{ Params: { cardId: string; userId: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {cardId, userId} = req.params;
-        await prisma.cardMember.delete({
-            where: {cardId_userId: {cardId, userId}},
-        }).catch(() => {
+
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        await prisma.cardMember.delete({where: {cardId_userId: {cardId, userId}}}).catch(() => {
         });
         return reply.code(204).send();
     });
 
-// ---------------- Checklists ----------------
+    // ---- checklists ----------------------------------------------------------
+
     type ChecklistCreateBody = { title: string };
     type ChecklistRenameBody = { title: string };
 
-    app.post('/api/cards/:cardId/checklists', async (req: FastifyRequest<{
-        Params: { cardId: string },
-        Body: ChecklistCreateBody
-    }>, reply) => {
+    app.post('/api/cards/:cardId/checklists', async (
+        req: FastifyRequest<{ Params: { cardId: string }; Body: ChecklistCreateBody }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {cardId} = req.params;
         const {title} = req.body ?? {};
         if (!title?.trim()) return reply.code(400).send({error: 'title required'});
 
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
         const last = await prisma.checklist.findFirst({
             where: {cardId},
             orderBy: {position: 'desc'},
-            select: {position: true}
+            select: {position: true},
         });
         const position = (last?.position ?? 0) + 1;
 
@@ -192,11 +338,18 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return created;
     });
 
-    app.patch('/api/checklists/:id', async (req: FastifyRequest<{
-        Params: { id: string },
-        Body: ChecklistRenameBody
-    }>, reply) => {
+    app.patch('/api/checklists/:id', async (
+        req: FastifyRequest<{ Params: { id: string }; Body: ChecklistRenameBody }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {id} = req.params;
+
+        const bId = await prisma.checklist
+            .findUnique({where: {id}, select: {card: {select: {list: {select: {boardId: true}}}}}})
+            .then(r => r?.card?.list?.boardId ?? null);
+        await assertBoardMember(prisma, bId, user.id);
+
         const {title} = req.body ?? {};
         if (!title?.trim()) return reply.code(400).send({error: 'title required'});
 
@@ -204,22 +357,29 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return updated;
     });
 
-// ---------------- Checklist Items ----------------
+    // ---- checklist items -----------------------------------------------------
+
     type ChecklistItemCreateBody = { text: string };
     type ChecklistItemPatchBody = { text?: string; done?: boolean };
 
-    app.post('/api/checklists/:id/items', async (req: FastifyRequest<{
-        Params: { id: string },
-        Body: ChecklistItemCreateBody
-    }>, reply) => {
+    app.post('/api/checklists/:id/items', async (
+        req: FastifyRequest<{ Params: { id: string }; Body: ChecklistItemCreateBody }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {id} = req.params;
         const {text} = req.body ?? {};
         if (!text?.trim()) return reply.code(400).send({error: 'text required'});
 
+        const bId = await prisma.checklist
+            .findUnique({where: {id}, select: {card: {select: {list: {select: {boardId: true}}}}}})
+            .then(r => r?.card?.list?.boardId ?? null);
+        await assertBoardMember(prisma, bId, user.id);
+
         const last = await prisma.checklistItem.findFirst({
             where: {checklistId: id},
             orderBy: {position: 'desc'},
-            select: {position: true}
+            select: {position: true},
         });
         const position = (last?.position ?? 0) + 1;
 
@@ -227,11 +387,20 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return created;
     });
 
-    app.patch('/api/checklist-items/:id', async (req: FastifyRequest<{
-        Params: { id: string },
-        Body: ChecklistItemPatchBody
-    }>) => {
+    app.patch('/api/checklist-items/:id', async (
+        req: FastifyRequest<{ Params: { id: string }; Body: ChecklistItemPatchBody }>
+    ) => {
+        const user = ensureUser(req);
         const {id} = req.params;
+
+        const bId = await prisma.checklistItem
+            .findUnique({
+                where: {id},
+                select: {checklist: {select: {card: {select: {list: {select: {boardId: true}}}}}}}
+            })
+            .then(r => r?.checklist?.card?.list?.boardId ?? null);
+        await assertBoardMember(prisma, bId, user.id);
+
         const data: ChecklistItemPatchBody = {};
         if (typeof req.body?.text === 'string') data.text = req.body.text;
         if (typeof req.body?.done === 'boolean') data.done = req.body.done;
@@ -240,55 +409,41 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return updated;
     });
 
-// ---------------- Comments ----------------
-// NOTE: Replace this with your real auth integration
-    function getUserId(req: FastifyRequest) {
-        // real auth → set req.user.id or forward header from frontend
-        return (req as any).user?.id || (req.headers['x-user-id'] as string) || 'demo-user';
-    }
+    // ---- comments ------------------------------------------------------------
 
-    // ensure there is a row in User table for this id
-    async function ensureAuthor(prisma: PrismaClient, id: string) {
-        // we also need an email because it's unique+required
-        const email = `${id}@local.invalid`;
-        await prisma.user.upsert({
-            where: {id},
-            update: {},
-            create: {
-                id,                // you can set id explicitly even if @default(cuid())
-                email,
-                name: id === 'demo-user' ? 'Demo User' : id,
-                password: 'x',     // placeholder; irrelevant if you don’t use password login
-            },
-        });
-    }
-
-    app.post('/api/cards/:cardId/comments', async (req: FastifyRequest<{
-        Params: { cardId: string },
-        Body: { text: string }
-    }>, reply) => {
+    app.post('/api/cards/:cardId/comments', async (
+        req: FastifyRequest<{ Params: { cardId: string }; Body: CommentCreateBody }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
         const {cardId} = req.params;
         const {text} = req.body ?? {};
         if (!text?.trim()) return reply.code(400).send({error: 'text required'});
 
-        const authorId = getUserId(req);
-        await ensureAuthor(prisma, authorId);  // <-- make sure FK target exists
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
 
         const created = await prisma.comment.create({
-            data: {text, authorId, cardId},
+            data: {text, authorId: user.id, cardId},
             include: {author: {select: {id: true, name: true, avatar: true}}},
         });
         return created;
     });
 
     app.delete('/api/comments/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const user = ensureUser(req);
         const {id} = req.params;
 
-        // Optional enforcement: only author can delete
-        const authorId = getUserId(req);
-        const c = await prisma.comment.findUnique({where: {id}, select: {authorId: true}});
+        const c = await prisma.comment.findUnique({
+            where: {id},
+            select: {authorId: true, card: {select: {list: {select: {boardId: true}}}}},
+        });
         if (!c) return reply.code(204).send();
-        if (c.authorId !== authorId) return reply.code(403).send({error: 'Forbidden'});
+
+        await assertBoardMember(prisma, c.card.list.boardId, user.id);
+
+        // Optional: enforce author-only deletion
+        // if (c.authorId !== user.id) return reply.code(403).send({ error: 'Forbidden' });
 
         await prisma.comment.delete({where: {id}});
         return reply.code(204).send();

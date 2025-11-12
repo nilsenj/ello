@@ -3,12 +3,14 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@fastify/cookie": "^9.4.0",
     "@fastify/cors": "^8",
-    "@fastify/multipart": "^7",
+    "@fastify/jwt": "^8",
+    "@fastify/multipart": "^7.7.3",
+    "@fastify/static": "6.1.0",
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^3.0.3",
     "csv-parse": "^6.1.0",
-    "dotenv": "^17.2.3",
     "fastify": "^4",
     "fastify-plugin": "^5.1.0",
     "fractional-indexing": "^3.2.0",
@@ -16,23 +18,22 @@
     "zod": "^4.1.12"
   },
   "pnpm": {
-    "overrides": {
-      "@fastify/multipart": "^8"
-    }
+    "overrides": {}
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.0",
+    "dotenv": "^17.2.3",
     "prisma": "^6.19.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.20.6"
   },
   "scripts": {
     "serve": "tsx watch src/main.ts",
     "build": "echo \"(bundling optional; using tsx for dev)\"",
     "prepare": "prisma generate --schema=./prisma/schema.prisma",
-    "db:generate": "pnpm -F api prisma generate --schema=apps/api/prisma/schema.prisma",
-    "db:migrate": "pnpm -F api prisma migrate dev --schema=apps/api/prisma/schema.prisma",
+    "db:generate": "pnpm -F api prisma generate --schema=./prisma/schema.prisma",
+    "db:migrate": "pnpm -F api prisma migrate dev --schema=./prisma/schema.prisma",
     "db:seed": "pnpm -F api ts-node src/seed.ts",
     "prisma": "prisma",
     "seed": "tsx -r dotenv/config src/seed.ts"

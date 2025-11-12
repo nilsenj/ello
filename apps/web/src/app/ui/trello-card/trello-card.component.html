@@ -1,52 +1,121 @@
 <div
-        class="bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
+        class="relative isolate overflow-hidden bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
         aria-label="Card"
         (click)="openModal($event)"
 >
+    <span *ngIf="card?.priority === 'urgent'"
+          class="absolute -inset-0.5 rounded-md ring-2 ring-red-300/60 animate-pulse pointer-events-none"></span>
+
+    <!-- left priority stripe -->
+    <span
+            *ngIf="priority() as p"
+            class="absolute left-0 top-0 bottom-0 w-1 rounded-l"
+            [style.backgroundColor]="p.dot"
+            aria-hidden="true"
+    ></span>
+    <!-- hover checkbox -->
+    <button
+            class="absolute -left-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            (click)="toggleDone($event)"
+            title="Mark complete"
+            data-stop-open
+    >
+    <span
+            class="inline-flex items-center justify-center w-6 h-6 rounded-full border bg-white shadow"
+            [class.bg-emerald-500]="cardDone()"
+            [class.border-emerald-500]="cardDone()"
+            [class.text-white]="cardDone()"
+    >
+      <svg *ngIf="cardDone()" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0L3.293 9.207a1 1 0 011.414-1.414L8.5 11.586l6.793-6.793a1 1 0 011.414 0z"
+              clip-rule="evenodd" />
+      </svg>
+      <svg *ngIf="!cardDone()" width="16" height="16" viewBox="0 0 24 24" class="text-gray-400">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </span>
+    </button>
     <!-- Labels row -->
     <div class="mb-2 flex flex-wrap gap-1" *ngIf="labelIds(card).length > 0">
     <span
             *ngFor="let lid of labelIds(card)"
             class="inline-block h-2 w-10 rounded"
             [style.backgroundColor]="labelColor(lid)"
-            [attr.title]="labelName(lid)">
-    </span>
+            [attr.title]="labelName(lid)"
+    ></span>
     </div>
 
     <!-- Title / Inline edit -->
     <ng-container *ngIf="!editing; else editMode">
-        <div class="text-ink-base">{{ card.title }}</div>
+        <div class="text-ink-base"
+             [class.line-through]="cardDone()"
+             [class.text-ink-sub]="cardDone()">
+            {{ card.title }}
+        </div>
     </ng-container>
+
     <ng-template #editMode>
-        <div class="space-y-2">
+        <div class="space-y-2" data-stop-open>
             <input
                     class="w-full rounded-md bg-white px-2 py-1 text-sm outline-none focus:ring"
                     [(ngModel)]="titleDraft"
                     (keydown)="onEditKeydown($event)"
-                    placeholder="Card title…"/>
+                    placeholder="Card title…"
+            />
             <div class="flex gap-2">
-                <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-xs"
+                <button
+                        class="rounded-md bg-blue-600 text-white px-3 py-1 text-xs"
                         [disabled]="!(titleDraft?.trim())"
-                        (click)="saveEdit()">Save</button>
-                <button class="rounded-md bg-transparent px-3 py-1 text-xs text-ink-sub hover:underline"
-                        (click)="cancelEdit()">Cancel</button>
+                        (click)="saveEdit()"
+                >
+                    Save
+                </button>
+                <button
+                        class="rounded-md bg-transparent px-3 py-1 text-xs text-ink-sub hover:underline"
+                        (click)="cancelEdit()"
+                >
+                    Cancel
+                </button>
             </div>
         </div>
     </ng-template>
 
-    <!-- Footer actions -->
-    <div class="mt-2 flex items-center gap-2 text-xs text-ink-sub">
-    <span class="inline-flex items-center gap-1">
-      <span class="inline-block w-2 h-2 rounded-full bg-accent-green"></span>
-      low
+    <!-- Meta row: priority • risk • estimation • dates • desc flag -->
+    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-sub">
+        <!-- Priority pill -->
+        <span *ngIf="priority() as p" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
+              [style.backgroundColor]="p.bg" [style.color]="p.fg" [attr.title]="'Priority: ' + p.label">
+      <span class="inline-block w-2 h-2 rounded-full" [style.backgroundColor]="p.dot"></span>
+            {{ p.label }}
     </span>
-        <span *ngIf="card.description" class="inline-block">• desc</span>
 
+        <!-- Risk pill -->
+        <span *ngIf="risk() as r" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
+              [style.backgroundColor]="r.bg" [style.color]="r.fg" [attr.title]="'Risk: ' + r.label">
+      ▲ {{ r.label }}
+    </span>
+
+        <!-- Estimation -->
+        <span *ngIf="estimation() !== null" [attr.title]="'Estimation'">
+      ⏱ {{ estimation() }}
+    </span>
+
+        <!-- Dates -->
+        <span *ngIf="dueInfo() as d" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
+              [ngClass]="d.class" [attr.title]="d.title">
+      🗓 {{ d.text }}
+    </span>
+
+        <!-- Has description -->
+        <span *ngIf="card.description" class="inline-flex items-center gap-1" title="Has description">• desc</span>
+
+        <!-- Right controls -->
         <div class="ml-auto flex items-center gap-1">
-            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showLabels = !showLabels; $event.stopPropagation()">
+            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showLabels = !showLabels; $event.stopPropagation()" data-stop-open>
                 Labels
             </button>
-            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showMore = !showMore; $event.stopPropagation()">
+            <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showMore = !showMore; $event.stopPropagation()" data-stop-open>
                 •••
             </button>
         </div>
@@ -57,7 +126,8 @@
          class="mt-2 bg-white rounded p-2 shadow border relative"
          clickOutside
          (clickOutside)="showLabels = false"
-         (click)="$event.stopPropagation()">
+         (click)="$event.stopPropagation()"
+         data-stop-open>
         <button type="button"
                 class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
                 (click)="showLabels = false">×</button>
@@ -76,7 +146,8 @@
          class="mt-2 bg-white rounded p-2 shadow border relative"
          clickOutside
          (clickOutside)="showMore = false"
-         (click)="$event.stopPropagation()">
+         (click)="$event.stopPropagation()"
+         data-stop-open>
         <button type="button"
                 class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
                 (click)="showMore = false">×</button>

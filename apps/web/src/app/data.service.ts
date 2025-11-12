@@ -3,23 +3,7 @@ import {Injectable, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {firstValueFrom} from 'rxjs';
 import {BoardStore} from "./store/board-store.service";
-
-export type Card = {
-    id: string;
-    title: string;
-    description?: string;
-    rank: string;
-    listId: string;
-};
-
-export type ListDto = {
-    id: string;
-    name?: string;
-    title?: string;
-    rank: string;
-    boardId: string;
-    cards?: Card[] | null;
-};
+import {Board, Card, ListDto} from "./types";
 
 @Injectable({providedIn: 'root'})
 export class DataService {
@@ -31,7 +15,7 @@ export class DataService {
     }
 
     async loadBoards() {
-        const boards = await firstValueFrom(this.http.get<{ id: string; name: string }[]>('/api/boards').pipe());
+        const boards = await firstValueFrom(this.http.get<Board[]>('/api/boards').pipe());
         this.store.setBoards(boards ?? []);
         if (boards?.length) await this.selectBoard(boards[0].id);
     }

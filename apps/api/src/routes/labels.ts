@@ -41,27 +41,4 @@ export async function registerLabelRoutes(app: FastifyInstance, prisma: PrismaCl
         });
         return { ok: true };
     });
-
-    // Body style  (THIS is the one your UI called)
-    app.post('/api/cards/:cardId/labels', async (req, res) => {
-        const { cardId } = req.params as any;
-        const { labelId } = (req.body ?? {}) as { labelId?: string };
-        if (!labelId) return res.status(400).send({ error: 'labelId required' });
-
-        await prisma.cardLabel.upsert({
-            where: { cardId_labelId: { cardId, labelId } },
-            update: {},
-            create: { cardId, labelId },
-        });
-
-        return res.send({ ok: true });
-    });
-
-    app.delete('/api/cards/:cardId/labels/:labelId', async (req) => {
-        const { cardId, labelId } = req.params as any;
-        await prisma.cardLabel.delete({
-            where: { cardId_labelId: { cardId, labelId } },
-        }).catch(() => {});
-        return { ok: true };
-    });
 }

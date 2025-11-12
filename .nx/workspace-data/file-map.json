@@ -15,195 +15,43 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "tsconfig.base.json",
-        "hash": "10258939139953668561"
+        "file": "docker-compose.yml",
+        "hash": "17143880532587014091"
+      },
+      {
+        "file": "pnpm-lock.yaml",
+        "hash": "12755043391836178027"
       },
       {
         "file": "pnpm-workspace.yaml",
         "hash": "4187941375446552466"
       },
       {
-        "file": ".env.example",
-        "hash": "11710807200313730003"
-      },
-      {
         "file": "nx.json",
         "hash": "11493607022105348433"
       },
       {
-        "file": ".gitignore",
-        "hash": "6562147615219035863"
+        "file": "package.json",
+        "hash": "1839570628925634659"
       },
       {
-        "file": "pnpm-lock.yaml",
-        "hash": "17930677679350091623"
-      },
-      {
-        "file": "docker-compose.yml",
-        "hash": "17143880532587014091"
+        "file": "tsconfig.base.json",
+        "hash": "10258939139953668561"
       },
       {
         "file": "README.md",
         "hash": "10527340750855060289"
       },
       {
-        "file": "package.json",
-        "hash": "14832369157653750616"
+        "file": ".gitignore",
+        "hash": "6562147615219035863"
+      },
+      {
+        "file": ".env.example",
+        "hash": "11710807200313730003"
       }
     ],
     "projectFileMap": {
-      "api": [
-        {
-          "file": "apps/api/package.json",
-          "hash": "11460557249982661250",
-          "deps": [
-            "npm:@types/bcryptjs",
-            "npm:@types/jsonwebtoken",
-            "npm:@types/node@24.10.0",
-            "npm:prisma",
-            "npm:tsx",
-            "npm:@fastify/cors",
-            "npm:@fastify/multipart",
-            "npm:@prisma/client",
-            "npm:bcryptjs",
-            "npm:csv-parse",
-            "npm:dotenv@17.2.3",
-            "npm:fastify",
-            "npm:fastify-plugin@5.1.0",
-            "npm:fractional-indexing",
-            "npm:jsonwebtoken",
-            "npm:zod"
-          ]
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106215826_init/migration.sql",
-          "hash": "13749220032901006315"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106232319_add_updatedat/migration.sql",
-          "hash": "2392548919565472977"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251106232827_pnpm_f_api_tsx_r_dotenv_config_src_scripts_backfill_rank_ts/migration.sql",
-          "hash": "1366105824191729927"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251107193815_label_order_archive/migration.sql",
-          "hash": "6792651899624204169"
-        },
-        {
-          "file": "apps/api/prisma/migrations/20251107203202_label_unique_3col/migration.sql",
-          "hash": "4758138774637475377"
-        },
-        {
-          "file": "apps/api/prisma/migrations/migration_lock.toml",
-          "hash": "872437952673290735"
-        },
-        {
-          "file": "apps/api/prisma/schema.prisma",
-          "hash": "6881550891931257598"
-        },
-        {
-          "file": "apps/api/project.json",
-          "hash": "14565464744280114995"
-        },
-        {
-          "file": "apps/api/src/main.ts",
-          "hash": "16510307781255059003",
-          "deps": [
-            "npm:fastify",
-            "npm:@fastify/cors",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/plugins/auth.ts",
-          "hash": "6167540925097356572",
-          "deps": [
-            "npm:fastify-plugin@5.1.0",
-            "npm:bcryptjs",
-            "npm:jsonwebtoken",
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/rank.ts",
-          "hash": "17551602584162012561"
-        },
-        {
-          "file": "apps/api/src/routes/boards.ts",
-          "hash": "14471100814225962168",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/cards.ts",
-          "hash": "9371112088729918691",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/import.ts",
-          "hash": "2462438114655152018",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client",
-            "npm:@fastify/multipart",
-            "npm:csv-parse"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/labels.ts",
-          "hash": "18225248664379289989",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/routes/lists.ts",
-          "hash": "2650737015765543571",
-          "deps": [
-            "npm:fastify",
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/scripts/backfill-rank.ts",
-          "hash": "17791702681499550805",
-          "deps": [
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/seed.ts",
-          "hash": "14439287105409029037",
-          "deps": [
-            "npm:@prisma/client"
-          ]
-        },
-        {
-          "file": "apps/api/src/utils/rank.ts",
-          "hash": "5761137886384326907"
-        },
-        {
-          "file": "apps/api/tsconfig.json",
-          "hash": "16102163062181804005"
-        },
-        {
-          "file": "apps/api/src/lib/authz.ts",
-          "hash": "9262868350528721618",
-          "deps": [
-            "npm:@prisma/client",
-            "npm:fastify"
-          ]
-        }
-      ],
       "web": [
         {
           "file": "apps/web/index.html",
@@ -211,7 +59,7 @@
         },
         {
           "file": "apps/web/package.json",
-          "hash": "6789033215926507440",
+          "hash": "8082278259391160348",
           "deps": [
             "npm:@analogjs/vite-plugin-angular",
             "npm:@tailwindcss/forms",
@@ -232,6 +80,7 @@
             "npm:@angular/platform-browser",
             "npm:@angular/platform-browser-dynamic",
             "npm:@angular/router",
+            "npm:lucide-angular",
             "npm:zone.js"
           ]
         },
@@ -244,6 +93,10 @@
           "hash": "9825194157261494028"
         },
         {
+          "file": "apps/web/proxy.conf.json",
+          "hash": "12644695902242813728"
+        },
+        {
           "file": "apps/web/src/app/app.component.ts",
           "hash": "10032000297048160503",
           "deps": [
@@ -254,14 +107,78 @@
         },
         {
           "file": "apps/web/src/app/app.routes.ts",
-          "hash": "13637218107478413609",
+          "hash": "6814255089275235300",
           "deps": [
+            "npm:@angular/router",
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/auth.guard.ts",
+          "hash": "1264254894581212302",
+          "deps": [
+            "npm:@angular/router",
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/auth.service.ts",
+          "hash": "3632841470944180194",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/forgot.page.ts",
+          "hash": "2521326342161369481",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/guest.guard.ts",
+          "hash": "3121324399151082622",
+          "deps": [
+            "npm:@angular/router",
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/login.page.ts",
+          "hash": "8215108043595275459",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/register.page.ts",
+          "hash": "5856916821119765497",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/auth/reset.page.ts",
+          "hash": "15016953647632045483",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
             "npm:@angular/router"
           ]
         },
         {
           "file": "apps/web/src/app/core/auth-header.interceptor.ts",
-          "hash": "9628320674972694755",
+          "hash": "2332547457024550764",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -269,8 +186,24 @@
           ]
         },
         {
+          "file": "apps/web/src/app/core/auth.interceptor.ts",
+          "hash": "14635122521141728922",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/core/token.service.ts",
+          "hash": "14329348863618157032",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        },
+        {
           "file": "apps/web/src/app/data.service.ts",
-          "hash": "7891324946238897300",
+          "hash": "11948589950167600635",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -279,7 +212,16 @@
         },
         {
           "file": "apps/web/src/app/data/api-base.service.ts",
-          "hash": "12044785072572608053",
+          "hash": "5139375572815106334",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/data/attachments.service.ts",
+          "hash": "17735923165929541072",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -288,19 +230,20 @@
         },
         {
           "file": "apps/web/src/app/data/boards.service.ts",
-          "hash": "10588172455135608802",
+          "hash": "1321818040973991475",
           "deps": [
+            "npm:rxjs@7.8.2",
             "npm:@angular/core",
             "npm:@angular/common"
           ]
         },
         {
           "file": "apps/web/src/app/data/cards.service.ts",
-          "hash": "14944765409679817964",
+          "hash": "3198909719528622995",
           "deps": [
             "npm:@angular/core",
-            "npm:rxjs@7.8.2",
-            "npm:@angular/common"
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
           ]
         },
         {
@@ -329,7 +272,7 @@
         },
         {
           "file": "apps/web/src/app/pages/board-page.component.ts",
-          "hash": "6076595562448866299",
+          "hash": "17883378992467301821",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -345,6 +288,14 @@
           ]
         },
         {
+          "file": "apps/web/src/app/shared/safe-html.pipe.ts",
+          "hash": "15423637658228721855",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/platform-browser"
+          ]
+        },
+        {
           "file": "apps/web/src/app/store/board-store.service.ts",
           "hash": "12213417148583063890",
           "deps": [
@@ -353,11 +304,20 @@
         },
         {
           "file": "apps/web/src/app/types.ts",
-          "hash": "10247459159868941827"
+          "hash": "7810033533807760148"
+        },
+        {
+          "file": "apps/web/src/app/ui/app-header.component.ts",
+          "hash": "3036976491390932381",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/router"
+          ]
         },
         {
           "file": "apps/web/src/app/ui/board-view.component.ts",
-          "hash": "9032560528879094942",
+          "hash": "1990923796711192222",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -367,19 +327,22 @@
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.css",
-          "hash": "6065380617410316670"
+          "hash": "17612944210047524452"
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.html",
-          "hash": "14667151266885990466"
+          "hash": "18400151479427151508"
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.ts",
-          "hash": "2985200554762655164",
+          "hash": "8075662974743556479",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
-            "npm:@angular/forms"
+            "npm:@angular/forms",
+            "npm:rxjs@7.8.2",
+            "npm:lucide-angular",
+            "npm:@angular/platform-browser"
           ]
         },
         {
@@ -437,15 +400,35 @@
         },
         {
           "file": "apps/web/src/app/ui/trello-card/trello-card.component.html",
-          "hash": "13026362867509413042"
+          "hash": "3373720259968662830"
         },
         {
           "file": "apps/web/src/app/ui/trello-card/trello-card.component.ts",
-          "hash": "9219955999223609910",
+          "hash": "7000707056752538358",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
             "npm:@angular/forms"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/ui/user-header/user-header.component.ts",
+          "hash": "5075917395090464172",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/uploads/uploads-viewer.page.ts",
+          "hash": "2925752462976028864",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/router",
+            "npm:@angular/platform-browser"
           ]
         },
         {
@@ -454,13 +437,14 @@
         },
         {
           "file": "apps/web/src/main.ts",
-          "hash": "794853447194165153",
+          "hash": "15714974178647575773",
           "deps": [
             "npm:zone.js",
             "npm:@angular/compiler",
             "npm:@angular/platform-browser",
             "npm:@angular/common",
-            "npm:@angular/router"
+            "npm:@angular/router",
+            "npm:@angular/core"
           ]
         },
         {
@@ -485,12 +469,298 @@
         },
         {
           "file": "apps/web/vite.config.mts",
-          "hash": "13404618539057048517",
+          "hash": "5093355828578272925",
           "deps": [
             "npm:vite",
             "npm:@analogjs/vite-plugin-angular",
             "npm:vite-tsconfig-paths"
           ]
+        },
+        {
+          "file": "apps/web/src/app/shared/uploads-bypass.component.ts",
+          "hash": "2768564668440077020",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/shared/ignore-uploads.strategy.ts",
+          "hash": "164926277408201162",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/environments/environment.ts",
+          "hash": "163516185282336267"
+        },
+        {
+          "file": "apps/web/src/environments/environment.prod.ts",
+          "hash": "10131888685073150121"
+        },
+        {
+          "file": "apps/web/src/app/core/app-config.ts",
+          "hash": "15201944913692542823",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        }
+      ],
+      "api": [
+        {
+          "file": "apps/api/package.json",
+          "hash": "8217760801876040454",
+          "deps": [
+            "npm:@types/bcryptjs",
+            "npm:@types/jsonwebtoken",
+            "npm:@types/node@24.10.1",
+            "npm:dotenv@17.2.3",
+            "npm:prisma",
+            "npm:tsx",
+            "npm:@fastify/cookie",
+            "npm:@fastify/cors",
+            "npm:@fastify/jwt",
+            "npm:@fastify/multipart",
+            "npm:@fastify/static",
+            "npm:@prisma/client",
+            "npm:bcryptjs",
+            "npm:csv-parse",
+            "npm:fastify",
+            "npm:fastify-plugin@5.1.0",
+            "npm:fractional-indexing",
+            "npm:jsonwebtoken",
+            "npm:zod"
+          ]
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106215826_init/migration.sql",
+          "hash": "13749220032901006315"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106232319_add_updatedat/migration.sql",
+          "hash": "2392548919565472977"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251106232827_pnpm_f_api_tsx_r_dotenv_config_src_scripts_backfill_rank_ts/migration.sql",
+          "hash": "1366105824191729927"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251107193815_label_order_archive/migration.sql",
+          "hash": "6792651899624204169"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251107203202_label_unique_3col/migration.sql",
+          "hash": "4758138774637475377"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251109220049_add_auth_token/migration.sql",
+          "hash": "6135484902447389434"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251110203358_add_risk_on_card/migration.sql",
+          "hash": "4353914677234279182"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251111020228_add_card_is_done/migration.sql",
+          "hash": "12208270118061032895"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251112161503_add_size_is_cover_interim/migration.sql",
+          "hash": "11487208834503536208"
+        },
+        {
+          "file": "apps/api/prisma/migrations/migration_lock.toml",
+          "hash": "872437952673290735"
+        },
+        {
+          "file": "apps/api/prisma/schema.prisma",
+          "hash": "8910215482944365618"
+        },
+        {
+          "file": "apps/api/project.json",
+          "hash": "14565464744280114995"
+        },
+        {
+          "file": "apps/api/src/@types/fastify.d.ts",
+          "hash": "11768724223895947410"
+        },
+        {
+          "file": "apps/api/src/lib/authz.ts",
+          "hash": "9262868350528721618",
+          "deps": [
+            "npm:@prisma/client",
+            "npm:fastify"
+          ]
+        },
+        {
+          "file": "apps/api/src/main.ts",
+          "hash": "10581613587932089422",
+          "deps": [
+            "npm:fastify",
+            "npm:@fastify/cors",
+            "npm:@fastify/cookie",
+            "npm:@fastify/static",
+            "npm:@fastify/jwt",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/plugins/auth.ts",
+          "hash": "6167540925097356572",
+          "deps": [
+            "npm:fastify-plugin@5.1.0",
+            "npm:bcryptjs",
+            "npm:jsonwebtoken",
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/rank.ts",
+          "hash": "17551602584162012561"
+        },
+        {
+          "file": "apps/api/src/routes/attachments.ts",
+          "hash": "10368251059079533029",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/auth.ts",
+          "hash": "18103018743671225444",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client",
+            "npm:bcryptjs",
+            "npm:jsonwebtoken"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/boards.ts",
+          "hash": "14471100814225962168",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/cards.ts",
+          "hash": "11031849760850762668",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/import.ts",
+          "hash": "2462438114655152018",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client",
+            "npm:@fastify/multipart",
+            "npm:csv-parse"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/labels.ts",
+          "hash": "14081663747487889927",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/lists.ts",
+          "hash": "16205254288720448804",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client",
+            "npm:jsonwebtoken"
+          ]
+        },
+        {
+          "file": "apps/api/src/routes/workspaces.ts",
+          "hash": "3597978094116215496",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/scripts/backfill-rank.ts",
+          "hash": "17791702681499550805",
+          "deps": [
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/src/seed-auth.ts",
+          "hash": "14410646442429153587",
+          "deps": [
+            "npm:dotenv@17.2.3",
+            "npm:@prisma/client",
+            "npm:bcryptjs"
+          ]
+        },
+        {
+          "file": "apps/api/src/seed.ts",
+          "hash": "12796998582592149574",
+          "deps": [
+            "npm:dotenv@17.2.3",
+            "npm:@prisma/client",
+            "npm:bcryptjs"
+          ]
+        },
+        {
+          "file": "apps/api/src/types/fastify.d.ts",
+          "hash": "13261277203019977808",
+          "deps": [
+            "npm:fastify"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/ensure-user.ts",
+          "hash": "13804352882516502437",
+          "deps": [
+            "npm:fastify",
+            "npm:jsonwebtoken"
+          ]
+        },
+        {
+          "file": "apps/api/src/utils/rank.ts",
+          "hash": "5761137886384326907"
+        },
+        {
+          "file": "apps/api/tsconfig.json",
+          "hash": "6066025878843351572"
+        },
+        {
+          "file": "apps/api/uploads/1762968045020_fdd692c00328a602a706e95d781d8c38.pdf",
+          "hash": "8182873050267108161"
+        },
+        {
+          "file": "apps/api/uploads/1762968570712_885df30def8a86754d1caf6251f43b87.pdf",
+          "hash": "8182873050267108161"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251112190946_add_download_token_backrelation/migration.sql",
+          "hash": "5036740785710582314"
+        },
+        {
+          "file": "apps/api/uploads/1762975663064_34a9feda10899ac2dc7d08606f3c1eb1.pdf",
+          "hash": "8182873050267108161"
+        },
+        {
+          "file": "apps/api/uploads/1762978631362_1c1dd57f6344e6cdfa91a53d3b637cc4.png",
+          "hash": "7720409113236888546"
+        },
+        {
+          "file": "apps/api/uploads/1762979122988_0bb91754fbd6bb28064846d3a6e245cb.md",
+          "hash": "10527340750855060289"
         }
       ]
     }

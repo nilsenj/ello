@@ -1,10 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { CdkDropListGroup } from '@angular/cdk/drag-drop';
-import { FormsModule } from '@angular/forms';
-import { BoardStore } from '../store/board-store.service';
-import { ListsService } from '../data/lists.service';
-import { ListColumnComponent } from './list-column.component';
+import {Component, computed, inject, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {CdkDropListGroup} from '@angular/cdk/drag-drop';
+import {FormsModule} from '@angular/forms';
+import {BoardStore} from '../store/board-store.service';
+import {ListsService} from '../data/lists.service';
+import {ListColumnComponent} from "./list-column/list-column.component";
 
 @Component({
     standalone: true,
@@ -32,7 +32,7 @@ import { ListColumnComponent } from './list-column.component';
                             <input
                                     class="w-full rounded border border-gray-300 px-2 py-1 text-sm"
                                     placeholder="Enter list title..."
-                                    [(ngModel)]="newListTitle" />
+                                    [(ngModel)]="newListTitle"/>
                             <div class="mt-2 flex items-center gap-2">
                                 <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm"
                                         (click)="addList()">
@@ -67,5 +67,8 @@ export class BoardViewComponent implements OnInit {
         this.creatingList.set(false);
     }
 
-    cancel() { this.newListTitle = ''; this.creatingList.set(false); }
+    cancel() {
+        this.newListTitle = '';
+        this.creatingList.set(false);
+    }
 }

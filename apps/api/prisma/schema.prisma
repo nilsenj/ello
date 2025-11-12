@@ -9,19 +9,18 @@ datasource db {
 
 // ===== Users & Memberships =====
 model User {
-  id            String            @id @default(cuid())
-  email         String            @unique
-  name          String?
-  avatar        String?
-  password      String
-  createdAt     DateTime          @default(now())
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  password  String
+  createdAt DateTime @default(now())
 
   workspaces    WorkspaceMember[]
   boards        BoardMember[]
   cardAssignees CardMember[]
   comments      Comment[]
-  refreshTokens RefreshToken[]    // <—
-
+  refreshTokens RefreshToken[] // <—
 }
 
 model Workspace {
@@ -33,40 +32,40 @@ model Workspace {
 }
 
 model WorkspaceMember {
-  id           String     @id @default(cuid())
-  role         Role
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
-  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workspaceId  String
+  id          String    @id @default(cuid())
+  role        Role
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
 
   @@unique([userId, workspaceId])
 }
 
 model Board {
-  id          String     @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
   description String?
-  isArchived  Boolean    @default(false)
+  isArchived  Boolean       @default(false)
   background  String?
-  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
   lists       List[]
   labels      Label[]
   members     BoardMember[]
   activities  Activity[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   @@unique([workspaceId, name])
 }
 
 model BoardMember {
-  id      String  @id @default(cuid())
+  id      String @id @default(cuid())
   role    Role
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  String
-  board   Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId String
 
   @@unique([userId, boardId])
@@ -74,19 +73,19 @@ model BoardMember {
 
 // ===== Lists / Cards / Labels =====
 model List {
-  id        String  @id @default(cuid())
-  name      String
+  id   String @id @default(cuid())
+  name String
 
   // Deprecated: kept temporarily for compatibility, will be removed later
-  position  Int?
+  position Int?
 
   // New: string rank for O(1) reorder
-  rank      String  @default("n")
+  rank String @default("n")
 
-  board     Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId   String
-  wipLimit  Int?
-  cards     Card[]
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId  String
+  wipLimit Int?
+  cards    Card[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,47 +93,55 @@ model List {
   @@index([boardId, rank])
 }
 
+enum Risk {
+  low
+  medium
+  high
+}
+
 model Card {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
 
   // Deprecated: kept temporarily
-  position    Int?
+  position Int?
 
   // New rank
-  rank        String   @default("n")
+  rank String @default("n")
 
-  list        List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  list        List         @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId      String
   startDate   DateTime?
   dueDate     DateTime?
   estimate    Float?
-  priority    Priority  @default(medium)
-  isArchived  Boolean   @default(false)
+  risk        Risk?
+  priority    Priority     @default(medium)
+  isArchived  Boolean      @default(false)
   labels      CardLabel[]
   assignees   CardMember[]
   checklists  Checklist[]
   attachments Attachment[]
   comments    Comment[]
+  isDone      Boolean      @default(false)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([listId, rank])
 }
 
 model Label {
-  id         String      @id @default(cuid())
+  id         String  @id @default(cuid())
   name       String
   color      String
   // ordering & archive
-  rank       String      @default("n")
-  isArchived Boolean     @default(false)
+  rank       String  @default("n")
+  isArchived Boolean @default(false)
 
-  board      Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId    String
-  cards      CardLabel[]
+  board   Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId String
+  cards   CardLabel[]
 
   // allow same name if color differs; give the DB constraint a stable name
   @@unique([boardId, name, color], map: "label_board_name_color_unique")
@@ -155,18 +162,18 @@ model CardLabel {
 model CardMember {
   cardId String
   userId String
-  card   Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([cardId, userId])
 }
 
 // ===== Checklists / Attachments / Comments / Activity =====
 model Checklist {
-  id       String   @id @default(cuid())
+  id       String          @id @default(cuid())
   title    String
   position Int
-  card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card     Card            @relation(fields: [cardId], references: [id], onDelete: Cascade)
   cardId   String
   items    ChecklistItem[]
 }
@@ -181,15 +188,34 @@ model ChecklistItem {
 }
 
 model Attachment {
-  id        String   @id @default(cuid())
-  name      String?
-  url       String
-  mime      String?
-  bytes     Int?
-  createdBy String?
-  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  cardId    String
-  createdAt DateTime @default(now())
+  id             String          @id @default(cuid())
+  name           String? // will become required
+  url            String
+  mime           String? // will become required
+  bytes          Int? // legacy
+  size           Int? // NEW (temporary nullable)
+  isCover        Boolean         @default(false)
+  createdBy      String?
+  card           Card            @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId         String
+  createdAt      DateTime        @default(now())
+  downloadTokens DownloadToken[]
+
+  @@index([cardId, createdAt])
+}
+
+model DownloadToken {
+  id           String    @id @default(cuid()) // internal id (not exposed)
+  jti          String    @unique // token id from JWT
+  attachmentId String
+  createdAt    DateTime  @default(now())
+  usedAt       DateTime?
+  expiresAt    DateTime
+
+  attachment Attachment @relation(fields: [attachmentId], references: [id], onDelete: Cascade)
+
+  @@index([attachmentId])
+  @@index([expiresAt])
 }
 
 model Comment {
