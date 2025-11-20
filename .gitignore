@@ -5,6 +5,8 @@ node_modules/
 .pnpm-store/
 .pnp.*
 .npm/
+.nx/
+.nx/*
 .nyc_output/
 .pnp.cjs
 .pnpm-debug.log*
