@@ -1,0 +1,48 @@
+{
+  "workspace": {
+    "name": "Demo Workspace"
+  },
+  "board": {
+    "name": "Product Launch"
+  },
+  "lists": [
+    {
+      "title": "Ideas",
+      "cards": [
+        {
+          "title": "Influencer outreach"
+        },
+        {
+          "title": "Landing copy v1"
+        }
+      ]
+    },
+    {
+      "title": "To Do",
+      "cards": [
+        {
+          "title": "Pricing table"
+        },
+        {
+          "title": "Email sequence"
+        }
+      ]
+    },
+    {
+      "title": "In Progress",
+      "cards": [
+        {
+          "title": "Beta waitlist page"
+        }
+      ]
+    },
+    {
+      "title": "Done",
+      "cards": [
+        {
+          "title": "Logo refresh"
+        }
+      ]
+    }
+  ]
+}
