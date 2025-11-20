@@ -1,6 +1,8 @@
 // apps/api/src/routes/boards.ts
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import {PrismaClient, Role} from '@prisma/client';
+import {ensureUser} from "../utils/ensure-user.js";
+import {Prisma} from "@prisma/client/extension";
 
 type CreateBoardBody = { workspaceId: string; name: string; description?: string };
 type ReorderListsBody = { listIds: string[] };
@@ -26,6 +28,21 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
                 labels: true
             }
         });
+    });
+
+    app.post('/api/boards/:id/join', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const user = ensureUser(req);
+        const { id: boardId } = req.params;
+
+        // You may also check workspace membership here if you want to restrict who can join.
+        // For now, just upsert a member row.
+        await prisma.boardMember.upsert({
+            where: { userId_boardId: { userId: user.id, boardId } },
+            update: {},
+            create: { userId: user.id, boardId, role: 'member' },
+        });
+
+        return reply.send({ ok: true });
     });
 
     // Create board
@@ -87,16 +104,69 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         return reply.code(204).send();
     });
 
-    // List board members (id, name, avatar) for side panel
-    app.get('/api/boards/:id/members', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
-        const { id } = req.params;
+    // GET /boards/:boardId/members?query=...
+    app.get<{
+        Params: { boardId: string };
+        Querystring: { query?: string };
+    }>('/api/boards/:boardId/members', async (req, reply) => {
+        ensureUser(req);
+
+        const { boardId } = req.params;
+        const q = (req.query.query ?? '').trim();
+
+        // Build where safely. Only add the user filter when q is present.
+        const where: any = {
+            boardId,
+            ...(q
+                ? {
+                    user: {
+                        is: {
+                            OR: [
+                                { name: { contains: q, mode: 'insensitive' } },
+                                { email: { contains: q, mode: 'insensitive' } },
+                            ],
+                        },
+                    },
+                }
+                : {}),
+        };
 
         const rows = await prisma.boardMember.findMany({
-            where: { boardId: id },
-            include: { user: { select: { id: true, name: true, avatar: true } } },
-            orderBy: { role: 'asc' },
+            where,
+            include: {
+                user: { select: { id: true, name: true, avatar: true, email: true } },
+            },
+            orderBy: [{ role: 'asc' }, { id: 'asc' }],
+            take: q ? 20 : 100, // limit results
         });
 
-        return rows.map(r => ({ id: r.user.id, name: r.user.name ?? 'User', avatar: r.user.avatar ?? undefined }));
+        const members = rows.map((r) => ({
+            id: r.user.id,
+            name: r.user.name ?? r.user.email,
+            email: r.user.email,
+            avatar: r.user.avatar ?? undefined,
+            role: r.role,
+        }));
+
+        return reply.send({ members });
+    });
+
+    // PATCH /boards/:boardId/members/:userId  { role: 'owner'|'admin'|'member'|'viewer' }
+    app.patch<{
+        Params: { boardId: string, userId: string },
+        Body: { role: Role }
+    }>('/boards/:boardId/members/:userId', async (req, reply) => {
+        const user = ensureUser(req);
+        const { boardId, userId } = req.params;
+        const { role } = req.body;
+
+        // TODO auth: ensure caller can change board roles
+
+        await prisma.boardMember.update({
+            where: { userId_boardId: { userId, boardId } },
+            data: { role },
+        });
+
+        return reply.send({ ok: true });
     });
 }

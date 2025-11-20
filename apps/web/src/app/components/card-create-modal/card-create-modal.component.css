@@ -1,0 +1,10 @@
+.cm-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    border-top: 1px solid #eef2f7;
+}

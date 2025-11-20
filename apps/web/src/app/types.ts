@@ -64,3 +64,11 @@ export type ListDto = {
     cardLabels?: any[];
 };
 export type Label = { id: string; name: string; color: string; rank?: string; boardId: string };
+
+export type CardAssignee = {
+    userId?: string;
+    id?: string;        // sometimes assignee shape uses id
+    user?: { id?: string; name?: string; email?: string; avatar?: string };
+    role?: string | null;
+    customRole?: string | null;
+};

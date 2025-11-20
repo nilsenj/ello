@@ -7,7 +7,7 @@
     z-index: 50;
 }
 
-/* Panel: centered, full-height with gaps; desktop width */
+/* Panel */
 .cm-panel {
     position: fixed;
     z-index: 51;
@@ -15,17 +15,16 @@
     margin: 0 auto;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .15),
-    0 2px 8px rgba(0, 0, 0, .08);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .15), 0 2px 8px rgba(0, 0, 0, .08);
     max-width: 1200px;
-    width: min(60vw, 1100px);
+    width: min(72vw, 1200px);
     display: flex;
     flex-direction: column;
     min-height: calc(100vh - 48px);
     overflow: hidden;
 }
 
-/* Priority palette (applies when .cm-panel has pri-*) */
+/* Priority palette */
 .cm-panel.pri-low {
     --pri-dot: #16a34a;
     --pri-bg: color-mix(in oklab, var(--pri-dot), #fff 85%);
@@ -63,7 +62,7 @@
     }
 }
 
-/* Header (priority-aware) */
+/* Header */
 .cm-header {
     position: sticky;
     top: 0;
@@ -73,12 +72,9 @@
     display: flex;
     gap: 12px;
     align-items: center;
-    position: relative; /* needed for accent positioning */
-    /* soft priority glow instead of a border */
     box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot, transparent), transparent 88%);
 }
 
-/* Left vertical accent for priority */
 .cm-header-accent {
     position: absolute;
     left: 0;
@@ -89,7 +85,6 @@
     background: var(--pri-dot, transparent);
 }
 
-/* Priority pill */
 .cm-header-pill {
     padding: 2px 8px;
     border-radius: 9999px;
@@ -101,7 +96,6 @@
     text-transform: capitalize;
 }
 
-/* Title */
 .cm-title {
     flex: 1 1 auto;
     font-size: 18px;
@@ -109,16 +103,10 @@
     border: 1px solid transparent;
     border-radius: 8px;
     padding: 8px 10px;
-    outline: none;
-    /* subtle underline when a priority exists */
     background: none;
+    outline: none;
 }
 
-.cm-title:focus {
-    /*box-shadow: 0 0 0 3px var(--pri-ring, rgba(59,130,246,.2));*/
-}
-
-/* Optional: gentle pulse for urgent */
 .cm-panel.pri-urgent .cm-header {
     animation: priPulse 1.8s ease-in-out infinite;
 }
@@ -132,7 +120,6 @@
     }
 }
 
-/* Close */
 .cm-close {
     border: 0;
     background: transparent;
@@ -148,23 +135,23 @@
     background: #f5f5f5;
 }
 
-/* Body: grid columns */
+/* Body grid */
 .cm-body {
     overflow: auto;
     padding: 20px;
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns:minmax(0, 1fr) clamp(380px, 34vw, 560px);
     gap: 24px;
 }
 
 @media (max-width: 1024px) {
     .cm-body {
-        grid-template-columns: 1fr;
+        grid-template-columns:1fr;
         gap: 16px;
     }
 }
 
-.cm-col {
+.cm-col, .cm-col-main, .cm-col-side {
     min-width: 0;
 }
 
@@ -172,7 +159,7 @@
     align-self: start;
 }
 
-/* Sections */
+/* UI atoms */
 .cm-section-title {
     font-size: .75rem;
     text-transform: uppercase;
@@ -182,7 +169,6 @@
     font-weight: 600;
 }
 
-/* Inputs / Textareas */
 .cm-textarea, .cm-input {
     width: 100%;
     border: 1px solid #e6e6e6;
@@ -210,7 +196,6 @@
     font-size: .9rem;
 }
 
-/* Buttons */
 .cm-btn {
     border: 1px solid #e6e6e6;
     background: #fafafa;
@@ -239,21 +224,20 @@
     cursor: not-allowed;
 }
 
-/* Labels list + selected state */
 .cm-labels {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:repeat(2, minmax(0, 1fr));
     gap: 8px;
 }
 
 @media (max-width: 420px) {
     .cm-labels {
-        grid-template-columns: 1fr;
+        grid-template-columns:1fr;
     }
 }
 
 .cm-label {
-    --c: #ddd; /* color provided inline via [style.--c] */
+    --c: #ddd;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -262,7 +246,6 @@
     border: none;
     background: color-mix(in oklab, var(--c), #fff 70%);
     cursor: pointer;
-    user-select: none;
     position: relative;
     transition: transform .06s ease, box-shadow .15s ease;
 }
@@ -272,12 +255,10 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
 }
 
-.cm-label.is-selected,
-.cm-label[aria-pressed="true"] {
+.cm-label.is-selected, .cm-label[aria-pressed="true"] {
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), #fff 70%);
 }
 
-/* Color dot (labels) */
 .cm-dot {
     width: 12px;
     height: 12px;
@@ -285,21 +266,7 @@
     flex: 0 0 12px;
 }
 
-/* Current label pills row */
-.cm-current {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.cm-pill {
-    height: 8px;
-    width: 36px;
-    border-radius: 999px;
-}
-
-/* Checklist */
+/* Checklists */
 .cm-checklist {
     border: 1px solid #eee;
     border-radius: 10px;
@@ -352,7 +319,6 @@
     color: #2563eb;
 }
 
-/* Tiny meta separator dot (avoid conflict with .cm-dot above) */
 .cm-meta-dot {
     width: 4px;
     height: 4px;
@@ -360,56 +326,17 @@
     background: currentColor;
 }
 
-/* Members */
-.cm-members {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-}
-
-.cm-member {
-    display: grid;
-    grid-template-columns: 28px 1fr auto;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 6px 10px;
-    background: #fafafa;
-}
-
-.cm-member.is-selected {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
-}
-
-.cm-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    object-fit: cover;
-}
-
-.cm-avatar-fallback {
-    display: inline-grid;
-    place-items: center;
-    background: #e5e7eb;
-    font-weight: 600;
-}
-
-/* chip for compact “already set” info */
+/* chips / add buttons (Tailwind via @apply if available) */
 .cm-chip {
     @apply inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs hover:bg-gray-50;
 }
 
-/* “Add to card” palette buttons */
 .cm-add {
     @apply w-full rounded-md border px-3 py-2 text-sm text-left hover:bg-gray-50;
 }
 
-/* card-modal.component.css */
-.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide,
-.cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
+/* lucide sizing */
+.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide, .cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
     width: 1em;
     height: 1em;
     vertical-align: -0.125em;
@@ -419,19 +346,7 @@
     margin-right: .375rem;
 }
 
-/* if not using Tailwind's mr-1 */
-
-.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide,
-.cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.125em;
-}
-
-.mr-1 {
-    margin-right: .375rem;
-}
-
+/* Attachments */
 .cm-attachments {
     display: grid;
     gap: 12px;
@@ -439,21 +354,23 @@
 
 .cm-attachment {
     display: grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns:140px 1fr;
     gap: 12px;
     align-items: start;
+    position: relative;
 }
 
 .cm-attachment-thumb {
     position: relative;
-    width: 120px;
-    height: 80px;
+    width: 140px;
+    height: 92px;
     border-radius: 8px;
     overflow: hidden;
     background: #f3f4f6;
     display: flex;
     align-items: center;
     justify-content: center;
+    isolation: isolate;
 }
 
 .cm-attachment-thumb img {
@@ -495,18 +412,22 @@
     gap: 6px;
 }
 
-.cm-attachment-actions {
+.cm-attachment-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
 }
 
-.cm-header-cover {
-    width: 100%;
-    max-height: 160px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-top: 8px;
+.cm-ext-badge {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #334155;
+    background: #e2e8f0;
+    letter-spacing: .02em;
 }
 
 .cm-attachment-video, .cm-attachment-audio, .cm-attachment-pdf {
@@ -519,116 +440,7 @@
     height: 220px;
 }
 
-/* Badge next to title count */
-.cm-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 18px;
-    padding: 0 6px;
-    border-radius: 9999px;
-    background: #eef2ff;
-    color: #3730a3;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-/* Drag & drop zone */
-.cm-dropzone {
-    border: 1.5px dashed #d1d5db;
-    border-radius: 10px;
-    background: #fafafa;
-    padding: 10px 12px;
-    outline: none;
-    cursor: pointer;
-    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
-}
-
-.cm-dropzone.is-active {
-    border-color: #2563eb;
-    background: #f0f6ff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
-}
-
-.cm-dropzone:focus-visible {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
-}
-
-.cm-dropzone-inner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.cm-dropzone-icon .lucide {
-    width: 18px;
-    height: 18px;
-    opacity: .85;
-}
-
-.cm-dropzone-text strong {
-    font-weight: 700;
-}
-
-.cm-dropzone-text .cm-muted {
-    margin-top: 2px;
-}
-
-/* Uploading row */
-.cm-uploading {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #475569;
-    font-size: 13px;
-}
-
-.cm-spinner {
-    width: 14px;
-    height: 14px;
-    border-radius: 9999px;
-    border: 2px solid #cbd5e1;
-    border-top-color: #2563eb;
-    animation: cmSpin .9s linear infinite;
-}
-
-@keyframes cmSpin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Attachment card tweaks */
-.cm-attachment {
-    position: relative;
-}
-
-.cm-attachment-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: space-between;
-}
-
-/* File extension badge */
-.cm-ext-badge {
-    flex: 0 0 auto;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    color: #334155;
-    background: #e2e8f0;
-    letter-spacing: .02em;
-}
-
-/* Hover overlay on thumb */
-.cm-attachment-thumb {
-    isolation: isolate;
-}
-
+/* Hover overlay */
 .cm-attachment-overlay {
     position: absolute;
     inset: 0;
@@ -648,7 +460,7 @@
 
 .cm-overlay-btn {
     border: 0;
-    background: #ffffff;
+    background: #fff;
     color: #111827;
     border-radius: 8px;
     padding: 6px 10px;
@@ -662,7 +474,7 @@
     cursor: not-allowed;
 }
 
-/* Tiny inline progress */
+/* Progress */
 .cm-progress {
     width: 100%;
     height: 4px;
@@ -706,12 +518,12 @@
     color: #94a3b8;
 }
 
-/* Attachment actions: compact pill bar */
+/* Attachment actionbar */
 .cm-actionbar {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 6px;
+    padding: 0;
     background: #f8fafc;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -726,80 +538,62 @@
     font-size: 12px;
     line-height: 1;
     color: #0f172a;
-    background: #ffffff;
+    background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     cursor: pointer;
     transition: background .15s ease, box-shadow .15s ease, transform .06s ease;
 }
-.cm-action:hover { background: #f3f4f6; }
-.cm-action:active { transform: translateY(1px); }
-.cm-action:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+
+.cm-action:hover {
+    background: #f3f4f6;
 }
 
-.cm-action .lucide { width: 1em; height: 1em; }
+.cm-action:active {
+    transform: translateY(1px);
+}
 
-/* “Danger” button */
+.cm-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .18);
+}
+
+.cm-action .lucide {
+    width: 1em;
+    height: 1em;
+}
+
 .cm-action--danger {
     color: #b91c1c;
     border-color: #fee2e2;
     background: #fff;
 }
-.cm-action--danger:hover { background: #fef2f2; }
-.cm-action--danger:focus-visible { box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
 
-/* Disabled state (e.g., already cover) */
+.cm-action--danger:hover {
+    background: #fef2f2;
+}
+
+.cm-action--danger:focus-visible {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, .2);
+}
+
 .cm-action:disabled {
     opacity: .55;
     cursor: not-allowed;
     background: #f9fafb;
 }
 
-/* Responsive: collapse labels on very narrow widths */
 @media (max-width: 420px) {
-    .cm-actionbar { gap: 6px; padding: 4px; }
-    .cm-action { padding: 6px; }
-    .cm-action span { display: none; } /* icon-only on tiny screens */
-}
+    .cm-actionbar {
+        gap: 6px;
+        padding: 4px;
+    }
 
+    .cm-action {
+        padding: 6px;
+    }
 
-/* Wider side column, slightly narrower main (desktop) */
-.cm-body {
-    /* was: grid-template-columns: 1fr 320px; */
-    grid-template-columns: minmax(0, 1fr) clamp(380px, 34vw, 560px);
-}
-
-/* Make the whole panel a bit wider on large screens */
-.cm-panel {
-    /* was: width: min(60vw, 1100px); max-width:1200px */
-    width: min(72vw, 1200px);
-    max-width: 1200px;
-}
-
-/* Ensure columns can shrink without overflow */
-.cm-col { min-width: 0; }
-.cm-col-main { min-width: 0; }
-.cm-col-side { min-width: 0; }
-
-/* Give attachment rows a touch more breathing room so text wraps cleaner */
-.cm-attachment {
-    /* was: 120px + 1fr */
-    grid-template-columns: 140px 1fr;
-}
-.cm-attachment-thumb {
-    width: 140px;               /* keep aspect + larger visual anchor */
-    height: 92px;
-}
-
-/* Tighten main column typography just a bit to compensate for width shift */
-.cm-description {
-    line-height: 1.55;
-}
-
-/* Responsive: single column stays as-is on tablets/phones */
-@media (max-width: 1024px) {
-    .cm-panel { width: auto; }  /* keep your existing mobile behavior */
-    .cm-body { grid-template-columns: 1fr; }
+    .cm-action span {
+        display: none;
+    }
 }

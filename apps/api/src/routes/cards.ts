@@ -1,6 +1,7 @@
 // apps/api/src/routes/cards.ts
 import type {FastifyInstance, FastifyRequest} from 'fastify';
-import type {PrismaClient} from '@prisma/client';
+import {CardRole, PrismaClient} from '@prisma/client';
+
 import {between} from '../utils/rank.js';
 import {ensureUser} from '../utils/ensure-user.js';
 
@@ -447,5 +448,70 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
         await prisma.comment.delete({where: {id}});
         return reply.code(204).send();
+    });
+
+    // PATCH /api/cards/:cardId/assignees/:userId/role
+// Body can be either:
+//   { role: "pm", customRole: null }              // flat (preferred)
+// or
+//   { role: { role: "other", customRole: "SEO" } } // nested (legacy)
+    app.patch<{
+        Params: { cardId: string; userId: string },
+        Body: {
+            role?: CardRole | { role?: CardRole | null; customRole?: string | null } | null;
+            customRole?: string | null
+        }
+    }>('/api/cards/:cardId/assignees/:userId/role', async (req, reply) => {
+        const user = ensureUser(req);
+        const {cardId, userId} = req.params;
+
+        // Ensure caller is a member of the board that owns this card
+        const bId = await boardIdByCard(prisma, cardId);
+        await assertBoardMember(prisma, bId, user.id);
+
+        // --- Accept both flat and nested body shapes ---
+        let role: CardRole | null = null;
+        let customRole: string | null = null;
+
+        const rawRole = (req.body?.role ?? null) as unknown;
+        const rawCustom = (req.body?.customRole ?? null) as unknown;
+
+        if (typeof rawRole === 'string' || rawRole === null) {
+            // flat: { role: "pm", customRole: null }
+            role = rawRole as CardRole | null;
+            customRole = (typeof rawCustom === 'string' ? rawCustom : null);
+        } else if (rawRole && typeof rawRole === 'object') {
+            // nested: { role: { role: "other", customRole: "SEO" } }
+            role = ((rawRole as any).role ?? null) as CardRole | null;
+            customRole = (rawRole as any).customRole ?? null;
+        }
+
+        // --- Validate role value (optional but safer) ---
+        const allowed: CardRole[] = ['developer', 'designer', 'qa', 'analyst', 'pm', 'devops', 'other'];
+        if (role !== null && !allowed.includes(role)) {
+            return reply.code(400).send({error: 'Invalid role value'});
+        }
+
+        // Normalize: only keep customRole for 'other'
+        if (role && role !== 'other') customRole = null;
+        if (typeof customRole === 'string') {
+            const trimmed = customRole.trim();
+            customRole = trimmed.length ? trimmed : null;
+        }
+
+        try {
+            const updated = await prisma.cardMember.update({
+                where: {cardId_userId: {cardId, userId}},
+                data: {role, customRole}, // <-- flat fields here
+                select: {userId: true, role: true, customRole: true},
+            });
+            return reply.send(updated);
+        } catch (err: any) {
+            // If the assignee record doesn't exist yet
+            if (err?.code === 'P2025') {
+                return reply.code(404).send({error: 'Assignee not found on this card'});
+            }
+            throw err;
+        }
     });
 }

@@ -42,12 +42,20 @@ model WorkspaceMember {
   @@unique([userId, workspaceId])
 }
 
+enum Visibility {
+  private
+  workspace
+  public
+}
+
 model Board {
   id          String        @id @default(cuid())
   name        String
   description String?
   isArchived  Boolean       @default(false)
   background  String?
+  visibility  Visibility    @default(private)  // <— add this
+
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
   lists       List[]
@@ -160,12 +168,16 @@ model CardLabel {
 }
 
 model CardMember {
-  cardId String
-  userId String
-  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId     String
+  userId     String
+  card       Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role       CardRole?
+  customRole String?  @db.VarChar(64)
 
   @@id([cardId, userId])
+  @@index([userId])
 }
 
 // ===== Checklists / Attachments / Comments / Activity =====
@@ -260,3 +272,16 @@ enum Priority {
   high
   urgent
 }
+
+// NEW: functional role on card assignments (not permissions)
+enum CardRole {
+  developer
+  designer
+  qa
+  analyst
+  pm
+  devops
+  other
+}
+
+

@@ -1,0 +1,50 @@
+<section *ngIf="modal.isOpen()" class="cm-backdrop" (mousedown)="onBackdrop($event)">
+    <div class="cm-panel max-w-[640px] w-[min(92vw,640px)]">
+        <!-- Header -->
+        <header class="cm-header relative">
+            <div class="cm-header-accent" style="background:#2563eb"></div>
+            <div class="flex items-center gap-2">
+                <lucide-icon [img]="ListPlusIcon" class="mr-1"></lucide-icon>
+                <span class="font-semibold text-[15px]">Add card</span>
+                <span class="cm-header-pill">Quick</span>
+                <button class="cm-close ml-auto" (click)="close()" aria-label="Close">
+                    <lucide-icon [img]="XIcon"></lucide-icon>
+                </button>
+            </div>
+        </header>
+
+        <!-- Body -->
+        <div class="cm-body !grid-cols-1">
+            <div class="grid gap-4">
+                <label class="cm-field">
+                    <span class="cm-field-label">Title</span>
+                    <input class="cm-input" autofocus
+                           placeholder="e.g., Write launch plan"
+                           [ngModel]="title()"
+                           (ngModelChange)="title.set($event)"/>
+                </label>
+
+                <label class="cm-field">
+          <span class="cm-field-label inline-flex items-center gap-1">
+            <lucide-icon [img]="ColumnsIcon" class="mr-1"></lucide-icon>
+            List
+          </span>
+                    <select class="cm-input cm-select"
+                            [ngModel]="listId()"
+                            (ngModelChange)="listId.set($event)">
+                        <option [ngValue]="null" disabled>Select a list…</option>
+                        <option *ngFor="let l of lists()" [value]="l.id">{{ l.name }}</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="cm-footer">
+            <button class="cm-btn" (click)="close()">Cancel</button>
+            <button class="cm-btn-primary" [disabled]="!canSubmit() || adding()" (click)="create()">
+                {{ adding() ? 'Adding…' : 'Add card' }}
+            </button>
+        </footer>
+    </div>
+</section>

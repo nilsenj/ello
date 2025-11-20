@@ -1,10 +1,10 @@
 // apps/web/src/app/components/card-modal/card-modal.component.ts
-import {Component, computed, effect, HostListener, inject, signal, untracked,} from '@angular/core';
+import {Component, computed, effect, HostListener, inject, signal, untracked} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {firstValueFrom} from 'rxjs';
-import type {Checklist, CommentDto, ModalCard} from '../../types';
-import {CardModalService} from './card-modal.service';
+import type {CardAssignee, Checklist, CommentDto, ModalCard} from '../../types';
+
 import {CardsService} from '../../data/cards.service';
 import {BoardStore} from '../../store/board-store.service';
 import {LabelsService} from '../../data/labels.service';
@@ -18,17 +18,14 @@ import {
     FileTextIcon,
     GaugeIcon,
     Heading1Icon,
-    InfoIcon,
     ItalicIcon,
     LinkIcon,
     ListChecksIcon,
     ListIcon,
     LucideAngularModule,
-    MessageSquareIcon,
     PaperclipIcon,
     PencilIcon,
     PlusIcon,
-    PlusSquareIcon,
     SaveIcon,
     SendIcon,
     TagIcon,
@@ -37,14 +34,16 @@ import {
     XCircleIcon,
     XIcon,
 } from 'lucide-angular';
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {MembersPanelComponent} from '../../components/members-panel/members-panel.component';
+import {CardModalService} from "./card-modal.service";
 
 type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning';
 
 @Component({
     standalone: true,
     selector: 'card-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe],
+    imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe, MembersPanelComponent],
     styleUrls: ['./card-modal.component.css'],
     templateUrl: './card-modal.component.html',
 })
@@ -58,9 +57,8 @@ export class CardModalComponent {
     attachmentsApi = inject(AttachmentsService);
     private sanitizer = inject(DomSanitizer);
 
-    // ✔ expose icon refs for [img]
+    // icons
     readonly XIcon = XIcon;
-    readonly InfoIcon = InfoIcon;
     readonly TagIcon = TagIcon;
     readonly CalendarIcon = CalendarIcon;
     readonly UsersIcon = UsersIcon;
@@ -74,13 +72,12 @@ export class CardModalComponent {
     readonly ListIcon = ListIcon;
     readonly Heading1Icon = Heading1Icon;
     readonly LinkIcon = LinkIcon;
-    readonly MessageSquareIcon = MessageSquareIcon;
     readonly SendIcon = SendIcon;
     readonly Trash2Icon = Trash2Icon;
     readonly PlusIcon = PlusIcon;
-    readonly PlusSquareIcon = PlusSquareIcon;
     readonly SaveIcon = SaveIcon;
     readonly XCircleIcon = XCircleIcon;
+    readonly DownloadIcon = DownloadIcon;
 
     // ui state
     loading = signal(false);
@@ -90,7 +87,6 @@ export class CardModalComponent {
     dlProgress = signal<Record<string, number>>({});
     dlBusy = signal<Set<string>>(new Set());
     dropActive = signal(false);
-
     isDownloading = (id: string) => this.dlBusy().has(id);
     downloadPercent = (id: string) => this.dlProgress()[id] ?? 0;
 
@@ -110,13 +106,15 @@ export class CardModalComponent {
     renameDraftName = signal('');
     isUploading = signal(false);
 
-    // side-panels state (single source of truth)
+    // side-panels
     private openPanelName = signal<PanelName | null>(null);
+    isPanelOpen = (name: PanelName) => this.openPanelName() === name;
+
+    // preview heuristics
     private readonly reImg = /\.(png|jpe?g|gif|webp|bmp|svg)(?:\?.*)?$/i;
     private readonly reVid = /\.(mp4|webm|ogg|mov|m4v)(?:\?.*)?$/i;
     private readonly reAud = /\.(mp3|wav|ogg|m4a|flac)(?:\?.*)?$/i;
     private readonly rePdf = /\.pdf(?:\?.*)?$/i;
-    isPanelOpen = (name: PanelName) => this.openPanelName() === name;
 
     private isExt(url: string, re: RegExp) {
         try {
@@ -126,39 +124,20 @@ export class CardModalComponent {
         }
     }
 
-    isImage = (a: AttachmentDto) =>
-        a.mime?.toLowerCase().startsWith('image/') || this.isExt(a.url, this.reImg);
-
-    isVideo = (a: AttachmentDto) =>
-        a.mime?.toLowerCase().startsWith('video/') || this.isExt(a.url, this.reVid);
-
-    isAudio = (a: AttachmentDto) =>
-        a.mime?.toLowerCase().startsWith('audio/') || this.isExt(a.url, this.reAud);
-
-    isPdf = (a: AttachmentDto) =>
-        a.mime?.toLowerCase() === 'application/pdf' || this.isExt(a.url, this.rePdf);
-
-    coverUrl = computed(() => {
-        const coverObj = this.attachments().find(a => a.isCover);
-        if (!coverObj) return '';
-        return this.attachmentApiFileUrl(coverObj as AttachmentDto);
-    });
+    isImage = (a: AttachmentDto) => a.mime?.toLowerCase().startsWith('image/') || this.isExt(a.url, this.reImg);
+    isVideo = (a: AttachmentDto) => a.mime?.toLowerCase().startsWith('video/') || this.isExt(a.url, this.reVid);
+    isAudio = (a: AttachmentDto) => a.mime?.toLowerCase().startsWith('audio/') || this.isExt(a.url, this.reAud);
+    isPdf = (a: AttachmentDto) => a.mime?.toLowerCase() === 'application/pdf' || this.isExt(a.url, this.rePdf);
 
     safeMediaUrl(u: string | null | undefined): SafeResourceUrl {
         const url = (u ?? '').trim();
-        // only trust http(s) and blob: (reject others like javascript:, data: by default)
-        const ok = /^(https?:|blob:)/i.test(url);
-        return this.sanitizer.bypassSecurityTrustResourceUrl(ok ? url : 'about:blank');
+        return this.sanitizer.bypassSecurityTrustResourceUrl(/^(https?:|blob:)/i.test(url) ? url : 'about:blank');
     }
 
     openPanel(name: PanelName, focusQuery?: string) {
         if (this.openPanelName() !== name) {
             this.openPanelName.set(name);
-            if (focusQuery) {
-                queueMicrotask(() =>
-                    document.querySelector<HTMLInputElement>(focusQuery)?.focus()
-                );
-            }
+            if (focusQuery) queueMicrotask(() => document.querySelector<HTMLInputElement>(focusQuery)?.focus());
         }
     }
 
@@ -166,16 +145,12 @@ export class CardModalComponent {
         this.openPanelName.set(null);
     }
 
-    togglePanel(name: PanelName) {
-        this.openPanelName.set(this.isPanelOpen(name) ? null : name);
-    }
-
-    // Compact getters for current values (server value first, then draft)
-    get currentPriority(): '' | 'low' | 'medium' | 'high' | 'urgent' {
+    // derived values for chips
+    get currentPriority() {
         return (this.data()?.priority as any) ?? this.priorityDraft() ?? '';
     }
 
-    get currentRisk(): '' | 'low' | 'medium' | 'high' {
+    get currentRisk() {
         return (this.data()?.risk as any) ?? this.riskDraft() ?? '';
     }
 
@@ -186,167 +161,122 @@ export class CardModalComponent {
         return draft === '' ? '' : Number(draft);
     }
 
-    // members cache
-    members = signal<{ id: string; name: string; avatar?: string }[]>([]);
-
+    // EFFECTS
     private _labelsLoadedFor = new Set<string>();
-    private _membersLoadedFor = new Set<string>();
-
     private reqToken = 0;
-    trackId = (_: number, id: string) => id;
 
     constructor() {
         // EFFECT #1 — reacts to open/close + cardId
-        effect(
-            () => {
-                const open = this.modal.isOpen();
-                const id = this.modal.cardId();
+        effect(() => {
+            const open = this.modal.isOpen();
+            const id = this.modal.cardId();
 
-                if (!open || !id) {
-                    this.loading.set(false);
+            if (!open || !id) {
+                this.loading.set(false);
+                this.data.set(null);
+                this.titleDraft.set('');
+                this.descDraft.set('');
+                this.startDraft.set(null);
+                this.dueDraft.set(null);
+                this.commentDraft.set('');
+                this.priorityDraft.set('');
+                this.riskDraft.set('');
+                this.estimationDraft.set('');
+                this.openPanelName.set(null);
+                return;
+            }
+
+            const token = ++this.reqToken;
+            this.loading.set(true);
+
+            (async () => {
+                try {
+                    const card = await this.cardsApi.getCard(id);
+                    if (this.reqToken !== token) return;
+                    const labelIds = this.normalizeLabelIds(card);
+                    this.data.set({...card, labelIds} as any);
+
+                    this.titleDraft.set(card?.title ?? '');
+                    this.descDraft.set(card?.description ?? '');
+                    this.startDraft.set(card?.startDate ? toLocalInput(card.startDate) : null);
+                    this.dueDraft.set(card?.dueDate ? toLocalInput(card.dueDate) : null);
+
+                    const priority = (card as any)?.priority ?? '';
+                    const risk = (card as any)?.risk ?? '';
+                    const estimate = (card as any)?.estimate;
+                    this.priorityDraft.set(priority);
+                    this.riskDraft.set(risk);
+                    this.estimationDraft.set(estimate === 0 || typeof estimate === 'number' ? String(estimate) : '');
+                } catch {
+                    if (this.reqToken !== token) return;
                     this.data.set(null);
-                    this.titleDraft.set('');
-                    this.descDraft.set('');
-                    this.startDraft.set(null);
-                    this.dueDraft.set(null);
-                    this.commentDraft.set('');
-                    this.priorityDraft.set('');
-                    this.riskDraft.set('');
-                    this.estimationDraft.set('');
-                    this.openPanelName.set(null);
-                    return;
+                } finally {
+                    if (this.reqToken === token) this.loading.set(false);
                 }
+            })();
 
-                const token = ++this.reqToken;
-                this.loading.set(true);
+            (async () => {
+                try {
+                    const list = await firstValueFrom(this.attachmentsApi.list(id));
+                    this.attachments.set(list);
+                } catch {
+                    this.attachments.set([]);
+                }
+            })();
+        }, {allowSignalWrites: true});
 
-                (async () => {
-                    try {
-                        const card = await this.cardsApi.getCard(id);
-                        if (this.reqToken !== token) return;
-
-                        const labelIds = this.normalizeLabelIds(card);
-                        this.data.set({...card, labelIds} as any);
-
-                        this.titleDraft.set(card?.title ?? '');
-                        this.descDraft.set(card?.description ?? '');
-                        this.startDraft.set(card?.startDate ? toLocalInput(card.startDate) : null);
-                        this.dueDraft.set(card?.dueDate ? toLocalInput(card.dueDate) : null);
-
-                        // planning fields
-                        const priority = (card as any)?.priority ?? '';
-                        const risk = (card as any)?.risk ?? '';
-                        const estimate = (card as any)?.estimate;
-                        this.priorityDraft.set(priority);
-                        this.riskDraft.set(risk);
-                        this.estimationDraft.set(
-                            estimate === 0 || typeof estimate === 'number' ? String(estimate) : ''
-                        );
-                    } catch {
-                        if (this.reqToken !== token) return;
-                        this.data.set(null);
-                    } finally {
-                        if (this.reqToken === token) this.loading.set(false);
-                    }
-                })();
-
-                (async () => {
-                    try {
-                        const list = await firstValueFrom(this.attachmentsApi.list(id));
-                        this.attachments.set(list);
-                    } catch {
-                        this.attachments.set([]);
-                    }
-                })();
-            },
-            {allowSignalWrites: true}
-        );
-
-        // EFFECT #2 — load labels/members for board
-        effect(
-            () => {
-                const boardId = this.store.currentBoardId();
-                if (!boardId) return;
-                untracked(() => {
-                    if (!this._labelsLoadedFor.has(boardId)) {
-                        this._labelsLoadedFor.add(boardId);
-                        this.labelsApi.loadLabels(boardId).catch(() => {
-                        });
-                    }
-                    if (!this._membersLoadedFor.has(boardId)) {
-                        this._membersLoadedFor.add(boardId);
-                        this.boardsApi
-                            .getMembers(boardId)
-                            .then((m) => this.members.set(m ?? []))
-                            .catch(() => {
-                            });
-                    }
-                });
-            },
-            {allowSignalWrites: true}
-        );
+        // EFFECT #2 — load labels per board (members logic removed; handled in members-panel)
+        effect(() => {
+            const boardId = this.store.currentBoardId();
+            if (!boardId) return;
+            untracked(() => {
+                if (!this._labelsLoadedFor.has(boardId)) {
+                    this._labelsLoadedFor.add(boardId);
+                    this.labelsApi.loadLabels(boardId).catch(() => {
+                    });
+                }
+            });
+        }, {allowSignalWrites: true});
     }
 
     // ------- Labels -------
     selectedLabelIds = computed(() => new Set(this.normalizeLabelIds(this.data())));
-
     hasLabel = (lid: string) => this.selectedLabelIds().has(lid);
 
     async toggleLabel(lid: string) {
         const c = this.data();
         if (!c) return;
-
         const has = this.selectedLabelIds().has(lid);
         try {
             if (has) {
                 await this.labelsApi.unassignFromCard(c.id, lid);
                 this.store.removeLabelFromCardLocally?.(c.id, lid);
-
                 const next: any = {...c};
-                if (Array.isArray((c as any).labelIds)) {
-                    next.labelIds = this.normalizeLabelIds(c).filter((x) => x !== lid);
-                }
-                if (Array.isArray((c as any).labels)) {
-                    next.labels = (c as any).labels.filter((x: any) => {
-                        const id = x?.labelId ?? (typeof x === 'string' ? x : x?.id);
-                        return id !== lid;
-                    });
-                }
-                if (Array.isArray((c as any).cardLabels)) {
+                if (Array.isArray((c as any).labelIds)) next.labelIds = this.normalizeLabelIds(c).filter(x => x !== lid);
+                if (Array.isArray((c as any).labels))
+                    next.labels = (c as any).labels.filter((x: any) => (x?.labelId ?? x?.id ?? x) !== lid);
+                if (Array.isArray((c as any).cardLabels))
                     next.cardLabels = (c as any).cardLabels.filter((x: any) => x?.labelId !== lid);
-                }
                 this.data.set(next);
             } else {
                 await this.labelsApi.assignToCard(c.id, lid);
                 this.store.addLabelToCardLocally?.(c.id, lid);
-
                 const next: any = {...c};
                 const ids = this.normalizeLabelIds(c);
-                if (Array.isArray((c as any).labelIds)) {
-                    next.labelIds = [...ids, lid];
-                }
-                if (Array.isArray((c as any).labels)) {
-                    const sample = (c as any).labels[0];
-                    if (typeof sample === 'string') {
-                        next.labels = [...(c as any).labels, lid];
-                    } else {
-                        next.labels = [...(c as any).labels, {id: lid, labelId: lid}];
-                    }
-                }
-                if (Array.isArray((c as any).cardLabels)) {
-                    next.cardLabels = [...(c as any).cardLabels, {cardId: c.id, labelId: lid}];
-                }
+                if (Array.isArray((c as any).labelIds)) next.labelIds = [...ids, lid];
+                if (Array.isArray((c as any).labels))
+                    next.labels = [
+                        ...(((c as any).labels ?? [])),
+                        typeof (c as any).labels?.[0] === 'string' ? lid : {id: lid, labelId: lid},
+                    ];
+                if (Array.isArray((c as any).cardLabels))
+                    next.cardLabels = [...(((c as any).cardLabels ?? [])), {cardId: c.id, labelId: lid}];
                 this.data.set(next);
             }
         } catch {
-            // noop (UI will re-sync on reopen)
+            /* noop */
         }
     }
-
-    labelColor = (id: string) =>
-        this.store.labels().find((l) => l.id === id)?.color ?? '#ccc';
-    labelName = (id: string) =>
-        this.store.labels().find((l) => l.id === id)?.name ?? '';
 
     // ------- Save fields -------
     private _savingTitle = false;
@@ -378,35 +308,17 @@ export class CardModalComponent {
         this.data.set({...c, ...payload});
     }
 
-    // ------- Members -------
+    // ------- Members (only minimal helpers kept) -------
     currentMemberIds(): string[] {
         const c: any = this.data();
         if (!c) return [];
-        if (Array.isArray(c.assignees))
-            return c.assignees.map((a: any) => a?.userId ?? a?.id).filter(Boolean);
-        return [];
+        return Array.isArray(c.assignees) ? c.assignees.map((a: any) => a?.userId ?? a?.id).filter(Boolean) : [];
     }
 
     hasAnyMembers = () => this.currentMemberIds().length > 0;
-    hasMember = (uid: string) => this.currentMemberIds().includes(uid);
 
-    async toggleMember(uid: string) {
-        const c = this.data();
-        if (!c) return;
-        if (this.hasMember(uid)) {
-            await this.cardsApi.unassignMember(c.id, uid);
-            const nextAssignees =
-                (c as any).assignees?.filter((a: any) => (a?.userId ?? a?.id) !== uid) ?? [];
-            this.data.set({...c, assignees: nextAssignees} as any);
-        } else {
-            await this.cardsApi.assignMember(c.id, uid);
-            const member = this.members().find((m) => m.id === uid);
-            const nextAssignees = [
-                ...((c as any).assignees ?? []),
-                {userId: uid, user: member},
-            ] as any[];
-            this.data.set({...c, assignees: nextAssignees} as any);
-        }
+    onAssigneesChange(list: CardAssignee[]) {
+        this.data.update(c => (c ? ({...c, assignees: list} as ModalCard) : c));
     }
 
     // ------- Checklists -------
@@ -418,17 +330,14 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklist(c.id, {title: 'Checklist'});
-        this.data.set({
-            ...c,
-            checklists: [...(((c as any).checklists as Checklist[]) ?? []), created],
-        } as any);
+        this.data.set({...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), created]} as any);
     }
 
     async renameChecklist(cid: string, title: string) {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.updateChecklist(cid, {title});
-        const next = this.checklists().map((cl) => (cl.id === cid ? {...cl, title} : cl));
+        const next = this.checklists().map(cl => (cl.id === cid ? {...cl, title} : cl));
         this.data.set({...c, checklists: next} as any);
     }
 
@@ -436,9 +345,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklistItem(cid, {text: 'New item'});
-        const next = this.checklists().map((cl) =>
-            cl.id === cid ? {...cl, items: [...cl.items, created]} : cl
-        );
+        const next = this.checklists().map(cl => (cl.id === cid ? {...cl, items: [...cl.items, created]} : cl));
         this.data.set({...c, checklists: next} as any);
     }
 
@@ -446,10 +353,8 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.updateChecklistItem(itemId, {done});
-        const next = this.checklists().map((cl) =>
-            cl.id === cid
-                ? {...cl, items: cl.items.map((it) => (it.id === itemId ? {...it, done} : it))}
-                : cl
+        const next = this.checklists().map(cl =>
+            cl.id === cid ? {...cl, items: cl.items.map(it => (it.id === itemId ? {...it, done} : it))} : cl
         );
         this.data.set({...c, checklists: next} as any);
     }
@@ -482,9 +387,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.deleteComment(commentId);
-        this.data.set(
-            {...c, comments: this.comments().filter((x) => x.id !== commentId)} as any
-        );
+        this.data.set({...c, comments: this.comments().filter(x => x.id !== commentId)} as any);
     }
 
     // ------- Close -------
@@ -497,10 +400,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         this.priorityDraft.set(val);
-        await this.cardsApi.patchCardExtended(
-            c.id,
-            val ? {priority: val} : ({priority: null} as any)
-        );
+        await this.cardsApi.patchCardExtended(c.id, val ? {priority: val} : ({priority: null} as any));
         this.data.set({...c, priority: val || null} as any);
     }
 
@@ -508,48 +408,20 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         this.riskDraft.set(val);
-        await this.cardsApi.patchCardExtended(
-            c.id,
-            val ? {risk: val} : ({risk: null} as any)
-        );
+        await this.cardsApi.patchCardExtended(c.id, val ? {risk: val} : ({risk: null} as any));
         this.data.set({...c, risk: val || null} as any);
     }
 
     async saveEstimation(raw: unknown) {
         const c = this.data();
         if (!c) return;
-
         const s = (raw ?? '').toString();
         this.estimationDraft.set(s);
-
         const trimmed = s.trim();
         const n = trimmed === '' ? null : Number(trimmed);
-        if (n !== null && (!Number.isFinite(n) || n < 0)) {
-            // keep draft as-is, do not persist invalid value
-            return;
-        }
-
-        await this.cardsApi.patchCardExtended(
-            c.id,
-            n === null ? ({estimate: null} as any) : {estimate: n}
-        );
+        if (n !== null && (!Number.isFinite(n) || n < 0)) return;
+        await this.cardsApi.patchCardExtended(c.id, n === null ? ({estimate: null} as any) : {estimate: n});
         this.data.set({...c, estimate: n} as any);
-    }
-
-    // ------- Priority styling -------
-    private priorityPalette: Record<
-        string,
-        { label: string; dot: string; bg: string; fg: string; ring: string }
-    > = {
-        low: {label: 'Low', dot: '#22c55e', bg: 'rgba(34,197,94,0.12)', fg: '#14532d', ring: '#86efac'},
-        medium: {label: 'Medium', dot: '#eab308', bg: 'rgba(234,179,8,0.14)', fg: '#713f12', ring: '#fde047'},
-        high: {label: 'High', dot: '#f97316', bg: 'rgba(249,115,22,0.14)', fg: '#7c2d12', ring: '#fdba74'},
-        urgent: {label: 'Urgent', dot: '#ef4444', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d', ring: '#fca5a5'},
-    };
-
-    priorityMeta() {
-        const raw = (this.data()?.priority as any) ?? this.priorityDraft();
-        return raw ? this.priorityPalette[raw] ?? null : null;
     }
 
     priorityClass() {
@@ -579,8 +451,12 @@ export class CardModalComponent {
         this.isEditingDesc = false;
     }
 
+    private textarea() {
+        return document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
+    }
+
     wrapSelection(left: string, right: string) {
-        const el = document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
+        const el = this.textarea();
         if (!el) return;
         const {selectionStart: a, selectionEnd: b} = el;
         const val = this.descDraft() || '';
@@ -594,12 +470,11 @@ export class CardModalComponent {
     }
 
     insertPrefix(prefix: string) {
-        const el = document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
+        const el = this.textarea();
         if (!el) return;
         const val = this.descDraft() || '';
         const {selectionStart: a, selectionEnd: b} = el;
-        const before = val.slice(0, a);
-        const blockStart = before.lastIndexOf('\n') + 1;
+        const blockStart = val.slice(0, a).lastIndexOf('\n') + 1;
         const next = val.slice(0, blockStart) + prefix + val.slice(blockStart);
         this.descDraft.set(next);
         queueMicrotask(() => {
@@ -613,7 +488,7 @@ export class CardModalComponent {
     }
 
     insertLink() {
-        const el = document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
+        const el = this.textarea();
         if (!el) return;
         const {selectionStart: a, selectionEnd: b} = el;
         const val = this.descDraft() || '';
@@ -629,62 +504,40 @@ export class CardModalComponent {
     }
 
     // ------- Rich description (SSR-safe) -------
-    private hasDom(): boolean {
+    private hasDom() {
         return typeof window !== 'undefined' && typeof document !== 'undefined';
     }
 
-    private fallbackSanitize(html: string): string {
-        let out = html.replace(
-            /<(script|style|iframe|object|embed)[\s\S]*?>[\s\S]*?<\/\1>/gi,
-            ''
-        );
-        out = out
+    private fallbackSanitize(html: string) {
+        let out = html.replace(/<(script|style|iframe|object|embed)[\s\S]*?>[\s\S]*?<\/\1>/gi, '');
+        return out
             .replace(/\son\w+="[^"]*"/gi, '')
             .replace(/\son\w+='[^']*'/gi, '')
             .replace(/\shref="javascript:[^"]*"/gi, ' href="#"')
             .replace(/\shref='javascript:[^']*'/gi, " href='#'");
-        return out;
     }
 
-    renderMarkdown(src: string | null | undefined): string {
-        let s = (src ?? '').replace(/[&<>]/g, (m) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[m]!));
-        // headings
+    renderMarkdown(src: string | null | undefined) {
+        let s = (src ?? '').replace(/[&<>]/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[m]!));
         s = s.replace(/^\s*#{1,6}\s+(.*)$/gmi, '<h4>$1</h4>');
-        // bold/italic
         s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         s = s.replace(/_(.+?)_/g, '<em>$1</em>');
-        // links
-        s = s.replace(
-            /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener">$1</a>'
+        s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        s = s.replace(/(?:^|\n)(-\s+.*(?:\n-\s+.*)*)/g, block =>
+            '<ul>' + block.trim().split('\n').map(line => line.replace(/^\-\s+(.+)$/, '<li>$1</li>')).join('') + '</ul>'
         );
-        // simple lists (group contiguous items)
-        s = s.replace(
-            /(?:^|\n)(-\s+.*(?:\n-\s+.*)*)/g,
-            (block) =>
-                '<ul>' +
-                block
-                    .trim()
-                    .split('\n')
-                    .map((line) => line.replace(/^\-\s+(.+)$/, '<li>$1</li>'))
-                    .join('') +
-                '</ul>'
-        );
-        // paragraphs
-        s = s
+        return s
             .split(/\n{2,}/)
-            .map((p) => (/^<(h4|ul)>/i.test(p) ? p : `<p>${p.replace(/\n/g, '<br/>')}</p>`))
+            .map(p => (/^<(h4|ul)>/i.test(p) ? p : `<p>${p.replace(/\n/g, '<br/>')}</p>`))
             .join('\n');
-        return s;
     }
 
-    private looksLikeHtml(s: string): boolean {
+    private looksLikeHtml(s: string) {
         return /<([a-z][\w:-]*)(\s[^>]*)?>[\s\S]*<\/\1>|<([a-z][\w:-]*)(\s[^>]*)?\/>/i.test(s);
     }
 
-    private sanitizeBasicHtml(input: string): string {
+    private sanitizeBasicHtml(input: string) {
         if (!this.hasDom()) return this.fallbackSanitize(input);
-
         const allowedTags = new Set([
             'p',
             'br',
@@ -711,18 +564,14 @@ export class CardModalComponent {
             'span',
             'div',
         ]);
-
         const allowedAttrs: Record<string, Set<string>> = {
             a: new Set(['href', 'title', 'target', 'rel']),
             span: new Set([]),
             div: new Set([]),
         };
-
         const template = document.createElement('template');
         template.innerHTML = input;
-
         const out = document.createElement('div');
-
         const cloneNode = (node: Node, parent: HTMLElement) => {
             if (node.nodeType === Node.TEXT_NODE) {
                 parent.appendChild(document.createTextNode(node.textContent ?? ''));
@@ -731,19 +580,15 @@ export class CardModalComponent {
             if (node.nodeType === Node.ELEMENT_NODE) {
                 const el = node as HTMLElement;
                 const tag = el.tagName.toLowerCase();
-
                 if (!allowedTags.has(tag)) {
                     for (const child of Array.from(el.childNodes)) cloneNode(child, parent);
                     return;
                 }
-
                 const outEl = document.createElement(tag);
-
                 const allowed = allowedAttrs[tag] ?? new Set<string>();
                 for (const {name, value} of Array.from(el.attributes)) {
                     const n = name.toLowerCase();
                     if (!allowed.has(n)) continue;
-
                     if (tag === 'a' && n === 'href') {
                         if (!/^(https?:|mailto:)/i.test(value)) continue;
                         outEl.setAttribute('href', value);
@@ -753,71 +598,57 @@ export class CardModalComponent {
                     }
                     outEl.setAttribute(n, value);
                 }
-
                 for (const child of Array.from(el.childNodes)) cloneNode(child, outEl);
                 parent.appendChild(outEl);
             }
         };
-
-        for (const child of Array.from(template.content.childNodes)) {
-            cloneNode(child, out);
-        }
-
+        for (const child of Array.from(template.content.childNodes)) cloneNode(child, out);
         return out.innerHTML;
     }
 
-    richDescription(src: string | null | undefined): string {
+    richDescription(src: string | null | undefined) {
         const val = (src ?? '').trim();
         if (!val) return '';
         const html = this.looksLikeHtml(val) ? val : this.renderMarkdown(val);
         return this.sanitizeBasicHtml(html);
     }
 
-    // ------- Labels helpers -------
+    // ------- Labels helpers / presence checks -------
     private normalizeLabelIds(src: any): string[] {
         const c = src as any;
         if (!c) return [];
         if (Array.isArray(c.labelIds)) return c.labelIds.filter(Boolean);
         if (Array.isArray(c.labels))
-            return c.labels
-                .map((x: any) => x?.labelId ?? (typeof x === 'string' ? x : x?.id))
-                .filter(Boolean);
-        if (Array.isArray(c.cardLabels))
-            return c.cardLabels.map((x: any) => x?.labelId).filter(Boolean);
+            return c.labels.map((x: any) => x?.labelId ?? (typeof x === 'string' ? x : x?.id)).filter(Boolean);
+        if (Array.isArray(c.cardLabels)) return c.cardLabels.map((x: any) => x?.labelId).filter(Boolean);
         return [];
     }
 
-    // ---- presence checks used to show/hide "Add to card" buttons ----
-    hasLabels(): boolean {
+    hasLabels() {
         return this.selectedLabelIds().size > 0;
     }
 
-    hasDates(): boolean {
+    hasDates() {
         return !!(this.startDraft() || this.dueDraft());
     }
 
-    hasMembers(): boolean {
+    hasMembers() {
         return this.currentMemberIds().length > 0;
     }
 
-    hasChecklists(): boolean {
+    hasChecklists() {
         return this.checklists().length > 0;
     }
 
-    // hasAttachments(): boolean {
-    //     const a = (this.data() as any)?.attachments;
-    //     return Array.isArray(a) && a.length > 0;
-    // }
-
-    hasAttachments(): boolean {
+    hasAttachments() {
         return (this.attachments()?.length ?? 0) > 0;
     }
 
-    coverId(): string | null {
+    coverId() {
         return this.attachments().find(a => a.isCover)?.id ?? null;
     }
 
-    hasPlanning(): boolean {
+    hasPlanning() {
         const p = (this.data()?.priority as any) || this.priorityDraft() || '';
         const r = (this.data()?.risk as any) || this.riskDraft() || '';
         const e = (this.data() as any)?.estimate;
@@ -825,22 +656,7 @@ export class CardModalComponent {
         return !!(p || r || hasE);
     }
 
-
-    async addAttachmentFile(input: HTMLInputElement) {
-        const c = this.data();
-        if (!c) return;
-        const file = input.files?.[0];
-        if (!file) return;
-        this.isUploading.set(true);
-        try {
-            const created = await firstValueFrom(this.attachmentsApi.upload(c.id, file));
-            this.attachments.set([created, ...this.attachments()]);
-        } finally {
-            this.isUploading.set(false);
-            input.value = '';
-        }
-    }
-
+    // ------- Attachments -------
     async addAttachmentByUrl() {
         const c = this.data();
         if (!c) return;
@@ -871,7 +687,7 @@ export class CardModalComponent {
         if (!name) return;
         try {
             const updated = await firstValueFrom(this.attachmentsApi.rename(id, name));
-            this.attachments.set(this.attachments().map(x => x.id === id ? updated : x));
+            this.attachments.set(this.attachments().map(x => (x.id === id ? updated : x)));
             this.cancelRename();
         } catch {
         }
@@ -880,8 +696,7 @@ export class CardModalComponent {
     async setAsCover(id: string) {
         try {
             await firstValueFrom(this.attachmentsApi.setCover(id));
-            const list = this.attachments().map(a => ({...a, isCover: a.id === id}));
-            this.attachments.set(list);
+            this.attachments.set(this.attachments().map(a => ({...a, isCover: a.id === id})));
         } catch {
         }
     }
@@ -894,10 +709,76 @@ export class CardModalComponent {
         }
     }
 
+    /** Returns short upper-cased file extension (max 6 chars). */
+    fileExt(a: Pick<AttachmentDto, 'name' | 'url'> | { name?: string | null; url?: string | null }): string {
+        const s = ((a?.name || a?.url) ?? '').split('?')[0];
+        const ix = s.lastIndexOf('.');
+        return ix < 0 ? 'FILE' : s.slice(ix + 1).toUpperCase().slice(0, 6);
+    }
+
+    /** Opens the attachment URL in a new tab (used by template previews). */
+    previewAttachment(a: AttachmentDto): void {
+        const url = this.attachmentApiFileUrl(a); // factory created earlier
+        if (url) window.open(url, '_blank', 'noopener');
+    }
+
+    // Drag & drop visual state
+    onDragOver(e: DragEvent) {
+        e.preventDefault();
+        this.dropActive.set(true);
+    }
+
+    onDragLeave(e: DragEvent) {
+        e.preventDefault();
+        this.dropActive.set(false);
+    }
+
+    async onDropFiles(e: DragEvent) {
+        e.preventDefault();
+        this.dropActive.set(false);
+
+        const c = this.data();
+        if (!c) return;
+
+        const files = Array.from(e.dataTransfer?.files ?? []);
+        if (!files.length) return;
+
+        this.isUploading.set(true);
+        try {
+            for (const f of files) {
+                const created = await firstValueFrom(this.attachmentsApi.upload(c.id, f));
+                this.attachments.set([created, ...this.attachments()]);
+            }
+        } finally {
+            this.isUploading.set(false);
+        }
+    }
+
+    // File input handler
+    async addAttachmentFiles(input: HTMLInputElement) {
+        const c = this.data();
+        if (!c) return;
+
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return;
+
+        this.isUploading.set(true);
+        try {
+            for (const f of files) {
+                const created = await firstValueFrom(this.attachmentsApi.upload(c.id, f));
+                this.attachments.set([created, ...this.attachments()]);
+            }
+        } finally {
+            this.isUploading.set(false);
+            input.value = '';
+        }
+    }
+
     humanBytes(n?: number | null) {
         if (!n || n < 0) return '—';
         const u = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let i = 0, v = n;
+        let i = 0,
+            v = n;
         while (v >= 1024 && i < u.length - 1) {
             v /= 1024;
             i++;
@@ -907,7 +788,7 @@ export class CardModalComponent {
 
     private setBusy(id: string, busy: boolean) {
         const s = new Set(this.dlBusy());
-        if (busy) s.add(id); else s.delete(id);
+        busy ? s.add(id) : s.delete(id);
         this.dlBusy.set(s);
     }
 
@@ -926,122 +807,48 @@ export class CardModalComponent {
         URL.revokeObjectURL(url);
     }
 
-    /** Download attachment with progress (cookie-based auth works on same-origin) */
     async downloadAttachment(a: AttachmentDto) {
         const id = a.id;
         if (this.isDownloading(id)) return;
-
         this.setBusy(id, true);
         this.setProgress(id, 0);
-
-        const sub = this.attachmentsApi
-            // withCredentials true is safe; on same-origin it’s a no-op, on subdomain it ensures cookies go along
-            .downloadWithProgress(id, {withCredentials: true})
-            .subscribe({
-                next: (evt) => {
-                    if (evt.kind === 'progress') this.setProgress(id, evt.percent);
-                    if (evt.kind === 'done') {
-                        const fallback = a.name || 'attachment';
-                        const name = (evt.filename && evt.filename.trim()) ? evt.filename : fallback;
-                        this.saveBlob(evt.blob, name);
-                        this.setProgress(id, 100);
-                        this.setBusy(id, false);
-                        sub.unsubscribe();
-                    }
-                },
-                error: () => {
-                    // reset on error
+        const sub = this.attachmentsApi.downloadWithProgress(id, {withCredentials: true}).subscribe({
+            next: evt => {
+                if (evt.kind === 'progress') this.setProgress(id, evt.percent);
+                if (evt.kind === 'done') {
+                    const fallback = a.name || 'attachment';
+                    const name = evt.filename && evt.filename.trim() ? evt.filename : fallback;
+                    this.saveBlob(evt.blob, name);
+                    this.setProgress(id, 100);
                     this.setBusy(id, false);
-                    this.setProgress(id, 0);
                     sub.unsubscribe();
-                },
-            });
+                }
+            },
+            error: () => {
+                this.setBusy(id, false);
+                this.setProgress(id, 0);
+                sub.unsubscribe();
+            },
+        });
     }
 
-    onDragOver(e: DragEvent) {
-        e.preventDefault();
-        this.dropActive.set(true);
-    }
-
-    onDragLeave(e: DragEvent) {
-        e.preventDefault();
-        this.dropActive.set(false);
-    }
-
-    async onDropFiles(e: DragEvent) {
-        e.preventDefault();
-        this.dropActive.set(false);
-        const c = this.data();
-        if (!c) return;
-        const files = Array.from(e.dataTransfer?.files ?? []);
-        if (!files.length) return;
-        this.isUploading.set(true);
-        try {
-            // sequential to keep order + avoid overloading server; parallel if you wish
-            for (const f of files) {
-                const created = await firstValueFrom(this.attachmentsApi.upload(c.id, f));
-                this.attachments.set([created, ...this.attachments()]);
-            }
-        } finally {
-            this.isUploading.set(false);
-        }
-    }
-
-// existing single input → accept multiple (backwards compatible)
-    async addAttachmentFiles(input: HTMLInputElement) {
-        const c = this.data();
-        if (!c) return;
-        const files = Array.from(input.files ?? []);
-        if (!files.length) return;
-        this.isUploading.set(true);
-        try {
-            for (const f of files) {
-                const created = await firstValueFrom(this.attachmentsApi.upload(c.id, f));
-                this.attachments.set([created, ...this.attachments()]);
-            }
-        } finally {
-            this.isUploading.set(false);
-            input.value = '';
-        }
-    }
-
-// open in new tab (respects your proxy + cookie auth via GET in same origin)
-    previewAttachment(a: AttachmentDto) {
-        const url = this.attachmentApiFileUrl(a); // already exposed in template
-        window.open(url, '_blank', 'noopener');
-    }
-
-// Small badge text like "PDF", "PNG", "ZIP"
-    fileExt(a: AttachmentDto): string {
-        const s = (a.name || a.url || '').split('?')[0];
-        const ix = s.lastIndexOf('.');
-        if (ix < 0) return 'FILE';
-        return s.slice(ix + 1).toUpperCase().slice(0, 6);
-    }
-
-    // ------- Keyboard -------
-    @HostListener('document:keydown.escape')
-    onEsc() {
+    // keyboard
+    @HostListener('document:keydown.escape') onEsc() {
         if (this.modal.isOpen()) this.close();
     }
 
-    protected readonly HTMLInputElement = HTMLInputElement;
+    // template helpers
     protected readonly attachmentApiFileUrl = this.attachmentsApi.makeAttachmentUrlFactory();
-
-    protected readonly DownloadIcon = DownloadIcon;
 }
 
-// --- helpers (pure) ---
+// helpers
 function toLocalInput(iso: string) {
     const d = new Date(iso);
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        d.getHours()
-    )}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function toUtcIso(local: string) {
     const d = new Date(local);
-    // new Date(local) treats 'local' as local time; convert to UTC ISO
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
 }

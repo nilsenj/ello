@@ -1,5 +1,5 @@
 // apps/web/src/app/data/boards.service.ts
-import { of, map, switchMap, tap } from 'rxjs';
+import { of, map, switchMap, tap, firstValueFrom } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { ApiBaseService } from './api-base.service';
 import type { Board } from '../types';
@@ -8,6 +8,8 @@ import { ListsService } from './lists.service';
 import { LabelsService } from "./labels.service";
 import { HttpClient } from "@angular/common/http";
 
+export type MemberRole = 'owner' | 'admin' | 'member' | 'viewer';
+export type BoardMemberLite = { id: string; name: string; avatar?: string; role: MemberRole };
 @Injectable({providedIn: 'root'})
 export class BoardsService {
     constructor(
@@ -29,19 +31,38 @@ export class BoardsService {
     }
 
     async selectBoard(boardId: string) {
+        // reflect selection in UI immediately
         this.store.setCurrentBoardId(boardId);
-        await Promise.all([
+
+        const loadAll = () => Promise.all([
             this.listsApi.loadLists(boardId),
             this.labelsApi.loadLabels(boardId),
         ]);
+
+        try {
+            await loadAll();
+        } catch (err: any) {
+            const status = err?.status ?? err?.statusCode ?? err?.error?.statusCode;
+            if (status === 403) {
+                // Not a member yet → join and retry
+                await firstValueFrom(this.http.post(`/api/boards/${boardId}/join`, {}));
+                await loadAll();
+            } else {
+                throw err;
+            }
+        }
     }
 
     async getMembers(boardId: string) {
         return this.http.get<{ id:string; name:string; avatar?:string }[]>(`/api/boards/${boardId}/members`).toPromise();
     }
 
-    createBoard(name: string, workspaceId?: string) {
-        // If the caller didn’t pass a workspace, try to infer one:
+    createBoard(workspaceId: string | null, payload: {
+        name: string;
+        description?: string | null;
+        visibility?: "private" | "workspace" | "public";
+        background?: string | null
+    }) {        // If the caller didn’t pass a workspace, try to infer one:
         // 1) from already-loaded boards, or
         // 2) fetch the first workspace from API (fallback).
         const inferWorkspaceId$ = workspaceId
@@ -56,7 +77,7 @@ export class BoardsService {
         return inferWorkspaceId$.pipe(
             switchMap(wsId => {
                 if (!wsId) throw new Error('No workspace available to create a board');
-                return this.http.post<any>(`/api/workspaces/${wsId}/boards`, { name }).pipe(
+                return this.http.post<any>(`/api/workspaces/${wsId}/boards`, { ...payload }).pipe(
                     tap(board => {
                         // minimally merge into store
                         const next = [...this.store.boards(), board];
@@ -65,5 +86,39 @@ export class BoardsService {
                 );
             })
         ).toPromise();
+    }
+
+    // Replace the existing methods in BoardsService with these:
+
+    async searchMembers(boardId: string, query?: string): Promise<BoardMemberLite[]> {
+        const params = query?.trim() ? { query: query.trim() } : undefined;
+
+        // Some backends return { members: [...] }, others return [...]
+        const resp = await firstValueFrom(
+            this.http.get<{ members: BoardMemberLite[] } | BoardMemberLite[]>(
+                `/api/boards/${boardId}/members`,
+                { params }
+            )
+        );
+
+        return Array.isArray(resp) ? resp : (resp?.members ?? []);
+    }
+
+    async updateBoardMemberRole(
+        boardId: string,
+        userId: string,
+        role: MemberRole
+    ): Promise<{ ok: true } | BoardMemberLite> {
+        const res = await firstValueFrom(
+            this.http.patch<{ ok: true } | BoardMemberLite>(
+                `/api/boards/${boardId}/members/${userId}`,
+                { role }
+            )
+        );
+
+        // If you maintain members in the BoardStore and have a local mutator, uncomment:
+        // (this.store.updateBoardMemberRoleLocally as any)?.(boardId, userId, role);
+
+        return res;
     }
 }

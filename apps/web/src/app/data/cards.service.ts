@@ -7,6 +7,23 @@ import type { Card, CommentDto } from '../types';
 import { ListsService } from './lists.service';
 import { BoardStore } from '../store/board-store.service';
 
+/** Mirror of your Prisma enum CardRole */
+export type CardRole =
+    | 'developer'
+    | 'designer'
+    | 'qa'
+    | 'analyst'
+    | 'pm'
+    | 'devops'
+    | 'other';
+
+/** Shape returned by POST /cards/:cardId/assignees and PATCH /.../role (select) */
+export type CardAssigneeRoleDto = {
+    userId: string;
+    role: CardRole | null;
+    customRole: string | null;
+};
+
 @Injectable({ providedIn: 'root' })
 export class CardsService {
     constructor(
@@ -162,13 +179,31 @@ export class CardsService {
         return firstValueFrom(this.http.patch(`/api/cards/${id}/extended`, body));
     }
 
-    async assignMember(cardId: string, userId: string) {
-        return firstValueFrom(this.http.post(`/api/cards/${cardId}/assignees`, { userId }));
+    /** Assign a user to a card. Server returns { userId, role, customRole }. */
+    async assignMember(cardId: string, userId: string): Promise<CardAssigneeRoleDto> {
+        return firstValueFrom(
+            this.http.post<CardAssigneeRoleDto>(`/api/cards/${cardId}/assignees`, { userId })
+        );
     }
+
     async unassignMember(cardId: string, userId: string) {
         return firstValueFrom(this.http.delete(`/api/cards/${cardId}/assignees/${userId}`));
     }
 
+    /**
+     * Set a functional role for a card assignee.
+     * If role !== 'other', customRole is ignored on the server side.
+     */
+    setAssigneeRole(cardId: string, userId: string, body: { role: CardRole | null, customRole?: string | null }) {
+        return firstValueFrom(
+            this.http.patch<{ userId: string; role: string | null; customRole: string | null }>(
+                `/api/cards/${cardId}/assignees/${userId}/role`,
+                { role: body.role, customRole: body.customRole ?? null }
+            )
+        );
+    }
+
+    // ---------- Checklists ----------
     async addChecklist(cardId: string, body: { title: string }) {
         return firstValueFrom(this.http.post(`/api/cards/${cardId}/checklists`, body));
     }
@@ -182,10 +217,10 @@ export class CardsService {
         return firstValueFrom(this.http.patch(`/api/checklist-items/${itemId}`, body));
     }
 
+    // ---------- Comments ----------
     addComment(cardId: string, body: { text: string }) {
         return firstValueFrom(this.http.post<CommentDto>(`/api/cards/${cardId}/comments`, body));
     }
-
     deleteComment(commentId: string) {
         return firstValueFrom(this.http.delete<void>(`/api/comments/${commentId}`));
     }

@@ -1,0 +1,247 @@
+/* wrapper spacing */
+.mp-wrap {
+    padding: 4px 2px;
+}
+
+/* accordions */
+.cm-accordion {
+    border: 1px solid #eaecef;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.cm-accordion + .cm-accordion {
+    margin-top: 12px;
+}
+
+.cm-accordion-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #0f172a;
+    background: #fafafa;
+    border-bottom: 1px solid #eef1f4;
+}
+.cm-accordion[open] .cm-accordion-summary {
+    background: #f7fafc;
+}
+.cm-accordion-summary::-webkit-details-marker {
+    display: none;
+}
+
+.cm-accordion-body {
+    padding: 0;
+}
+
+/* badge */
+.cm-badge {
+    display: inline-block;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+    color: #0b3aa5;
+    background: color-mix(in oklab, #2563eb, #fff 85%);
+    border: 1px solid color-mix(in oklab, #2563eb, #fff 60%);
+}
+
+/* search row layout */
+.cm-search-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+/* segment control */
+.cm-segment {
+    display: inline-flex;
+    gap: 6px;
+    padding: 4px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #fff;
+}
+.cm-seg-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #0f172a;
+}
+.cm-seg-opt input[type="radio"] {
+    accent-color: #2563eb;
+}
+
+/* spinner */
+.cm-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: cmSpin 0.8s linear infinite;
+}
+@keyframes cmSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* members list spacing & visuals */
+.cm-members {
+    display: grid;
+    gap: 10px;
+}
+
+.cm-member {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #eee;
+    padding: 8px 12px;
+    background: #fafafa;
+    transition: background .15s ease, box-shadow .15s ease, transform .06s ease;
+}
+.cm-member:hover {
+    background: #f3f4f6;
+    box-shadow: 0 1px 6px rgba(0,0,0,.06);
+}
+.cm-member.is-selected {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+}
+
+.cm-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    object-fit: cover;
+}
+.cm-avatar-fallback {
+    display: inline-grid;
+    place-items: center;
+    background: #e5e7eb;
+    font-weight: 600;
+}
+
+.cm-member-col {
+    min-width: 0;
+}
+.cm-member-name {
+    font-weight: 600;
+    color: #0f172a;
+}
+.cm-member-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.cm-role-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+/* small checkmark at the end */
+.cm-check {
+    font-weight: 700;
+    color: #16a34a;
+}
+
+/* inputs/fields */
+.cm-field {
+    display: grid;
+    gap: 6px;
+}
+.cm-field-label {
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* tighten input padding slightly for compact rows */
+.cm-input {
+}
+
+/* remove any legacy .cm-member-assign styles if present */
+.cm-member-assign,
+.cm-member-assign--remove {
+    display: none !important;
+}
+
+/* Make member rows full-width and borderless */
+.cm-member {
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+    background: #fff;            /* keep clean white row */
+    padding: 10px 12px;          /* small comfort bump */
+    border-bottom: 2px solid lightgray!important;
+}
+
+.cm-member:last-child {
+    border-bottom: 0!important;
+}
+
+.cm-member:hover {
+    background: #f7fafc;         /* subtle hover without shadow */
+    box-shadow: none;
+}
+
+.cm-member.is-selected {
+    /* no border or ring; just a gentle tint to indicate selection */
+    background: #eef2ff;
+    box-shadow: none;
+}
+
+/* If button variant is used for search results, ensure it stretches */
+button.cm-member {
+    width: 100%;
+}
+
+/* Optional: tighten the list to look good without borders */
+.cm-members {
+    gap: 0px;                    /* slightly tighter spacing between rows */
+}
+
+/* Unify select look with inputs + custom chevron */
+.cm-select {
+    @apply w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23677' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 14px 14px;
+    padding-right: 2rem; /* room for chevron */
+}
+
+.cm-select:hover {
+    @apply border-gray-300;
+}
+
+.cm-select:focus {
+    @apply outline-none ring-2 ring-blue-500/20 border-blue-400;
+}
+
+.cm-select:disabled {
+    @apply bg-gray-50 text-gray-400 cursor-not-allowed;
+}
+
+/* Optional: compact size variant if you need it somewhere */
+.cm-select--sm {
+    @apply px-2 py-1 text-[13px];
+    background-position: right 0.5rem center;
+    padding-right: 1.75rem;
+}
