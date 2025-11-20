@@ -1,8 +1,8 @@
 // apps/api/src/main.ts
-import Fastify, {FastifyPluginAsync} from 'fastify';
+import Fastify, { FastifyPluginAsync } from 'fastify';
 import fastifyCors from '@fastify/cors';
 import cookie from '@fastify/cookie';
-import fastifyStatic, {FastifyStaticOptions} from '@fastify/static';
+import fastifyStatic, { FastifyStaticOptions } from '@fastify/static';
 import fastifyJwt from '@fastify/jwt';            // ✅ v8 for Fastify v4
 import { PrismaClient } from '@prisma/client';
 import path from 'node:path';
@@ -16,6 +16,7 @@ import { registerLabelRoutes } from './routes/labels.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerWorkspaceRoutes } from './routes/workspaces.js';
 import { registerAttachmentRoutes } from './routes/attachments.js';
+import { registerActivityRoutes } from './routes/activity.js';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +31,7 @@ async function bootstrap() {
 
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-    await app.register(fastifyCors, { origin: true, credentials: true,  exposedHeaders: ['Content-Disposition', 'Content-Length', 'Content-Type']});
+    await app.register(fastifyCors, { origin: true, credentials: true, exposedHeaders: ['Content-Disposition', 'Content-Length', 'Content-Type'] });
     await app.register(cookie, { secret: process.env.COOKIE_SECRET || 'dev-cookie' });
 
     // ❌ remove multipart here (plugin will handle it)
@@ -60,6 +61,7 @@ async function bootstrap() {
         publicBaseUrl: PUBLIC_BASE_URL,
         publicPrefix: '/uploads',
     });
+    await registerActivityRoutes(app, prisma);
 
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`API on ${PUBLIC_BASE_URL}`);

@@ -1,26 +1,15 @@
 <div *ngIf="modal.isOpen()" class="cm-backdrop" (click)="close()"></div>
 
-<div
-        *ngIf="modal.isOpen()"
-        class="cm-panel"
-        role="dialog"
-        [ngClass]="priorityClass()"
-        aria-modal="true"
-        (click)="$event.stopPropagation()"
->
+<div *ngIf="modal.isOpen()" class="cm-panel" role="dialog" [ngClass]="priorityClass()" aria-modal="true"
+    (click)="$event.stopPropagation()">
     <div class="cm-header">
         <span class="cm-header-accent" aria-hidden="true"></span>
 
         <span class="cm-header-pill" *ngIf="(data()?.priority || priorityDraft()) as p">{{ p }}</span>
 
-        <input
-                class="cm-title"
-                [ngModel]="titleDraft()"
-                (ngModelChange)="titleDraft.set($event)"
-                (blur)="saveTitle()"
-                (keydown.enter)="saveTitle()"
-                [attr.aria-label]="'Card title. Priority: ' + ((data()?.priority || priorityDraft()) || 'none')"
-        />
+        <input class="cm-title" [ngModel]="titleDraft()" (ngModelChange)="titleDraft.set($event)" (blur)="saveTitle()"
+            (keydown.enter)="saveTitle()"
+            [attr.aria-label]="'Card title. Priority: ' + ((data()?.priority || priorityDraft()) || 'none')" />
 
         <button class="cm-close" (click)="close()" aria-label="Close">
             <lucide-icon [img]="XIcon"></lucide-icon>
@@ -34,20 +23,15 @@
             <section>
                 <div class="cm-section-title">Description</div>
 
-                <div
-                        *ngIf="!isEditingDesc && !descDraft()?.trim()"
-                        class="cm-btn inline-flex items-center"
-                        (click)="startDescEdit()"
-                >
+                <div *ngIf="!isEditingDesc && !descDraft()?.trim()" class="cm-btn inline-flex items-center"
+                    (click)="startDescEdit()">
                     <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
                     Add a more detailed description…
                 </div>
 
                 <div *ngIf="!isEditingDesc && (descDraft()?.trim()?.length || 0) > 0" class="space-y-2">
-                    <div
-                            class="prose prose-sm max-w-none cm-description"
-                            [innerHTML]="richDescription(descDraft()) | safeHtml"
-                    ></div>
+                    <div class="prose prose-sm max-w-none cm-description"
+                        [innerHTML]="richDescription(descDraft()) | safeHtml"></div>
                     <div>
                         <button class="cm-btn inline-flex items-center" (click)="startDescEdit()">
                             <lucide-icon [img]="PencilIcon" class="mr-1"></lucide-icon>
@@ -59,7 +43,7 @@
                 <div *ngIf="isEditingDesc" class="space-y-2">
                     <div class="flex gap-2">
                         <button type="button" class="cm-btn inline-flex items-center"
-                                (click)="wrapSelection('**','**')">
+                            (click)="wrapSelection('**','**')">
                             <lucide-icon [img]="BoldIcon" class="mr-1"></lucide-icon>
                             <span class="sr-only">Bold</span>
                             <strong>B</strong>
@@ -83,12 +67,8 @@
                         </button>
                     </div>
 
-                    <textarea
-                            class="cm-textarea"
-                            rows="6"
-                            [ngModel]="descDraft()"
-                            (ngModelChange)="descDraft.set($event)"
-                    ></textarea>
+                    <textarea class="cm-textarea" rows="6" [ngModel]="descDraft()"
+                        (ngModelChange)="descDraft.set($event)"></textarea>
 
                     <div class="flex gap-2">
                         <button class="cm-btn-primary inline-flex items-center" (click)="saveDescription()">
@@ -109,20 +89,11 @@
                 <div class="cm-section-title">Comments</div>
 
                 <div class="cm-comment-editor">
-          <textarea
-                  rows="3"
-                  class="cm-textarea"
-                  [ngModel]="commentDraft()"
-                  (ngModelChange)="commentDraft.set($event)"
-                  placeholder="Write a comment…"
-          ></textarea>
+                    <textarea rows="3" class="cm-textarea" [ngModel]="commentDraft()"
+                        (ngModelChange)="commentDraft.set($event)" placeholder="Write a comment…"></textarea>
                     <div class="mt-2">
-                        <button
-                                class="cm-btn-primary inline-flex items-center"
-                                type="button"
-                                [disabled]="isCommentBlank()"
-                                (click)="addComment()"
-                        >
+                        <button class="cm-btn-primary inline-flex items-center" type="button"
+                            [disabled]="isCommentBlank()" (click)="addComment()">
                             <lucide-icon [img]="SendIcon" class="mr-1"></lucide-icon>
                             Comment
                         </button>
@@ -150,8 +121,7 @@
         <div class="cm-col cm-col-side">
             <!-- Compact chips -->
             <section
-                    *ngIf="selectedLabelIds().size || startDraft() || dueDraft() || hasAnyMembers() || checklists().length || hasPlanning() || hasAttachments()"
-            >
+                *ngIf="selectedLabelIds().size || startDraft() || dueDraft() || hasAnyMembers() || checklists().length || hasPlanning() || hasAttachments()">
                 <div class="cm-section-title">Card details</div>
                 <div class="flex flex-wrap gap-2">
                     <button *ngIf="selectedLabelIds().size" class="cm-chip" (click)="openPanel('labels')">
@@ -200,7 +170,7 @@
                         Labels
                     </button>
                     <button class="cm-add inline-flex items-center" *ngIf="!hasMembers()"
-                            (click)="openPanel('members')">
+                        (click)="openPanel('members')">
                         <lucide-icon [img]="UsersIcon" class="mr-1"></lucide-icon>
                         Members
                     </button>
@@ -209,17 +179,17 @@
                         Dates
                     </button>
                     <button class="cm-add inline-flex items-center" *ngIf="!hasChecklists()"
-                            (click)="openPanel('checklists')">
+                        (click)="openPanel('checklists')">
                         <lucide-icon [img]="ListChecksIcon" class="mr-1"></lucide-icon>
                         Checklist
                     </button>
                     <button class="cm-add inline-flex items-center" *ngIf="!hasAttachments()"
-                            (click)="openPanel('attachments')">
+                        (click)="openPanel('attachments')">
                         <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
                         Attachments
                     </button>
                     <button class="cm-add inline-flex items-center" *ngIf="!hasPlanning()"
-                            (click)="openPanel('planning')">
+                        (click)="openPanel('planning')">
                         <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
                         Priority/Risk/Estimate
                     </button>
@@ -230,10 +200,10 @@
             <!-- Labels -->
             <section *ngIf="isPanelOpen('labels')">
                 <div class="cm-section-title flex items-center gap-2">
-          <span class="inline-flex items-center">
-            <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
-            Labels
-          </span>
+                    <span class="inline-flex items-center">
+                        <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
+                        Labels
+                    </span>
                     <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                         <lucide-icon [img]="XIcon"></lucide-icon>
                         Close
@@ -241,13 +211,9 @@
                 </div>
 
                 <div class="cm-labels">
-                    <button
-                            *ngFor="let lb of (store.labels() || [])"
-                            class="cm-label"
-                            [class.is-selected]="selectedLabelIds().has(lb.id)"
-                            [style.--c]="lb.color"
-                            (click)="toggleLabel(lb.id)"
-                    >
+                    <button *ngFor="let lb of (store.labels() || [])" class="cm-label"
+                        [class.is-selected]="selectedLabelIds().has(lb.id)" [style.--c]="lb.color"
+                        (click)="toggleLabel(lb.id)">
                         <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
                         <span>{{ lb.name }}</span>
                         <span class="cm-check" *ngIf="selectedLabelIds().has(lb.id)">✓</span>
@@ -258,10 +224,10 @@
             <!-- Dates -->
             <section *ngIf="isPanelOpen('dates')">
                 <div class="cm-section-title flex items-center gap-2">
-          <span class="inline-flex items-center">
-            <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
-            Dates
-          </span>
+                    <span class="inline-flex items-center">
+                        <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
+                        Dates
+                    </span>
                     <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                         <lucide-icon [img]="XIcon"></lucide-icon>
                         Close
@@ -270,41 +236,28 @@
 
                 <label class="cm-field">
                     <span class="cm-field-label">Start</span>
-                    <input
-                            type="datetime-local"
-                            class="cm-input"
-                            [ngModel]="startDraft()"
-                            (ngModelChange)="startDraft.set($event || null); setDates('start', $event || null)"
-                    />
+                    <input type="datetime-local" class="cm-input" [ngModel]="startDraft()"
+                        (ngModelChange)="startDraft.set($event || null); setDates('start', $event || null)" />
                 </label>
 
                 <label class="cm-field">
                     <span class="cm-field-label">Due</span>
-                    <input
-                            type="datetime-local"
-                            class="cm-input"
-                            [ngModel]="dueDraft()"
-                            (ngModelChange)="dueDraft.set($event || null); setDates('due', $event || null)"
-                    />
+                    <input type="datetime-local" class="cm-input" [ngModel]="dueDraft()"
+                        (ngModelChange)="dueDraft.set($event || null); setDates('due', $event || null)" />
                 </label>
             </section>
 
             <!-- Members -->
             <ng-container *ngIf="isPanelOpen('members') && data() as c">
-                <members-panel
-                        [cardId]="c.id"
-                        [assigneesInput]="(c.assignees ?? [])"
-                        (assigneesChange)="onAssigneesChange($event)"
-                        (closePanel)="closePanel()"
-                />
+                <members-panel [cardId]="c.id" [assigneesInput]="(c.assignees ?? [])"
+                    (assigneesChange)="onAssigneesChange($event)" (closePanel)="closePanel()" />
             </ng-container>
             <!-- Checklists -->
             <section *ngIf="isPanelOpen('checklists')">
                 <div class="cm-section-title flex items-center gap-2">
-          <span class="inline-flex items-center">
-            <lucide-icon [img]="ListChecksIcon" class="mr-1"></lucide-icon>
-            Checklists
-          </span>
+                    <span class="inline-flex items-center">
+                        Checklists
+                    </span>
                     <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                         <lucide-icon [img]="XIcon"></lucide-icon>
                         Close
@@ -312,25 +265,44 @@
                 </div>
 
                 <div class="cm-checklist" *ngFor="let cl of checklists()">
-                    <div class="cm-checklist-header">
-                        <input class="cm-input" [ngModel]="cl.title" (ngModelChange)="renameChecklist(cl.id, $event)"/>
+                    <div class="cm-checklist-header flex items-center gap-2">
+                        <input class="cm-input flex-1 font-semibold" [ngModel]="cl.title"
+                            (ngModelChange)="renameChecklist(cl.id, $event)" />
+                        <button class="cm-icon-btn text-gray-400 hover:text-red-600" (click)="deleteChecklist(cl.id)"
+                            title="Delete checklist">
+                            <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
+                        </button>
                     </div>
 
-                    <ul class="cm-checklist-items">
-                        <li *ngFor="let it of cl.items" class="cm-checklist-item">
-                            <label class="cm-checkbox">
-                                <input
-                                        type="checkbox"
-                                        [checked]="it.done"
-                                        (change)="toggleChecklistItem(cl.id, it.id, $any($event.target).checked)"
-                                />
-                                <span [class.line-through]="it.done">{{ it.text }}</span>
-                            </label>
+                    <div class="cm-checklist-progress my-2" *ngIf="cl.items.length > 0">
+                        <div class="text-xs text-gray-500 mb-1">
+                            {{ (cl.items | filterBy: 'done': true).length }}/{{ cl.items.length }}
+                        </div>
+                        <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500 transition-all duration-300"
+                                [style.width.%]="((cl.items | filterBy: 'done': true).length / cl.items.length) * 100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="cm-checklist-items space-y-1">
+                        <li *ngFor="let it of cl.items"
+                            class="cm-checklist-item group flex items-start gap-2 hover:bg-gray-50 p-1 rounded -mx-1">
+                            <input type="checkbox" class="mt-1" [checked]="it.done"
+                                (change)="toggleChecklistItem(cl.id, it.id, $any($event.target).checked)" />
+                            <input class="flex-1 bg-transparent border-none p-0 text-sm focus:ring-0"
+                                [class.line-through]="it.done" [class.text-gray-500]="it.done" [ngModel]="it.text"
+                                (blur)="updateChecklistItemText(cl.id, it.id, $any($event.target).value)"
+                                (keydown.enter)="$any($event.target).blur()" />
+                            <button class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 p-0.5"
+                                (click)="deleteChecklistItem(cl.id, it.id)" title="Delete item">
+                                <lucide-icon [img]="XIcon" class="w-3 h-3"></lucide-icon>
+                            </button>
                         </li>
                     </ul>
 
-                    <button class="cm-btn inline-flex items-center" (click)="addChecklistItem(cl.id)">
-                        <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
+                    <button class="cm-btn inline-flex items-center mt-2 text-xs" (click)="addChecklistItem(cl.id)">
+                        <lucide-icon [img]="PlusIcon" class="mr-1 w-3 h-3"></lucide-icon>
                         Add item
                     </button>
                 </div>
@@ -344,10 +316,10 @@
             <!-- Attachments -->
             <section *ngIf="isPanelOpen('attachments')">
                 <div class="cm-section-title flex items-center gap-2">
-          <span class="inline-flex items-center">
-            <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
-            Attachments
-          </span>
+                    <span class="inline-flex items-center">
+                        <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
+                        Attachments
+                    </span>
                     <span class="cm-badge ml-2" *ngIf="attachments()?.length">{{ attachments()?.length }}</span>
                     <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                         <lucide-icon [img]="XIcon"></lucide-icon>
@@ -358,30 +330,16 @@
                 <!-- Add new -->
                 <div class="space-y-3">
                     <!-- Drag & Drop + Button -->
-                    <div
-                            class="cm-dropzone"
-                            [class.is-active]="dropActive()"
-                            tabindex="0"
-                            role="button"
-                            aria-label="Upload files. You can also drag and drop."
-                            (dragover)="onDragOver($event)"
-                            (dragleave)="onDragLeave($event)"
-                            (drop)="onDropFiles($event)"
-                            (keydown.enter)="openHiddenFileInput.click()"
-                            (keydown.space)="openHiddenFileInput.click()"
-                    >
-                        <input
-                            #openHiddenFileInput
-                            type="file"
-                            class="sr-only"
-                            multiple
-                            (change)="addAttachmentFiles($event.target)"
-                            accept="image/*,video/*,audio/*,application/pdf,
+                    <div class="cm-dropzone" [class.is-active]="dropActive()" tabindex="0" role="button"
+                        aria-label="Upload files. You can also drag and drop." (dragover)="onDragOver($event)"
+                        (dragleave)="onDragLeave($event)" (drop)="onDropFiles($event)"
+                        (keydown.enter)="openHiddenFileInput.click()" (keydown.space)="openHiddenFileInput.click()">
+                        <input #openHiddenFileInput type="file" class="sr-only" multiple
+                            (change)="addAttachmentFiles($event.target)" accept="image/*,video/*,audio/*,application/pdf,
                 application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
                 application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
                 application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,
-                text/plain,text/markdown,text/csv,application/json,.zip,.rar,.7z"
-                        />
+                text/plain,text/markdown,text/csv,application/json,.zip,.rar,.7z" />
                         <div class="cm-dropzone-inner">
                             <div class="cm-dropzone-icon">
                                 <lucide-icon [img]="PlusIcon"></lucide-icon>
@@ -398,12 +356,8 @@
 
                     <!-- Attach by URL -->
                     <div class="flex items-center gap-2">
-                        <input
-                                class="cm-input flex-1"
-                                placeholder="https://example.com/file.png"
-                                [ngModel]="attachUrlDraft()"
-                                (ngModelChange)="attachUrlDraft.set($event)"
-                        />
+                        <input class="cm-input flex-1" placeholder="https://example.com/file.png"
+                            [ngModel]="attachUrlDraft()" (ngModelChange)="attachUrlDraft.set($event)" />
                         <button class="cm-btn inline-flex items-center" (click)="addAttachmentByUrl()">
                             <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
                             Attach URL
@@ -422,34 +376,25 @@
                         <div class="cm-attachment-thumb">
                             <!-- Preview heuristic -->
                             <ng-container *ngIf="isImage(a); else typeThumb">
-                                <img [src]="attachmentApiFileUrl(a)" alt=""/>
+                                <img [src]="attachmentApiFileUrl(a)" alt="" />
                             </ng-container>
 
                             <ng-template #typeThumb>
                                 <ng-container *ngIf="isVideo(a); else audioOrDoc">
-                                    <video
-                                            [src]="safeMediaUrl(attachmentApiFileUrl(a))"
-                                            class="cm-attachment-video"
-                                            controls
-                                    ></video>
+                                    <video [src]="safeMediaUrl(attachmentApiFileUrl(a))" class="cm-attachment-video"
+                                        controls></video>
                                 </ng-container>
 
                                 <ng-template #audioOrDoc>
                                     <ng-container *ngIf="isAudio(a); else docThumb">
-                                        <audio
-                                                [src]="safeMediaUrl(attachmentApiFileUrl(a))"
-                                                class="cm-attachment-audio"
-                                                controls
-                                        ></audio>
+                                        <audio [src]="safeMediaUrl(attachmentApiFileUrl(a))" class="cm-attachment-audio"
+                                            controls></audio>
                                     </ng-container>
 
                                     <ng-template #docThumb>
                                         <ng-container *ngIf="isPdf(a); else genericIcon">
-                                            <iframe
-                                                    [src]="safeMediaUrl(attachmentApiFileUrl(a))"
-                                                    class="cm-attachment-pdf"
-                                                    title="PDF preview"
-                                            ></iframe>
+                                            <iframe [src]="safeMediaUrl(attachmentApiFileUrl(a))"
+                                                class="cm-attachment-pdf" title="PDF preview"></iframe>
                                         </ng-container>
 
                                         <ng-template #genericIcon>
@@ -468,6 +413,14 @@
                                 <button class="cm-overlay-btn" (click)="previewAttachment(a)" aria-label="Open">
                                     Open
                                 </button>
+                                <button *ngIf="isImage(a) && !a.isCover" class="cm-overlay-btn mt-2"
+                                    (click)="setAsCover(a.id)" aria-label="Make Cover">
+                                    Make Cover
+                                </button>
+                                <button *ngIf="a.isCover" class="cm-overlay-btn mt-2" (click)="removeCover(a.id)"
+                                    aria-label="Remove Cover">
+                                    Remove Cover
+                                </button>
                             </div>
                         </div>
 
@@ -485,12 +438,8 @@
                                 <span class="cm-muted">{{ humanBytes(a.size ?? 0) }}</span>
                                 <span class="cm-meta-dot"></span>
 
-                                <button
-                                        class="cm-link inline-flex items-center"
-                                        (click)="downloadAttachment(a)"
-                                        [disabled]="isDownloading(a.id)"
-                                        aria-label="Download"
-                                >
+                                <button class="cm-link inline-flex items-center" (click)="downloadAttachment(a)"
+                                    [disabled]="isDownloading(a.id)" aria-label="Download">
                                     <lucide-icon [img]="DownloadIcon" class="mr-1"></lucide-icon>
                                     <ng-container *ngIf="!isDownloading(a.id); else dlProg">Download</ng-container>
                                 </button>
@@ -508,7 +457,7 @@
                                 </button>
 
                                 <button class="cm-action cm-action--danger" (click)="removeAttachment(a.id)"
-                                        aria-label="Delete">
+                                    aria-label="Delete">
                                     <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
                                     <span>Delete</span>
                                 </button>
@@ -517,11 +466,8 @@
 
                         <ng-template #renameTpl>
                             <div class="flex items-center gap-2">
-                                <input
-                                        class="cm-input"
-                                        [ngModel]="renameDraftName()"
-                                        (ngModelChange)="renameDraftName.set($event)"
-                                />
+                                <input class="cm-input" [ngModel]="renameDraftName()"
+                                    (ngModelChange)="renameDraftName.set($event)" />
                                 <button class="cm-btn-primary inline-flex items-center" (click)="saveRename()">
                                     <lucide-icon [img]="SaveIcon" class="mr-1"></lucide-icon>
                                     Save
@@ -549,10 +495,10 @@
             <!-- Planning -->
             <section *ngIf="isPanelOpen('planning')">
                 <div class="cm-section-title flex items-center gap-2">
-          <span class="inline-flex items-center">
-            <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
-            Planning
-          </span>
+                    <span class="inline-flex items-center">
+                        <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
+                        Planning
+                    </span>
                     <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                         <lucide-icon [img]="XIcon"></lucide-icon>
                         Close
@@ -582,15 +528,8 @@
 
                 <label class="cm-field">
                     <span class="cm-field-label">Estimation</span>
-                    <input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            class="cm-input"
-                            placeholder="e.g. 3"
-                            [ngModel]="estimationDraft()"
-                            (ngModelChange)="saveEstimation($event ?? '')"
-                    />
+                    <input type="number" min="0" step="0.5" class="cm-input" placeholder="e.g. 3"
+                        [ngModel]="estimationDraft()" (ngModelChange)="saveEstimation($event ?? '')" />
                     <small class="cm-muted">Story Points</small>
                 </label>
             </section>

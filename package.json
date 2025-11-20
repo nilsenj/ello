@@ -30,9 +30,6 @@
   "pnpm": {
     "overrides": {
       "rollup": "4.21.3",
-      "vite": "^7.2.2",
-      "vite-node": "^2.0.0",
-      "@analogjs/vite-plugin-angular": "1.22.5",
       "typescript": "5.5.4",
       "@fastify/multipart": "7.7.3",
       "@fastify/static": "6.1.0"

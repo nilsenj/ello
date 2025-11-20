@@ -10,7 +10,21 @@ export type Board = {
 };
 export type Workspace = { id: string; name: string };
 export type BoardMember = { id: string; userId: string; boardId: string; role: string };
-export type Activity = { id: string; type: string; boardId: string; userId: string; createdAt: string };
+export type Activity = {
+    id: string;
+    type: string;
+    payload: any;
+    createdAt: string;
+    user?: {
+        id: string;
+        name: string | null;
+        avatar: string | null;
+    };
+    card?: {
+        id: string;
+        title: string;
+    };
+}
 export type ChecklistItem = { id: string; text: string; done: boolean; position: number };
 export type Checklist = { id: string; title: string; position: number; items: ChecklistItem[] };
 export type CommentDto = {
@@ -36,6 +50,8 @@ export type Card = {
     listId: string;
     labels?: string[]
     labelIds?: string[]; // optional client convenience
+    coverAttachment?: { id: string; url: string; mime: string | null; isCover: boolean } | null;
+    isArchived?: boolean;
 };
 
 export type ModalCard = Card & {
@@ -62,6 +78,7 @@ export type ListDto = {
     labelIds?: string[];
     labels?: any[];
     cardLabels?: any[];
+    isArchived?: boolean;
 };
 export type Label = { id: string; name: string; color: string; rank?: string; boardId: string };
 

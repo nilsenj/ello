@@ -1,7 +1,7 @@
-import {defineConfig} from 'vite'
+import { defineConfig } from 'vite'
 import angular from '@analogjs/vite-plugin-angular'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import {fileURLToPath} from 'node:url'
+import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
     plugins: [
@@ -20,5 +20,8 @@ export default defineConfig({
                 secure: false,
             }
         }
+    },
+    build: {
+        modulePreload: false
     }
 })

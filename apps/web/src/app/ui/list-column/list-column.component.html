@@ -1,16 +1,16 @@
-<div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card">
-    <div class="px-2 py-1 font-semibold text-ink-base" cdkDragHandle>{{ title() }}</div>
+<div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card group/list relative">
+    <div class="px-2 py-1 font-semibold text-ink-base flex justify-between items-start" cdkDragHandle>
+        <span>{{ title() }}</span>
+        <button class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
+            (click)="requestArchive()" title="Archive list">
+            <lucide-icon [img]="ArchiveIcon" class="h-4 w-4"></lucide-icon>
+        </button>
+    </div>
 
     <!-- Always-catch drop zone, even when empty -->
-    <div
-            cdkDropList
-            [cdkDropListData]="cards()"
-            [id]="dropListId()"
-            [cdkDropListConnectedTo]="connectedTo()"
-            cdkDropListOrientation="vertical"
-            class="dropzone space-y-2"
-            [class.empty]="cards().length === 0"
-            (cdkDropListDropped)="onDrop($event)">
+    <div cdkDropList [cdkDropListData]="cards()" [id]="dropListId()" [cdkDropListConnectedTo]="connectedTo()"
+        cdkDropListOrientation="vertical" class="dropzone space-y-2" [class.empty]="cards().length === 0"
+        (cdkDropListDropped)="onDrop($event)">
 
         <!-- Visible target when there are no cards -->
         <div *ngIf="cards().length === 0" class="empty-placeholder">
@@ -18,30 +18,63 @@
         </div>
 
         <!-- Render filtered if provided, otherwise full -->
-        <trello-card
-                *ngFor="let c of (filtered ?? cards()); trackBy: trackCard"
-                cdkDrag
-                [cdkDragData]="c"
-                [card]="c"
-                [listId]="list.id">
+        <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c" [card]="c"
+            [listId]="list.id">
         </trello-card>
     </div>
 
     <div class="mt-2">
         <ng-container *ngIf="!adding(); else editor">
-            <button
-                    class="w-full text-left text-sm text-ink-sub hover:text-ink-base px-2 py-1 rounded hover:bg-white"
-                    (click)="adding.set(true)">+ Add a card</button>
+            <button class="w-full text-left text-sm text-ink-sub hover:text-ink-base px-2 py-1 rounded hover:bg-white"
+                (click)="adding.set(true)">+ Add a card</button>
         </ng-container>
         <ng-template #editor>
             <div class="bg-white rounded p-2 shadow-card">
-        <textarea [(ngModel)]="newTitle" rows="3" class="w-full rounded border border-gray-300 text-sm px-2 py-1"
-                  placeholder="Enter a title for this card..."></textarea>
+                <textarea [(ngModel)]="newTitle" rows="3"
+                    class="w-full rounded border border-gray-300 text-sm px-2 py-1"
+                    placeholder="Enter a title for this card..."></textarea>
                 <div class="mt-2 flex items-center gap-2">
-                    <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm" (click)="createCard()">Add card</button>
+                    <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm" (click)="createCard()">Add
+                        card</button>
                     <button class="text-ink-sub" (click)="cancel()">✕</button>
                 </div>
             </div>
         </ng-template>
     </div>
 </div>
+
+<!-- Archive Confirmation Modal -->
+<section *ngIf="showArchiveModal()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
+    (mousedown)="closeArchiveModal()" role="dialog" aria-modal="true">
+    <div class="w-[min(90vw,400px)] bg-white rounded-xl shadow-2xl flex flex-col"
+        (mousedown)="$event.stopPropagation()">
+        <!-- header -->
+        <header class="relative px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span class="font-semibold text-[15px] text-slate-800">Archive List</span>
+            <button class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+                (click)="closeArchiveModal()" aria-label="Close">
+                <lucide-icon [img]="XIcon" class="h-4 w-4 text-slate-600"></lucide-icon>
+            </button>
+        </header>
+
+        <!-- body -->
+        <div class="p-5 text-sm text-slate-600">
+            <p>Are you sure you want to archive <strong>{{ title() }}</strong>?</p>
+            <p class="mt-2">You can restore it later from the board menu.</p>
+        </div>
+
+        <!-- footer -->
+        <footer class="border-t border-slate-200 bg-white px-4 py-3 flex justify-end gap-2 rounded-b-xl">
+            <button
+                class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                (click)="closeArchiveModal()">
+                Cancel
+            </button>
+            <button
+                class="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
+                (click)="confirmArchive()">
+                Archive
+            </button>
+        </footer>
+    </div>
+</section>

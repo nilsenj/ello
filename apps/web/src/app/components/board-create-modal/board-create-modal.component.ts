@@ -1,12 +1,12 @@
-import {Component, computed, HostListener, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {GlobeIcon, ImageIcon, LockIcon, LucideAngularModule, PaletteIcon, XIcon} from 'lucide-angular';
-import {Router} from '@angular/router';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GlobeIcon, ImageIcon, LockIcon, LucideAngularModule, PaletteIcon, XIcon } from 'lucide-angular';
+import { Router } from '@angular/router';
 
-import {BoardCreateModalService} from './board-create-modal.service';
-import {BoardsService} from '../../data/boards.service';
-import {BoardStore} from '../../store/board-store.service';
+import { BoardCreateModalService } from './board-create-modal.service';
+import { BoardsService } from '../../data/boards.service';
+import { BoardStore } from '../../store/board-store.service';
 
 type Visibility = 'private' | 'workspace' | 'public';
 
@@ -76,11 +76,8 @@ export class BoardCreateModalComponent {
         if (!this.canSubmit()) return;
         this.creating.set(true);
         try {
+            // If no workspace found from current board, pass null to let service infer it
             const wsId = this.getCurrentWorkspaceId();
-            if (!wsId) {
-                console.error('No workspace available to create a board');
-                return;
-            }
 
             console.log('Creating board in workspace', wsId);
             console.log((this.name()).trim(),

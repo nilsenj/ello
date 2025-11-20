@@ -1,5 +1,5 @@
-import {Component, computed, inject, Input, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import { Component, computed, inject, Input, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
     CdkDrag,
     CdkDragDrop,
@@ -8,32 +8,45 @@ import {
     moveItemInArray,
     transferArrayItem
 } from '@angular/cdk/drag-drop';
-import type {Card, ListDto} from '../../types';
-import {CardsService} from '../../data/cards.service';
-import {BoardStore} from '../../store/board-store.service';
-import {FormsModule} from '@angular/forms';
-import {between} from '../../utils/rank';
-import {TrelloCardComponent} from "../trello-card/trello-card.component";
+import type { Card, ListDto } from '../../types';
+import { CardsService } from '../../data/cards.service';
+import { ListsService } from '../../data/lists.service';
+import { BoardStore } from '../../store/board-store.service';
+import { FormsModule } from '@angular/forms';
+import { between } from '../../utils/rank';
+import { TrelloCardComponent } from "../trello-card/trello-card.component";
+
+import { LucideAngularModule, Archive, X } from 'lucide-angular';
 
 @Component({
     standalone: true,
     selector: 'list-column',
-    imports: [CommonModule, FormsModule, CdkDropList, TrelloCardComponent, CdkDrag, CdkDragHandle],
+    imports: [CommonModule, FormsModule, CdkDropList, TrelloCardComponent, CdkDrag, CdkDragHandle, LucideAngularModule],
     styleUrls: ['./list-column.component.css'],
     templateUrl: './list-column.component.html'
 })
 export class ListColumnComponent {
-    @Input({required: true}) list!: ListDto;
+    @Input({ required: true }) list!: ListDto;
     @Input() filtered: Card[] | null = null;
 
     store = inject(BoardStore);
     cardsApi = inject(CardsService);
+    listsApi = inject(ListsService);
+
+    // Icons
+    readonly ArchiveIcon = Archive;
+    readonly XIcon = X;
 
     newTitle = '';
     adding = signal(false);
+    showArchiveModal = signal(false);
 
     title = computed(() => this.list.title ?? this.list.name ?? '');
-    cards = computed<Card[]>(() => Array.isArray(this.list.cards) ? this.list.cards! : []);
+    // Only show active cards in the column
+    cards = computed<Card[]>(() => {
+        const all = Array.isArray(this.list.cards) ? this.list.cards! : [];
+        return all.filter(c => !c.isArchived);
+    });
     dropListId = computed(() => 'list-' + this.list.id);
     connectedTo = computed(() => this.store.lists().map(l => 'list-' + l.id));
 
@@ -48,6 +61,22 @@ export class ListColumnComponent {
     }
 
     cancel() { this.newTitle = ''; this.adding.set(false); }
+
+    requestArchive() {
+        this.showArchiveModal.set(true);
+    }
+
+    closeArchiveModal() {
+        this.showArchiveModal.set(false);
+    }
+
+    async confirmArchive() {
+        this.showArchiveModal.set(false);
+        await this.listsApi.updateList(this.list.id, { isArchived: true });
+        // Update store to reflect archived state (KanbanBoardComponent will filter it out)
+        const current = this.store.lists();
+        this.store.setLists(current.map(l => l.id === this.list.id ? { ...l, isArchived: true } : l));
+    }
 
     async onDrop(event: CdkDragDrop<Card[]>) {
         const src = event.previousContainer.data;
@@ -68,8 +97,8 @@ export class ListColumnComponent {
             moveItemInArray(dst, event.previousIndex, event.currentIndex);
 
             const beforeCard = dst[event.currentIndex - 1] ?? undefined;
-            const afterCard  = dst[event.currentIndex + 1] ?? undefined;
-            const nextRank   = between(beforeCard?.rank ?? null, afterCard?.rank ?? null);
+            const afterCard = dst[event.currentIndex + 1] ?? undefined;
+            const nextRank = between(beforeCard?.rank ?? null, afterCard?.rank ?? null);
 
             await this.cardsApi.moveCard(
                 moved.id,
@@ -86,8 +115,8 @@ export class ListColumnComponent {
         transferArrayItem(src, dst, event.previousIndex, event.currentIndex);
 
         const beforeCard = dst[event.currentIndex - 1] ?? undefined;
-        const afterCard  = dst[event.currentIndex + 1] ?? undefined;
-        const nextRank   = between(beforeCard?.rank ?? null, afterCard?.rank ?? null);
+        const afterCard = dst[event.currentIndex + 1] ?? undefined;
+        const nextRank = between(beforeCard?.rank ?? null, afterCard?.rank ?? null);
 
         await this.cardsApi.moveCard(
             moved.id,

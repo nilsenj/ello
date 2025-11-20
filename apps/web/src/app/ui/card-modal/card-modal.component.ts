@@ -1,16 +1,16 @@
 // apps/web/src/app/components/card-modal/card-modal.component.ts
-import {Component, computed, effect, HostListener, inject, signal, untracked} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {firstValueFrom} from 'rxjs';
-import type {CardAssignee, Checklist, CommentDto, ModalCard} from '../../types';
+import { Component, computed, effect, HostListener, inject, signal, untracked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import type { CardAssignee, Checklist, CommentDto, ModalCard } from '../../types';
 
-import {CardsService} from '../../data/cards.service';
-import {BoardStore} from '../../store/board-store.service';
-import {LabelsService} from '../../data/labels.service';
-import {BoardsService} from '../../data/boards.service';
-import {AttachmentDto, AttachmentsService} from '../../data/attachments.service';
-import {SafeHtmlPipe} from '../../shared/safe-html.pipe';
+import { CardsService } from '../../data/cards.service';
+import { BoardStore } from '../../store/board-store.service';
+import { LabelsService } from '../../data/labels.service';
+import { BoardsService } from '../../data/boards.service';
+import { AttachmentDto, AttachmentsService } from '../../data/attachments.service';
+import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
 import {
     BoldIcon,
     CalendarIcon,
@@ -34,16 +34,17 @@ import {
     XCircleIcon,
     XIcon,
 } from 'lucide-angular';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {MembersPanelComponent} from '../../components/members-panel/members-panel.component';
-import {CardModalService} from "./card-modal.service";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
+import { CardModalService } from "./card-modal.service";
+import { FilterByPipe } from '../../shared/filter-by.pipe';
 
 type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning';
 
 @Component({
     standalone: true,
     selector: 'card-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe, MembersPanelComponent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe, MembersPanelComponent, FilterByPipe],
     styleUrls: ['./card-modal.component.css'],
     templateUrl: './card-modal.component.html',
 })
@@ -194,7 +195,7 @@ export class CardModalComponent {
                     const card = await this.cardsApi.getCard(id);
                     if (this.reqToken !== token) return;
                     const labelIds = this.normalizeLabelIds(card);
-                    this.data.set({...card, labelIds} as any);
+                    this.data.set({ ...card, labelIds } as any);
 
                     this.titleDraft.set(card?.title ?? '');
                     this.descDraft.set(card?.description ?? '');
@@ -223,7 +224,7 @@ export class CardModalComponent {
                     this.attachments.set([]);
                 }
             })();
-        }, {allowSignalWrites: true});
+        }, { allowSignalWrites: true });
 
         // EFFECT #2 — load labels per board (members logic removed; handled in members-panel)
         effect(() => {
@@ -236,7 +237,7 @@ export class CardModalComponent {
                     });
                 }
             });
-        }, {allowSignalWrites: true});
+        }, { allowSignalWrites: true });
     }
 
     // ------- Labels -------
@@ -251,7 +252,7 @@ export class CardModalComponent {
             if (has) {
                 await this.labelsApi.unassignFromCard(c.id, lid);
                 this.store.removeLabelFromCardLocally?.(c.id, lid);
-                const next: any = {...c};
+                const next: any = { ...c };
                 if (Array.isArray((c as any).labelIds)) next.labelIds = this.normalizeLabelIds(c).filter(x => x !== lid);
                 if (Array.isArray((c as any).labels))
                     next.labels = (c as any).labels.filter((x: any) => (x?.labelId ?? x?.id ?? x) !== lid);
@@ -261,16 +262,16 @@ export class CardModalComponent {
             } else {
                 await this.labelsApi.assignToCard(c.id, lid);
                 this.store.addLabelToCardLocally?.(c.id, lid);
-                const next: any = {...c};
+                const next: any = { ...c };
                 const ids = this.normalizeLabelIds(c);
                 if (Array.isArray((c as any).labelIds)) next.labelIds = [...ids, lid];
                 if (Array.isArray((c as any).labels))
                     next.labels = [
                         ...(((c as any).labels ?? [])),
-                        typeof (c as any).labels?.[0] === 'string' ? lid : {id: lid, labelId: lid},
+                        typeof (c as any).labels?.[0] === 'string' ? lid : { id: lid, labelId: lid },
                     ];
                 if (Array.isArray((c as any).cardLabels))
-                    next.cardLabels = [...(((c as any).cardLabels ?? [])), {cardId: c.id, labelId: lid}];
+                    next.cardLabels = [...(((c as any).cardLabels ?? [])), { cardId: c.id, labelId: lid }];
                 this.data.set(next);
             }
         } catch {
@@ -289,9 +290,9 @@ export class CardModalComponent {
         if (!next || next === c.title) return;
         this._savingTitle = true;
         try {
-            await this.cardsApi.updateCard(c.id, {title: next});
+            await this.cardsApi.updateCard(c.id, { title: next });
             this.store.patchCardTitleLocally?.(c.id, next);
-            this.data.set({...c, title: next});
+            this.data.set({ ...c, title: next });
         } finally {
             this._savingTitle = false;
         }
@@ -305,7 +306,7 @@ export class CardModalComponent {
         if (kind === 'start') payload.startDate = val ? toUtcIso(val) : null;
         if (kind === 'due') payload.dueDate = val ? toUtcIso(val) : null;
         await this.cardsApi.patchCardExtended(c.id, payload);
-        this.data.set({...c, ...payload});
+        this.data.set({ ...c, ...payload });
     }
 
     // ------- Members (only minimal helpers kept) -------
@@ -318,7 +319,7 @@ export class CardModalComponent {
     hasAnyMembers = () => this.currentMemberIds().length > 0;
 
     onAssigneesChange(list: CardAssignee[]) {
-        this.data.update(c => (c ? ({...c, assignees: list} as ModalCard) : c));
+        this.data.update(c => (c ? ({ ...c, assignees: list } as ModalCard) : c));
     }
 
     // ------- Checklists -------
@@ -329,34 +330,66 @@ export class CardModalComponent {
     async addChecklist() {
         const c = this.data();
         if (!c) return;
-        const created = await this.cardsApi.addChecklist(c.id, {title: 'Checklist'});
-        this.data.set({...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), created]} as any);
+        const created = await this.cardsApi.addChecklist(c.id, { title: 'Checklist' });
+        // Ensure items is initialized to avoid template errors
+        const checklistWithItems = { ...created, items: [] };
+        this.data.set({ ...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), checklistWithItems] } as any);
     }
 
     async renameChecklist(cid: string, title: string) {
         const c = this.data();
         if (!c) return;
-        await this.cardsApi.updateChecklist(cid, {title});
-        const next = this.checklists().map(cl => (cl.id === cid ? {...cl, title} : cl));
-        this.data.set({...c, checklists: next} as any);
+        await this.cardsApi.updateChecklist(cid, { title });
+        const next = this.checklists().map(cl => (cl.id === cid ? { ...cl, title } : cl));
+        this.data.set({ ...c, checklists: next } as any);
     }
 
     async addChecklistItem(cid: string) {
         const c = this.data();
         if (!c) return;
-        const created = await this.cardsApi.addChecklistItem(cid, {text: 'New item'});
-        const next = this.checklists().map(cl => (cl.id === cid ? {...cl, items: [...cl.items, created]} : cl));
-        this.data.set({...c, checklists: next} as any);
+        const created = await this.cardsApi.addChecklistItem(cid, { text: 'New item' });
+        const next = this.checklists().map(cl => (cl.id === cid ? { ...cl, items: [...cl.items, created] } : cl));
+        this.data.set({ ...c, checklists: next } as any);
     }
 
     async toggleChecklistItem(cid: string, itemId: string, done: boolean) {
         const c = this.data();
         if (!c) return;
-        await this.cardsApi.updateChecklistItem(itemId, {done});
+        await this.cardsApi.updateChecklistItem(itemId, { done });
         const next = this.checklists().map(cl =>
-            cl.id === cid ? {...cl, items: cl.items.map(it => (it.id === itemId ? {...it, done} : it))} : cl
+            cl.id === cid ? { ...cl, items: cl.items.map(it => (it.id === itemId ? { ...it, done } : it)) } : cl
         );
-        this.data.set({...c, checklists: next} as any);
+        this.data.set({ ...c, checklists: next } as any);
+    }
+
+    async updateChecklistItemText(cid: string, itemId: string, text: string) {
+        const c = this.data();
+        if (!c) return;
+        // Optimistic update could be good here, but for now just wait
+        await this.cardsApi.updateChecklistItem(itemId, { text });
+        const next = this.checklists().map(cl =>
+            cl.id === cid ? { ...cl, items: cl.items.map(it => (it.id === itemId ? { ...it, text } : it)) } : cl
+        );
+        this.data.set({ ...c, checklists: next } as any);
+    }
+
+    async deleteChecklistItem(cid: string, itemId: string) {
+        const c = this.data();
+        if (!c) return;
+        await this.cardsApi.deleteChecklistItem(itemId);
+        const next = this.checklists().map(cl =>
+            cl.id === cid ? { ...cl, items: cl.items.filter(it => it.id !== itemId) } : cl
+        );
+        this.data.set({ ...c, checklists: next } as any);
+    }
+
+    async deleteChecklist(cid: string) {
+        const c = this.data();
+        if (!c) return;
+        if (!confirm('Delete this checklist?')) return;
+        await this.cardsApi.deleteChecklist(cid);
+        const next = this.checklists().filter(cl => cl.id !== cid);
+        this.data.set({ ...c, checklists: next } as any);
     }
 
     // ------- Comments -------
@@ -374,9 +407,9 @@ export class CardModalComponent {
         const text = this.commentDraft().trim();
         if (!text) return;
         try {
-            const created = await this.cardsApi.addComment(c.id, {text});
+            const created = await this.cardsApi.addComment(c.id, { text });
             if (!created) return;
-            this.data.set({...c, comments: [...this.comments(), created]} as any);
+            this.data.set({ ...c, comments: [...this.comments(), created] } as any);
             this.commentDraft.set('');
         } catch (err) {
             console.error('Failed to add comment', err);
@@ -387,7 +420,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.deleteComment(commentId);
-        this.data.set({...c, comments: this.comments().filter(x => x.id !== commentId)} as any);
+        this.data.set({ ...c, comments: this.comments().filter(x => x.id !== commentId) } as any);
     }
 
     // ------- Close -------
@@ -400,16 +433,16 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         this.priorityDraft.set(val);
-        await this.cardsApi.patchCardExtended(c.id, val ? {priority: val} : ({priority: null} as any));
-        this.data.set({...c, priority: val || null} as any);
+        await this.cardsApi.patchCardExtended(c.id, val ? { priority: val } : ({ priority: null } as any));
+        this.data.set({ ...c, priority: val || null } as any);
     }
 
     async saveRisk(val: '' | 'low' | 'medium' | 'high') {
         const c = this.data();
         if (!c) return;
         this.riskDraft.set(val);
-        await this.cardsApi.patchCardExtended(c.id, val ? {risk: val} : ({risk: null} as any));
-        this.data.set({...c, risk: val || null} as any);
+        await this.cardsApi.patchCardExtended(c.id, val ? { risk: val } : ({ risk: null } as any));
+        this.data.set({ ...c, risk: val || null } as any);
     }
 
     async saveEstimation(raw: unknown) {
@@ -420,8 +453,8 @@ export class CardModalComponent {
         const trimmed = s.trim();
         const n = trimmed === '' ? null : Number(trimmed);
         if (n !== null && (!Number.isFinite(n) || n < 0)) return;
-        await this.cardsApi.patchCardExtended(c.id, n === null ? ({estimate: null} as any) : {estimate: n});
-        this.data.set({...c, estimate: n} as any);
+        await this.cardsApi.patchCardExtended(c.id, n === null ? ({ estimate: null } as any) : { estimate: n });
+        this.data.set({ ...c, estimate: n } as any);
     }
 
     priorityClass() {
@@ -446,8 +479,8 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         const next = (this.descDraft() ?? '').trim();
-        await this.cardsApi.patchCardExtended(c.id, {description: next || ''});
-        this.data.set({...c, description: next} as any);
+        await this.cardsApi.patchCardExtended(c.id, { description: next || '' });
+        this.data.set({ ...c, description: next } as any);
         this.isEditingDesc = false;
     }
 
@@ -458,7 +491,7 @@ export class CardModalComponent {
     wrapSelection(left: string, right: string) {
         const el = this.textarea();
         if (!el) return;
-        const {selectionStart: a, selectionEnd: b} = el;
+        const { selectionStart: a, selectionEnd: b } = el;
         const val = this.descDraft() || '';
         const sel = val.slice(a, b);
         const next = val.slice(0, a) + left + sel + right + val.slice(b);
@@ -473,7 +506,7 @@ export class CardModalComponent {
         const el = this.textarea();
         if (!el) return;
         const val = this.descDraft() || '';
-        const {selectionStart: a, selectionEnd: b} = el;
+        const { selectionStart: a, selectionEnd: b } = el;
         const blockStart = val.slice(0, a).lastIndexOf('\n') + 1;
         const next = val.slice(0, blockStart) + prefix + val.slice(blockStart);
         this.descDraft.set(next);
@@ -490,7 +523,7 @@ export class CardModalComponent {
     insertLink() {
         const el = this.textarea();
         if (!el) return;
-        const {selectionStart: a, selectionEnd: b} = el;
+        const { selectionStart: a, selectionEnd: b } = el;
         const val = this.descDraft() || '';
         const sel = val.slice(a, b) || 'link text';
         const ins = `[${sel}](https://)`;
@@ -518,7 +551,7 @@ export class CardModalComponent {
     }
 
     renderMarkdown(src: string | null | undefined) {
-        let s = (src ?? '').replace(/[&<>]/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[m]!));
+        let s = (src ?? '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]!));
         s = s.replace(/^\s*#{1,6}\s+(.*)$/gmi, '<h4>$1</h4>');
         s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         s = s.replace(/_(.+?)_/g, '<em>$1</em>');
@@ -586,7 +619,7 @@ export class CardModalComponent {
                 }
                 const outEl = document.createElement(tag);
                 const allowed = allowedAttrs[tag] ?? new Set<string>();
-                for (const {name, value} of Array.from(el.attributes)) {
+                for (const { name, value } of Array.from(el.attributes)) {
                     const n = name.toLowerCase();
                     if (!allowed.has(n)) continue;
                     if (tag === 'a' && n === 'href') {
@@ -696,7 +729,25 @@ export class CardModalComponent {
     async setAsCover(id: string) {
         try {
             await firstValueFrom(this.attachmentsApi.setCover(id));
-            this.attachments.set(this.attachments().map(a => ({...a, isCover: a.id === id})));
+            this.attachments.set(this.attachments().map(a => ({ ...a, isCover: a.id === id })));
+            // Update local card data to reflect cover change immediately if needed
+            const c = this.data();
+            if (c) {
+                const cover = this.attachments().find(a => a.id === id);
+                // We might need to update the store or trigger a refresh, but for now local state is key
+            }
+        } catch {
+        }
+    }
+
+    async removeCover(id: string) {
+        try {
+            // If there's an API for removing cover (e.g. setting it to null or unsetting), use it.
+            // Assuming setCover(id) sets it, maybe we need an unset endpoint or just set another?
+            // Actually, usually 'setCover' toggles or we need a specific 'removeCover'.
+            // Let's check attachmentsApi.
+            await firstValueFrom(this.attachmentsApi.removeCover(id));
+            this.attachments.set(this.attachments().map(a => ({ ...a, isCover: false })));
         } catch {
         }
     }
@@ -793,7 +844,7 @@ export class CardModalComponent {
     }
 
     private setProgress(id: string, percent: number) {
-        this.dlProgress.set({...this.dlProgress(), [id]: percent});
+        this.dlProgress.set({ ...this.dlProgress(), [id]: percent });
     }
 
     private saveBlob(blob: Blob, filename: string) {
@@ -812,7 +863,7 @@ export class CardModalComponent {
         if (this.isDownloading(id)) return;
         this.setBusy(id, true);
         this.setProgress(id, 0);
-        const sub = this.attachmentsApi.downloadWithProgress(id, {withCredentials: true}).subscribe({
+        const sub = this.attachmentsApi.downloadWithProgress(id, { withCredentials: true }).subscribe({
             next: evt => {
                 if (evt.kind === 'progress') this.setProgress(id, evt.percent);
                 if (evt.kind === 'done') {

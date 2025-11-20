@@ -1,6 +1,6 @@
-import {Component, effect, inject, OnInit} from '@angular/core';
-import {NgFor, NgIf} from '@angular/common';
-import {FormsModule} from '@angular/forms';
+import { Component, effect, inject, OnInit } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
     CdkDrag,
     CdkDragDrop, CdkDragPlaceholder, CdkDragPreview,
@@ -9,23 +9,21 @@ import {
     moveItemInArray,
     transferArrayItem,
 } from '@angular/cdk/drag-drop';
-import type {Card, ListDto} from '../../types';
-import {BoardStore} from '../../store/board-store.service';
-import {BoardsService} from '../../data/boards.service';
-import {ListsService} from '../../data/lists.service';
-import {CardsService} from '../../data/cards.service';
-import {ListColumnComponent} from "../list-column/list-column.component";
-import {CardModalService} from "../card-modal/card-modal.service";
-import {ActivatedRoute, Router} from "@angular/router";
-import {CardModalComponent} from "../card-modal/card-modal.component";
-import {
-    DragDropModule
-} from '@angular/cdk/drag-drop';
+import type { Card, ListDto } from '../../types';
+import { BoardStore } from '../../store/board-store.service';
+import { BoardsService } from '../../data/boards.service';
+import { ListsService } from '../../data/lists.service';
+import { CardsService } from '../../data/cards.service';
+import { ListColumnComponent } from "../list-column/list-column.component";
+import { CardModalService } from "../card-modal/card-modal.service";
+import { ActivatedRoute, Router } from "@angular/router";
+import { BoardMenuComponent } from "../board-menu/board-menu.component";
+import { CardModalComponent } from "../card-modal/card-modal.component";
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, BoardMenuComponent], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -76,8 +74,8 @@ export class KanbanBoardComponent implements OnInit {
 
             const isOpen = this.modal.isOpen();
             const id = this.modal.cardId();
-            const qp = isOpen && id ? {card: id} : {};
-            this.router.navigate([], {queryParams: qp, queryParamsHandling: 'merge'});
+            const qp = isOpen && id ? { card: id } : {};
+            this.router.navigate([], { queryParams: qp, queryParamsHandling: 'merge' });
         });
     }
 
@@ -88,7 +86,8 @@ export class KanbanBoardComponent implements OnInit {
     // projections
     boards = () => this.store.boards();
     currentBoardId = () => this.store.currentBoardId();
-    lists = () => this.store.lists();
+    // Only show active lists on the board
+    lists = () => this.store.lists().filter(l => !l.isArchived);
 
     // header label filter handler (called from template)
     updateActiveLabel(val: string) {
@@ -223,7 +222,7 @@ export class KanbanBoardComponent implements OnInit {
             this.editingCard[card.id] = false;
             return;
         }
-        await this.cardsApi.updateCard(card.id, {title: next});
+        await this.cardsApi.updateCard(card.id, { title: next });
         // optimistic local patch if available
         this.store.patchCardTitleLocally?.(card.id, next);
         this.editingCard[card.id] = false;

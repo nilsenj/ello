@@ -23,14 +23,14 @@
     "zone.js": "^0.14.8"
   },
   "devDependencies": {
-    "@analogjs/vite-plugin-angular": "^1.24.0",
+    "@analogjs/vite-plugin-angular": "1.10.0",
     "@tailwindcss/forms": "^0.5.10",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "sass": "^1.93.3",
     "tailwindcss": "^3.4.18",
     "typescript": "5.5.4",
-    "vite": "^7.2.2",
+    "vite": "^5.4.0",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }

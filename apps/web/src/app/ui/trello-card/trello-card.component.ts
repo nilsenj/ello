@@ -28,7 +28,7 @@ export class TrelloCardComponent {
         private cardsApi: CardsService,
         private labelsApi: LabelsService,
         private modal: CardModalService,
-    ) {}
+    ) { }
 
     openModal(ev: MouseEvent) {
         const target = ev.target as HTMLElement;
@@ -44,10 +44,10 @@ export class TrelloCardComponent {
         if (!val) return null;
         // dot: left stripe color; border: card border color; bg/fg used by the badge you already show
         const map: Record<string, { label: string; dot: string; border: string; bg: string; fg: string }> = {
-            low:    { label: 'low',    dot: '#22c55e', border: '#86efac', bg: 'rgba(34,197,94,0.12)',  fg: '#14532d' },   // green-400/200
-            medium: { label: 'medium', dot: '#eab308', border: '#fde047', bg: 'rgba(234,179,8,0.14)',  fg: '#713f12' },   // amber-500/300
-            high:   { label: 'high',   dot: '#f97316', border: '#fdba74', bg: 'rgba(249,115,22,0.14)', fg: '#7c2d12' },   // orange-500/300
-            urgent: { label: 'urgent', dot: '#ef4444', border: '#fca5a5', bg: 'rgba(239,68,68,0.14)',  fg: '#7f1d1d' },   // red-500/300
+            low: { label: 'low', dot: '#22c55e', border: '#86efac', bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },   // green-400/200
+            medium: { label: 'medium', dot: '#eab308', border: '#fde047', bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },   // amber-500/300
+            high: { label: 'high', dot: '#f97316', border: '#fdba74', bg: 'rgba(249,115,22,0.14)', fg: '#7c2d12' },   // orange-500/300
+            urgent: { label: 'urgent', dot: '#ef4444', border: '#fca5a5', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },   // red-500/300
         };
         return map[val] ?? null;
     }
@@ -55,13 +55,13 @@ export class TrelloCardComponent {
 
     priorityClass() {
         // Tailwind needs explicit class names so we provide all variants.
-        const val = (this.card as any)?.priority as 'low'|'medium'|'high'|'urgent'|undefined;
+        const val = (this.card as any)?.priority as 'low' | 'medium' | 'high' | 'urgent' | undefined;
         switch (val) {
-            case 'low':    return 'ring-1 ring-green-200';
+            case 'low': return 'ring-1 ring-green-200';
             case 'medium': return 'ring-1 ring-amber-200';
-            case 'high':   return 'ring-1 ring-orange-200';
+            case 'high': return 'ring-1 ring-orange-200';
             case 'urgent': return 'ring-2 ring-red-300';
-            default:       return '';
+            default: return '';
         }
     }
 
@@ -70,9 +70,9 @@ export class TrelloCardComponent {
         const val = (this.card as any)?.risk as string | undefined;
         if (!val) return null;
         const map: Record<string, { label: string; bg: string; fg: string }> = {
-            low:    { label: 'low',    bg: 'rgba(34,197,94,0.12)',  fg: '#14532d' },
-            medium: { label: 'medium', bg: 'rgba(234,179,8,0.14)',  fg: '#713f12' },
-            high:   { label: 'high',   bg: 'rgba(239,68,68,0.14)',  fg: '#7f1d1d' },
+            low: { label: 'low', bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },
+            medium: { label: 'medium', bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },
+            high: { label: 'high', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },
         };
         return map[val] ?? null;
     }
@@ -141,8 +141,16 @@ export class TrelloCardComponent {
         this.editing = false;
     }
     async delete() {
+        if (!confirm('Delete this card forever?')) return;
         await this.cardsApi.deleteCard(this.card.id);
         this.store.removeCardLocally?.(this.card.id);
+        this.showMore = false;
+    }
+
+    async archive() {
+        await this.cardsApi.patchCardExtended(this.card.id, { isArchived: true });
+        // Update local view to archived (KanbanBoardComponent/ListColumnComponent will filter it out)
+        this.store.upsertCardLocally(this.listId, { ...this.card, isArchived: true });
         this.showMore = false;
     }
 

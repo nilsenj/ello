@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { mid } from '../utils/rank.js';
-import {ensureUser} from "../utils/ensure-user.js";
+import { ensureUser } from "../utils/ensure-user.js";
 
 type JwtPayload = { sub: string; email?: string };
 
@@ -82,6 +82,7 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
             title: (l as any).title ?? l.name,
             rank: l.rank,
             boardId: l.boardId,
+            isArchived: l.isArchived,
             cards: l.cards.map(c => ({
                 id: c.id,
                 title: c.title,
@@ -89,6 +90,7 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
                 listId: c.listId,
                 rank: c.rank,
                 priority: c.priority,
+                isArchived: c.isArchived,
                 labelIds: (c.labels ?? []).map(x => x.labelId),
             })),
         }));
@@ -109,7 +111,7 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
     });
 
     app.patch('/api/lists/:id', async (
-        req: FastifyRequest<{ Params: { id: string }, Body: { name?: string; title?: string } }>
+        req: FastifyRequest<{ Params: { id: string }, Body: { name?: string; title?: string; isArchived?: boolean } }>
     ) => {
         const user = ensureUser(req);
         const { id } = req.params;
@@ -118,6 +120,14 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
         await assertBoardMember(prisma, bId, user.id);
 
         const title = req.body?.title ?? req.body?.name;
-        return prisma.list.update({ where: { id }, data: { name: title || undefined } });
+        const { isArchived } = req.body ?? {};
+
+        return prisma.list.update({
+            where: { id },
+            data: {
+                name: title || undefined,
+                isArchived: typeof isArchived === 'boolean' ? isArchived : undefined
+            }
+        });
     });
 }

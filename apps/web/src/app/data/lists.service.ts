@@ -14,7 +14,7 @@ export class ListsService {
         private api: ApiBaseService,
         private http: HttpClient,
         private store: BoardStore
-    ) {}
+    ) { }
 
     private normalizeList(l: ListDto): ListDto {
         return {
@@ -42,6 +42,16 @@ export class ListsService {
     async updateListName(listId: string, name: string) {
         await firstValueFrom(this.http.patch(`/api/lists/${listId}`, { name }));
         this.store.renameListLocally(listId, name);
+    }
+
+    async updateList(listId: string, patch: Partial<{ name: string; isArchived: boolean }>) {
+        const updated = await firstValueFrom(this.http.patch<ListDto>(`/api/lists/${listId}`, patch));
+        // Update store
+        const lists = this.store.lists();
+        const next = lists.map(l => l.id === listId ? { ...l, ...updated } : l);
+        // If archived, we might want to remove it from the visible list?
+        // For now, let's just update it. The UI should filter it out.
+        this.store.setLists(next);
     }
 
     async createList(name: string) {

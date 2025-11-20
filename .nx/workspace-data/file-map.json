@@ -15,12 +15,16 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "docker-compose.yml",
-        "hash": "17143880532587014091"
+        "file": "pnpm-lock.yaml",
+        "hash": "9676988025771882228"
       },
       {
         "file": "nx.json",
         "hash": "11493607022105348433"
+      },
+      {
+        "file": "README.md",
+        "hash": "10527340750855060289"
       },
       {
         "file": ".gitignore",
@@ -35,20 +39,16 @@
         "hash": "10258939139953668561"
       },
       {
-        "file": "pnpm-lock.yaml",
-        "hash": "12755043391836178027"
-      },
-      {
-        "file": "package.json",
-        "hash": "1839570628925634659"
+        "file": "docker-compose.yml",
+        "hash": "17143880532587014091"
       },
       {
         "file": ".env.example",
         "hash": "11710807200313730003"
       },
       {
-        "file": "README.md",
-        "hash": "10527340750855060289"
+        "file": "package.json",
+        "hash": "48221400256006021"
       }
     ],
     "projectFileMap": {
@@ -59,13 +59,13 @@
         },
         {
           "file": "apps/web/package.json",
-          "hash": "8082278259391160348",
+          "hash": "9637274233265177811",
           "deps": [
             "npm:@analogjs/vite-plugin-angular",
             "npm:@tailwindcss/forms",
-            "npm:autoprefixer@10.4.21",
+            "npm:autoprefixer@10.4.22",
             "npm:postcss@8.5.6",
-            "npm:sass@1.93.3",
+            "npm:sass@1.94.2",
             "npm:tailwindcss",
             "npm:typescript",
             "npm:vite",
@@ -107,7 +107,7 @@
         },
         {
           "file": "apps/web/src/app/app.routes.ts",
-          "hash": "6814255089275235300",
+          "hash": "351459856712005075",
           "deps": [
             "npm:@angular/router",
             "npm:@angular/core"
@@ -177,6 +177,83 @@
           ]
         },
         {
+          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.css",
+          "hash": "10687361375462053139"
+        },
+        {
+          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.html",
+          "hash": "7389244600168232640"
+        },
+        {
+          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.ts",
+          "hash": "17956648671782245172",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:lucide-angular",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.service.ts",
+          "hash": "11925619271663682481",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.css",
+          "hash": "10821087380099008031"
+        },
+        {
+          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.html",
+          "hash": "2327925240006374682"
+        },
+        {
+          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.ts",
+          "hash": "867980859654839261",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:lucide-angular"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.service.ts",
+          "hash": "386122081879077043",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/components/members-panel/members-panel.component.css",
+          "hash": "9912710288585964055"
+        },
+        {
+          "file": "apps/web/src/app/components/members-panel/members-panel.component.html",
+          "hash": "12310203856380637788"
+        },
+        {
+          "file": "apps/web/src/app/components/members-panel/members-panel.component.ts",
+          "hash": "693299103615418877",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:lucide-angular",
+            "npm:@angular/cdk"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/core/app-config.ts",
+          "hash": "15201944913692542823",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        },
+        {
           "file": "apps/web/src/app/core/auth-header.interceptor.ts",
           "hash": "2332547457024550764",
           "deps": [
@@ -221,7 +298,7 @@
         },
         {
           "file": "apps/web/src/app/data/attachments.service.ts",
-          "hash": "17735923165929541072",
+          "hash": "14575527630122174512",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -239,7 +316,7 @@
         },
         {
           "file": "apps/web/src/app/data/cards.service.ts",
-          "hash": "12473727959317228482",
+          "hash": "3653723680981384470",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -255,11 +332,20 @@
         },
         {
           "file": "apps/web/src/app/data/lists.service.ts",
-          "hash": "726179072884421986",
+          "hash": "10225428694241010682",
           "deps": [
             "npm:@angular/core",
             "npm:rxjs@7.8.2",
             "npm:@angular/common"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/data/workspaces.service.ts",
+          "hash": "1459725333231400376",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
           ]
         },
         {
@@ -288,11 +374,27 @@
           ]
         },
         {
+          "file": "apps/web/src/app/shared/ignore-uploads.strategy.ts",
+          "hash": "164926277408201162",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router"
+          ]
+        },
+        {
           "file": "apps/web/src/app/shared/safe-html.pipe.ts",
           "hash": "15423637658228721855",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/platform-browser"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/shared/uploads-bypass.component.ts",
+          "hash": "2768564668440077020",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router"
           ]
         },
         {
@@ -304,7 +406,7 @@
         },
         {
           "file": "apps/web/src/app/types.ts",
-          "hash": "12023356410639428694"
+          "hash": "10358113841182815287"
         },
         {
           "file": "apps/web/src/app/ui/app-header.component.ts",
@@ -313,6 +415,23 @@
             "npm:@angular/core",
             "npm:@angular/common",
             "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/ui/board-menu/board-menu.component.css",
+          "hash": "12336290495870314707"
+        },
+        {
+          "file": "apps/web/src/app/ui/board-menu/board-menu.component.html",
+          "hash": "13325030766082659461"
+        },
+        {
+          "file": "apps/web/src/app/ui/board-menu/board-menu.component.ts",
+          "hash": "8564162228811960367",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:lucide-angular"
           ]
         },
         {
@@ -331,11 +450,11 @@
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.html",
-          "hash": "990409893188321023"
+          "hash": "16183191796785261279"
         },
         {
           "file": "apps/web/src/app/ui/card-modal/card-modal.component.ts",
-          "hash": "15566566039590540951",
+          "hash": "6698955920798660681",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -343,6 +462,15 @@
             "npm:rxjs@7.8.2",
             "npm:lucide-angular",
             "npm:@angular/platform-browser"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/ui/card-modal/card-modal.service.ts",
+          "hash": "11759888433135421172",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router",
+            "npm:rxjs@7.8.2"
           ]
         },
         {
@@ -358,11 +486,11 @@
         },
         {
           "file": "apps/web/src/app/ui/kanban-board/kanban-board.component.html",
-          "hash": "17401606768949610007"
+          "hash": "18297178822787879792"
         },
         {
           "file": "apps/web/src/app/ui/kanban-board/kanban-board.component.ts",
-          "hash": "7287257918745206824",
+          "hash": "12589241646331253134",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -377,25 +505,26 @@
         },
         {
           "file": "apps/web/src/app/ui/list-column/list-column.component.html",
-          "hash": "17760117089343972282"
+          "hash": "15841802282797941910"
         },
         {
           "file": "apps/web/src/app/ui/list-column/list-column.component.ts",
-          "hash": "9329963542619586701",
+          "hash": "564464605551492398",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
             "npm:@angular/cdk",
-            "npm:@angular/forms"
+            "npm:@angular/forms",
+            "npm:lucide-angular"
           ]
         },
         {
           "file": "apps/web/src/app/ui/trello-card/trello-card.component.html",
-          "hash": "3373720259968662830"
+          "hash": "3834813246402230466"
         },
         {
           "file": "apps/web/src/app/ui/trello-card/trello-card.component.ts",
-          "hash": "7000707056752538358",
+          "hash": "1701473339257137882",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -404,7 +533,7 @@
         },
         {
           "file": "apps/web/src/app/ui/user-header/user-header.component.ts",
-          "hash": "9747728704684703793",
+          "hash": "14557814625251822621",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
@@ -425,6 +554,14 @@
         {
           "file": "apps/web/src/app/utils/rank.ts",
           "hash": "17980626010899528950"
+        },
+        {
+          "file": "apps/web/src/environments/environment.prod.ts",
+          "hash": "10131888685073150121"
+        },
+        {
+          "file": "apps/web/src/environments/environment.ts",
+          "hash": "163516185282336267"
         },
         {
           "file": "apps/web/src/main.ts",
@@ -460,7 +597,7 @@
         },
         {
           "file": "apps/web/vite.config.mts",
-          "hash": "5093355828578272925",
+          "hash": "1294144054646063435",
           "deps": [
             "npm:vite",
             "npm:@analogjs/vite-plugin-angular",
@@ -468,123 +605,38 @@
           ]
         },
         {
-          "file": "apps/web/src/app/shared/uploads-bypass.component.ts",
-          "hash": "2768564668440077020",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/shared/ignore-uploads.strategy.ts",
-          "hash": "164926277408201162",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/web/src/environments/environment.ts",
-          "hash": "163516185282336267"
-        },
-        {
-          "file": "apps/web/src/environments/environment.prod.ts",
-          "hash": "10131888685073150121"
-        },
-        {
-          "file": "apps/web/src/app/core/app-config.ts",
-          "hash": "15201944913692542823",
-          "deps": [
-            "npm:@angular/core"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/data/workspaces.service.ts",
-          "hash": "1459725333231400376",
+          "file": "apps/web/src/app/pages/home-page/home-page.component.ts",
+          "hash": "5053520995126016618",
           "deps": [
             "npm:@angular/core",
             "npm:@angular/common",
-            "npm:rxjs@7.8.2"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/members-panel/members-panel.component.ts",
-          "hash": "693299103615418877",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/common",
-            "npm:@angular/forms",
-            "npm:lucide-angular",
-            "npm:@angular/cdk"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/members-panel/members-panel.component.html",
-          "hash": "12310203856380637788"
-        },
-        {
-          "file": "apps/web/src/app/components/members-panel/members-panel.component.css",
-          "hash": "9912710288585964055"
-        },
-        {
-          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.service.ts",
-          "hash": "11925619271663682481",
-          "deps": [
-            "npm:@angular/core"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.ts",
-          "hash": "2292796257718434574",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/common",
-            "npm:@angular/forms",
-            "npm:lucide-angular",
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.html",
-          "hash": "7389244600168232640"
-        },
-        {
-          "file": "apps/web/src/app/components/board-create-modal/board-create-modal.component.css",
-          "hash": "10687361375462053139"
-        },
-        {
-          "file": "apps/web/src/app/ui/card-modal/card-modal.service.ts",
-          "hash": "11759888433135421172",
-          "deps": [
-            "npm:@angular/core",
             "npm:@angular/router",
-            "npm:rxjs@7.8.2"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.service.ts",
-          "hash": "386122081879077043",
-          "deps": [
-            "npm:@angular/core"
-          ]
-        },
-        {
-          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.ts",
-          "hash": "867980859654839261",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/common",
-            "npm:@angular/forms",
             "npm:lucide-angular"
           ]
         },
         {
-          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.html",
-          "hash": "10181965285794283295"
+          "file": "apps/web/src/app/pages/home-page/home-page.component.html",
+          "hash": "4640009666360484746"
         },
         {
-          "file": "apps/web/src/app/components/card-create-modal/card-create-modal.component.css",
-          "hash": "10821087380099008031"
+          "file": "apps/web/src/app/pages/home-page/home-page.component.css",
+          "hash": "227772550928078687"
+        },
+        {
+          "file": "apps/web/src/app/shared/filter-by.pipe.ts",
+          "hash": "7580895464144075464",
+          "deps": [
+            "npm:@angular/core"
+          ]
+        },
+        {
+          "file": "apps/web/src/app/data/activity.service.ts",
+          "hash": "3442151751243821933",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:rxjs@7.8.2"
+          ]
         }
       ],
       "api": [
@@ -650,12 +702,24 @@
           "hash": "11487208834503536208"
         },
         {
+          "file": "apps/api/prisma/migrations/20251112190946_add_download_token_backrelation/migration.sql",
+          "hash": "5036740785710582314"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251114212738_add_cardmember_role/migration.sql",
+          "hash": "3545824437746662351"
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251118000443_add_board_visibility/migration.sql",
+          "hash": "9187198580643110470"
+        },
+        {
           "file": "apps/api/prisma/migrations/migration_lock.toml",
           "hash": "872437952673290735"
         },
         {
           "file": "apps/api/prisma/schema.prisma",
-          "hash": "17217995281567021549"
+          "hash": "7320238502561655406"
         },
         {
           "file": "apps/api/project.json",
@@ -675,7 +739,7 @@
         },
         {
           "file": "apps/api/src/main.ts",
-          "hash": "10581613587932089422",
+          "hash": "9255072168120653185",
           "deps": [
             "npm:fastify",
             "npm:@fastify/cors",
@@ -702,7 +766,7 @@
         },
         {
           "file": "apps/api/src/routes/attachments.ts",
-          "hash": "10368251059079533029",
+          "hash": "9744810568163579741",
           "deps": [
             "npm:fastify",
             "npm:@prisma/client"
@@ -728,7 +792,7 @@
         },
         {
           "file": "apps/api/src/routes/cards.ts",
-          "hash": "17845099949334383677",
+          "hash": "18354824189007612498",
           "deps": [
             "npm:fastify",
             "npm:@prisma/client"
@@ -754,7 +818,7 @@
         },
         {
           "file": "apps/api/src/routes/lists.ts",
-          "hash": "16205254288720448804",
+          "hash": "3464741166155899032",
           "deps": [
             "npm:fastify",
             "npm:@prisma/client",
@@ -826,10 +890,6 @@
           "hash": "8182873050267108161"
         },
         {
-          "file": "apps/api/prisma/migrations/20251112190946_add_download_token_backrelation/migration.sql",
-          "hash": "5036740785710582314"
-        },
-        {
           "file": "apps/api/uploads/1762975663064_34a9feda10899ac2dc7d08606f3c1eb1.pdf",
           "hash": "8182873050267108161"
         },
@@ -842,10 +902,6 @@
           "hash": "10527340750855060289"
         },
         {
-          "file": "apps/api/prisma/migrations/20251114212738_add_cardmember_role/migration.sql",
-          "hash": "3545824437746662351"
-        },
-        {
           "file": "apps/api/uploads/1763175356016_1878868729910d1e90b8037ba34d3dc4.json",
           "hash": "1765642879076257601"
         },
@@ -854,8 +910,20 @@
           "hash": "7051982094607935444"
         },
         {
-          "file": "apps/api/prisma/migrations/20251118000443_add_board_visibility/migration.sql",
-          "hash": "9187198580643110470"
+          "file": "apps/api/prisma/migrations/20251120174042_add_list_is_archived/migration.sql",
+          "hash": "9454110492446263332"
+        },
+        {
+          "file": "apps/api/src/routes/activity.ts",
+          "hash": "13793717662055433477",
+          "deps": [
+            "npm:fastify",
+            "npm:@prisma/client"
+          ]
+        },
+        {
+          "file": "apps/api/prisma/migrations/20251120183655_add_attachments_functionalit/migration.sql",
+          "hash": "13167095112269640198"
         }
       ]
     }

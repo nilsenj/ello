@@ -1,10 +1,10 @@
 // apps/web/src/app/app.routes.ts
-import {Router, Routes, UrlMatchResult, UrlSegment} from '@angular/router';
+import { Router, Routes, UrlMatchResult, UrlSegment } from '@angular/router';
 import { inject } from '@angular/core';
 import { BoardPageComponent } from './pages/board-page.component';
 import { AuthService } from './auth/auth.service';
 import { BoardsService } from './data/boards.service';
-import {UploadsBypassComponent} from "./shared/uploads-bypass.component";
+import { UploadsBypassComponent } from "./shared/uploads-bypass.component";
 
 /** Guard: block private area when not authenticated (await bootstrap on first run) */
 const authGuard = async () => {
@@ -47,23 +47,23 @@ export function uploadsMatcher(segments: UrlSegment[]): UrlMatchResult | null {
 
 export const routes: Routes = [
     // Public auth routes
-    { path: 'login',    loadComponent: () => import('./auth/login.page').then(m => m.default),  title: 'Log in' },
+    { path: 'login', loadComponent: () => import('./auth/login.page').then(m => m.default), title: 'Log in' },
     { path: 'register', loadComponent: () => import('./auth/register.page').then(m => m.default), title: 'Create account' },
-    { path: 'forgot',   loadComponent: () => import('./auth/forgot.page').then(m => m.default),   title: 'Reset password' },
+    { path: 'forgot', loadComponent: () => import('./auth/forgot.page').then(m => m.default), title: 'Reset password' },
 
     // ✅ BYPASS /uploads/** BEFORE ANY GUARDED/SPA ROUTES
     { matcher: uploadsMatcher, component: UploadsBypassComponent },
 
     // Private area (guarded)
+    // Private area (guarded)
     {
-        path: 'b',
-        canMatch: [authGuard],                      // ✅ now safe on reload
+        path: '',
+        canMatch: [authGuard],
         children: [
-            { path: ':boardId', component: BoardPageComponent, title: 'Board' },
-            { path: '_auto', canActivate: [autoBoardGuard], component: BoardPageComponent }, // never renders; guard redirects
+            { path: '', loadComponent: () => import('./pages/home-page/home-page.component').then(m => m.HomePageComponent), title: 'Boards' },
+            { path: 'b/:boardId', component: BoardPageComponent, title: 'Board' },
         ],
     },
 
-    { path: '', redirectTo: 'b/_auto', pathMatch: 'full' },
-    { path: '**', redirectTo: 'b/_auto' },
+    { path: '**', redirectTo: '' },
 ];

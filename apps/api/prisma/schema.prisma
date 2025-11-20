@@ -20,7 +20,8 @@ model User {
   boards        BoardMember[]
   cardAssignees CardMember[]
   comments      Comment[]
-  refreshTokens RefreshToken[] // <—
+  activities    Activity[]
+  refreshTokens RefreshToken[]
 }
 
 model Workspace {
@@ -54,7 +55,7 @@ model Board {
   description String?
   isArchived  Boolean       @default(false)
   background  String?
-  visibility  Visibility    @default(private)  // <— add this
+  visibility  Visibility    @default(private)
 
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
@@ -89,6 +90,7 @@ model List {
 
   // New: string rank for O(1) reorder
   rank String @default("n")
+  isArchived Boolean @default(false)
 
   board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId  String
@@ -131,6 +133,7 @@ model Card {
   checklists  Checklist[]
   attachments Attachment[]
   comments    Comment[]
+  activities  Activity[]
   isDone      Boolean      @default(false)
 
   createdAt DateTime @default(now())
@@ -247,6 +250,11 @@ model Activity {
   createdAt DateTime @default(now())
   board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId   String
+  // Optional relations for better querying
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?
+  card      Card?    @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  cardId    String?
 }
 
 model RefreshToken {
@@ -283,5 +291,3 @@ enum CardRole {
   devops
   other
 }
-
-

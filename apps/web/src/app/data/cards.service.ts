@@ -31,7 +31,7 @@ export class CardsService {
         private listsSvc: ListsService,
         private http: HttpClient,
         private store: BoardStore
-    ) {}
+    ) { }
 
     /** Create on server and return the created card */
     async createCard(listId: string, title: string): Promise<Card> {
@@ -215,6 +215,12 @@ export class CardsService {
     }
     async updateChecklistItem(itemId: string, body: { done?: boolean; text?: string }) {
         return firstValueFrom(this.http.patch(`/api/checklist-items/${itemId}`, body));
+    }
+    async deleteChecklist(checklistId: string) {
+        return firstValueFrom(this.http.delete<void>(`/api/checklists/${checklistId}`));
+    }
+    async deleteChecklistItem(itemId: string) {
+        return firstValueFrom(this.http.delete<void>(`/api/checklist-items/${itemId}`));
     }
 
     // ---------- Comments ----------

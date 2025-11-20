@@ -1,13 +1,13 @@
 // apps/api/src/routes/attachments.ts
-import type {FastifyInstance, FastifyRequest} from 'fastify';
-import type {PrismaClient} from '@prisma/client';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { PrismaClient } from '@prisma/client';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import {ensureUser} from "../utils/ensure-user.js";
+import { ensureUser } from "../utils/ensure-user.js";
 // If ensureUser lives in ../utils/ensure-user.js, import from there instead:
 // import { ensureUser } from '../utils/ensure-user.js';
-import {randomUUID} from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 type Opts = {
     uploadDir: string;            // absolute dir on disk
@@ -19,8 +19,8 @@ type Opts = {
 
 async function boardIdByCard(prisma: PrismaClient, cardId: string) {
     const row = await prisma.card.findUnique({
-        where: {id: cardId},
-        select: {list: {select: {boardId: true}}},
+        where: { id: cardId },
+        select: { list: { select: { boardId: true } } },
     });
     return row?.list?.boardId ?? null;
 }
@@ -32,8 +32,8 @@ async function assertBoardMember(prisma: PrismaClient, boardId: string | null, u
         throw err;
     }
     const member = await prisma.boardMember.findFirst({
-        where: {boardId, userId},
-        select: {id: true},
+        where: { boardId, userId },
+        select: { id: true },
     });
     if (!member) {
         const err: any = new Error('Forbidden');
@@ -68,10 +68,10 @@ export async function registerAttachmentRoutes(
     prisma: PrismaClient,
     opts: Opts
 ) {
-    const {uploadDir, publicBaseUrl, publicPrefix} = opts;
+    const { uploadDir, publicBaseUrl, publicPrefix } = opts;
 
     // Ensure dir
-    fs.mkdirSync(uploadDir, {recursive: true});
+    fs.mkdirSync(uploadDir, { recursive: true });
 
     // 1) Upload attachment (multipart) OR attach by URL (JSON)
     //    - Multipart: field "file" (single). Optional field "name".
@@ -80,7 +80,7 @@ export async function registerAttachmentRoutes(
         '/api/cards/:cardId/attachments',
         async (req: FastifyRequest<{ Params: { cardId: string } }>, reply) => {
             const user = ensureUser(req);
-            const {cardId} = req.params;
+            const { cardId } = req.params;
 
             const bId = await boardIdByCard(prisma, cardId);
             await assertBoardMember(prisma, bId, user.id);
@@ -132,7 +132,7 @@ export async function registerAttachmentRoutes(
                 }
 
                 if (!created) {
-                    return reply.code(400).send({error: 'file is required'});
+                    return reply.code(400).send({ error: 'file is required' });
                 }
 
                 return created;
@@ -147,7 +147,7 @@ export async function registerAttachmentRoutes(
             };
 
             const url = (body.url || '').trim();
-            if (!url) return reply.code(400).send({error: 'url required'});
+            if (!url) return reply.code(400).send({ error: 'url required' });
 
             const created = await prisma.attachment.create({
                 data: {
@@ -167,29 +167,29 @@ export async function registerAttachmentRoutes(
     // 2) List attachments for a card (optional, as /api/cards/:id already includes them)
     app.get('/api/cards/:cardId/attachments', async (req: FastifyRequest<{ Params: { cardId: string } }>) => {
         const user = ensureUser(req);
-        const {cardId} = req.params;
+        const { cardId } = req.params;
 
         const bId = await boardIdByCard(prisma, cardId);
         await assertBoardMember(prisma, bId, user.id);
 
         return prisma.attachment.findMany({
-            where: {cardId},
-            orderBy: [{isCover: 'desc'}, {createdAt: 'desc'}],
+            where: { cardId },
+            orderBy: [{ isCover: 'desc' }, { createdAt: 'desc' }],
         });
     });
 
     // 3) Delete attachment
     app.delete('/api/attachments/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
         const user = ensureUser(req);
-        const {id} = req.params;
+        const { id } = req.params;
 
         const row = await prisma.attachment.findUnique({
-            where: {id},
+            where: { id },
             select: {
                 id: true,
                 url: true,
                 isCover: true,
-                card: {select: {id: true, list: {select: {boardId: true}}}},
+                card: { select: { id: true, list: { select: { boardId: true } } } },
             },
         });
 
@@ -203,18 +203,18 @@ export async function registerAttachmentRoutes(
             await unlinkIfExists(diskPath);
         }
 
-        await prisma.attachment.delete({where: {id}});
+        await prisma.attachment.delete({ where: { id } });
         return reply.code(204).send();
     });
 
     // 4) Set as cover
     app.post('/api/attachments/:id/cover', async (req: FastifyRequest<{ Params: { id: string } }>) => {
         const user = ensureUser(req);
-        const {id} = req.params;
+        const { id } = req.params;
 
         const row = await prisma.attachment.findUnique({
-            where: {id},
-            select: {id: true, cardId: true, card: {select: {list: {select: {boardId: true}}}}},
+            where: { id },
+            select: { id: true, cardId: true, card: { select: { list: { select: { boardId: true } } } } },
         });
         if (!row) {
             const err: any = new Error('Not Found');
@@ -224,11 +224,31 @@ export async function registerAttachmentRoutes(
         await assertBoardMember(prisma, row.card.list.boardId, user.id);
 
         await prisma.$transaction([
-            prisma.attachment.updateMany({where: {cardId: row.cardId, isCover: true}, data: {isCover: false}}),
-            prisma.attachment.update({where: {id}, data: {isCover: true}}),
+            prisma.attachment.updateMany({ where: { cardId: row.cardId, isCover: true }, data: { isCover: false } }),
+            prisma.attachment.update({ where: { id }, data: { isCover: true } }),
         ]);
 
-        return {ok: true};
+        return { ok: true };
+    });
+
+    app.delete('/api/attachments/:id/cover', async (req: FastifyRequest<{ Params: { id: string } }>) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+
+        const row = await prisma.attachment.findUnique({
+            where: { id },
+            select: { id: true, card: { select: { list: { select: { boardId: true } } } } },
+        });
+        if (!row) {
+            const err: any = new Error('Not Found');
+            err.statusCode = 404;
+            throw err;
+        }
+        await assertBoardMember(prisma, row.card.list.boardId, user.id);
+
+        await prisma.attachment.update({ where: { id }, data: { isCover: false } });
+
+        return { ok: true };
     });
 
     // 5) Rename attachment (optional quality-of-life)
@@ -236,19 +256,19 @@ export async function registerAttachmentRoutes(
         '/api/attachments/:id',
         async (req: FastifyRequest<{ Params: { id: string }; Body: { name?: string } }>, reply) => {
             const user = ensureUser(req);
-            const {id} = req.params;
-            const {name} = (req.body ?? {}) as { name?: string };
+            const { id } = req.params;
+            const { name } = (req.body ?? {}) as { name?: string };
 
             const row = await prisma.attachment.findUnique({
-                where: {id},
-                select: {id: true, card: {select: {list: {select: {boardId: true}}}}},
+                where: { id },
+                select: { id: true, card: { select: { list: { select: { boardId: true } } } } },
             });
-            if (!row) return reply.code(404).send({error: 'Not Found'});
+            if (!row) return reply.code(404).send({ error: 'Not Found' });
             await assertBoardMember(prisma, row.card.list.boardId, user.id);
 
-            if (!name?.trim()) return reply.code(400).send({error: 'name required'});
+            if (!name?.trim()) return reply.code(400).send({ error: 'name required' });
 
-            const updated = await prisma.attachment.update({where: {id}, data: {name: name.trim()}});
+            const updated = await prisma.attachment.update({ where: { id }, data: { name: name.trim() } });
             return updated;
         }
     );
@@ -256,19 +276,19 @@ export async function registerAttachmentRoutes(
     // 6) Build absolute URL utility (if you later need to emit absolute URLs)
     app.get('/api/attachments/:id/url', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
         const user = ensureUser(req);
-        const {id} = req.params;
+        const { id } = req.params;
         const row = await prisma.attachment.findUnique({
-            where: {id},
-            select: {url: true, card: {select: {list: {select: {boardId: true}}}}},
+            where: { id },
+            select: { url: true, card: { select: { list: { select: { boardId: true } } } } },
         });
-        if (!row) return reply.code(404).send({error: 'Not Found'});
+        if (!row) return reply.code(404).send({ error: 'Not Found' });
         await assertBoardMember(prisma, row.card.list.boardId, user.id);
 
         // If local, convert /uploads/* to absolute, else return as-is
         const absolute = isLocalUrl(row.url, publicPrefix)
             ? `${publicBaseUrl}${row.url}`
             : row.url;
-        return {url: absolute};
+        return { url: absolute };
     });
 
     // Stream the attachment file via API (auth-checked)
@@ -276,20 +296,20 @@ export async function registerAttachmentRoutes(
     // External absolute URLs are redirected
     app.get('/api/attachments/:id/file', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
         const user = ensureUser(req);
-        const {id} = req.params;
+        const { id } = req.params;
 
         const row = await prisma.attachment.findUnique({
-            where: {id},
+            where: { id },
             select: {
                 id: true,
                 url: true,
                 name: true,
                 mime: true,
-                card: {select: {list: {select: {boardId: true}}}},
+                card: { select: { list: { select: { boardId: true } } } },
             },
         });
 
-        if (!row) return reply.code(404).send({error: 'Not Found'});
+        if (!row) return reply.code(404).send({ error: 'Not Found' });
 
         await assertBoardMember(prisma, row.card.list.boardId, user.id);
 
@@ -307,7 +327,7 @@ export async function registerAttachmentRoutes(
         try {
             stat = await fs.promises.stat(diskPath);
         } catch {
-            return reply.code(404).send({error: 'File missing'});
+            return reply.code(404).send({ error: 'File missing' });
         }
 
         // Optional: force download with ?download=1
@@ -340,7 +360,7 @@ export async function registerAttachmentRoutes(
                 .header('Content-Range', `bytes ${start}-${end}/${stat.size}`)
                 .header('Content-Length', String(end - start + 1));
 
-            const stream = fs.createReadStream(diskPath, {start, end});
+            const stream = fs.createReadStream(diskPath, { start, end });
             return reply.send(stream);
         }
 

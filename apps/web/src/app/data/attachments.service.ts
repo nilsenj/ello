@@ -7,7 +7,7 @@ import {
     HttpResponse,
 } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import {APP_CONFIG} from "../core/app-config";
+import { APP_CONFIG } from "../core/app-config";
 
 export type DownloadEvent =
     | { kind: 'progress'; percent: number }
@@ -41,7 +41,7 @@ export class AttachmentsService {
     private cfg = inject(APP_CONFIG); // { apiOrigin, publicPrefix }
 
     list(cardId: string) {
-        return this.http.get<AttachmentDto[]>(`/api/cards/${cardId}/attachments`, {withCredentials: true});
+        return this.http.get<AttachmentDto[]>(`/api/cards/${cardId}/attachments`, { withCredentials: true });
     }
 
     makeAttachmentUrlFactory() {
@@ -71,14 +71,14 @@ export class AttachmentsService {
         const form = new FormData();
         form.append('file', file, file.name);
         if (name) form.append('name', name);
-        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, form, {withCredentials: true});
+        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, form, { withCredentials: true });
     }
 
     /**
      * Attach by external URL
      */
     attachUrl(cardId: string, url: string, name?: string, mime?: string, size?: number) {
-        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, { url, name, mime, size }, {withCredentials: true});
+        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, { url, name, mime, size }, { withCredentials: true });
     }
 
     /**
@@ -96,27 +96,31 @@ export class AttachmentsService {
     }
 
     rename(id: string, name: string) {
-        return this.http.patch<AttachmentDto>(`/api/attachments/${id}`, { name }, {withCredentials: true});
+        return this.http.patch<AttachmentDto>(`/api/attachments/${id}`, { name }, { withCredentials: true });
     }
 
     setCover(id: string) {
-        return this.http.post<{ ok: true }>(`/api/attachments/${id}/cover`, {}, {withCredentials: true});
+        return this.http.post<{ ok: true }>(`/api/attachments/${id}/cover`, {}, { withCredentials: true });
+    }
+
+    removeCover(id: string) {
+        return this.http.delete<{ ok: true }>(`/api/attachments/${id}/cover`, { withCredentials: true });
     }
 
     delete(id: string) {
-        return this.http.delete<void>(`/api/attachments/${id}`, {withCredentials: true});
+        return this.http.delete<void>(`/api/attachments/${id}`, { withCredentials: true });
     }
 
     /**
      * Absolute URL resolver (useful if SSR or need to copy/share)
      */
     resolveUrl(id: string) {
-        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, {withCredentials: true});
+        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, { withCredentials: true });
     }
 
     /** If you ever need an absolute URL from API */
     resolveAbsoluteUrl(id: string) {
-        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, {withCredentials: true}).pipe(map(r => r.url));
+        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, { withCredentials: true }).pipe(map(r => r.url));
     }
 
 
