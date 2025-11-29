@@ -1,0 +1,58 @@
+<section *ngIf="modal.isOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
+    (mousedown)="onBackdrop($event)" role="dialog" aria-modal="true">
+    <div class="w-[min(92vw,800px)] bg-white rounded-xl shadow-2xl flex flex-col max-h-[85vh]"
+        (mousedown)="$event.stopPropagation()">
+        <!-- Header -->
+        <header class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+                <lucide-icon [img]="LayoutTemplateIcon" class="w-5 h-5 text-blue-600"></lucide-icon>
+                <h2 class="text-lg font-semibold text-gray-800">Start with a Template</h2>
+            </div>
+            <button class="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors" (click)="close()">
+                <lucide-icon [img]="XIcon" class="w-5 h-5"></lucide-icon>
+            </button>
+        </header>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto">
+
+            <!-- Workspace Selector -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Choose Workspace</label>
+                <select [value]="selectedWorkspaceId()" (change)="selectWorkspace($event)"
+                    class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                    <option *ngFor="let ws of workspaces()" [value]="ws.id">{{ ws.name }}</option>
+                </select>
+            </div>
+
+            <!-- Templates Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div *ngFor="let template of templates"
+                    class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                    (click)="useTemplate(template)">
+
+                    <!-- Preview Header -->
+                    <div class="h-24 flex items-end p-4" [style.background-color]="template.background">
+                        <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold shadow-sm">
+                            {{ template.name }}
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{{
+                            template.name }}</h3>
+                        <p class="text-sm text-gray-500 mb-3">{{ template.description }}</p>
+
+                        <div class="flex flex-wrap gap-1">
+                            <span *ngFor="let list of template.lists"
+                                class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                                {{ list }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

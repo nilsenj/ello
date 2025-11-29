@@ -1,0 +1,26 @@
+<div class="relative shrink-0" (focusout)="onBlur($event)">
+    <button class="btn bg-white/10 text-white hover:bg-white/20 border-none flex items-center gap-2" (click)="toggle()">
+        <span>Create</span>
+        <svg class="w-4 h-4 opacity-80" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M5.25 7.5l4.5 4.5 4.5-4.5" />
+        </svg>
+    </button>
+
+    <div class="menu-content mt-1 w-64 origin-top-left" *ngIf="isOpen()">
+        <div class="px-4 py-2 border-b border-gray-100">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Create</div>
+        </div>
+        <div class="p-2">
+            <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 flex flex-col gap-0.5"
+                (click)="createBoard.emit(); close()">
+                <span class="text-sm font-medium text-gray-700">Create board</span>
+                <span class="text-xs text-gray-500">A board is made up of cards ordered on lists.</span>
+            </button>
+            <button class="w-full text-left px-3 py-2 rounded hover:bg-gray-50 flex flex-col gap-0.5"
+                (click)="createCard.emit(); close()">
+                <span class="text-sm font-medium text-gray-700">Create card</span>
+                <span class="text-xs text-gray-500">Create a card to track a task.</span>
+            </button>
+        </div>
+    </div>
+</div>
