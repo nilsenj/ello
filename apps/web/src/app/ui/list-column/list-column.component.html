@@ -19,7 +19,8 @@
 
         <!-- Render filtered if provided, otherwise full -->
         <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c" [card]="c"
-            [listId]="list.id">
+            [listId]="list.id" (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
+            [disableClick]="disableCardClick()">
         </trello-card>
     </div>
 

@@ -396,6 +396,212 @@ This enables stable drag & drop and “move to top/bottom” without renumbering
 
 ---
 
+## Real-Time Notifications System
+
+Ello includes a complete real-time notification system using Socket.IO for instant updates. Users receive notifications for mentions, assignments, comments, card moves, and board invites.
+
+### Architecture
+
+- **Backend**: Socket.IO server with JWT authentication
+- **Database**: Notification persistence with Prisma
+- **Frontend**: Socket.IO client with Signal-based state management
+- **UI**: Notification bell in header with dropdown list
+
+### Backend Setup
+
+The notification system is already integrated. Key components:
+
+**Socket.IO Server** (`apps/api/src/socket.ts`):
+- JWT-based authentication
+- User-specific rooms: `user:{userId}`
+- Board subscription rooms: `board:{boardId}`
+
+**Notification Service** (`apps/api/src/services/notification-service.ts`):
+- `notifyMention(params)` - @mentions in comments
+- `notifyCardAssignment(params)` - user assigned to card
+- `notifyCardComment(params)` - comments on watched cards
+- `notifyCardMove(params)` - card moved between lists
+- `notifyBoardInvite(params)` - added to board
+
+**API Routes** (`/api/notifications/*`):
+- `GET /api/notifications` - Fetch notifications (paginated)
+- `GET /api/notifications/unread/count` - Get unread count
+- `PATCH /api/notifications/:id/read` - Mark as read
+- `PATCH /api/notifications/read-all` - Mark all as read
+- `DELETE /api/notifications/:id` - Delete notification
+
+### Frontend Integration
+
+**Services**:
+- `SocketService` - WebSocket connection management
+- `NotificationsService` - HTTP API calls
+- `NotificationsStore` - Signal-based state with real-time updates
+
+**Authentication Integration**:
+Socket.IO automatically connects when user logs in and disconnects on logout. Check `apps/web/src/app/auth/auth.service.ts`:
+```typescript
+async login(payload) {
+  // ... login logic
+  this.socketService.connect(accessToken);
+  await this.notificationsStore.loadNotifications();
+}
+```
+
+**User Header Component**:
+The notification bell appears in the user header with:
+- Unread badge count
+- Dropdown list of recent notifications
+- Mark as read / delete actions
+- Click to navigate to related card/board
+
+### Notification Types
+
+```typescript
+type NotificationType =
+  | 'MENTIONED'           // @mentioned in a comment
+  | 'ASSIGNED_TO_CARD'    // assigned to a card
+  | 'CARD_COMMENT'        // comment on assigned/watched card
+  | 'CARD_DUE_SOON'       // due date approaching
+  | 'CARD_MOVED'          // card moved to different list
+  | 'ADDED_TO_BOARD'      // invited to board
+  | 'ADDED_TO_WORKSPACE'; // invited to workspace
+```
+
+### Triggering Notifications
+
+Notifications are automatically triggered when:
+
+**Card Assignment**:
+```typescript
+// In apps/api/src/routes/cards.ts
+await notificationService.notifyCardAssignment({
+  assigneeId: userId,
+  actorId: currentUser.id,
+  cardId: card.id
+});
+```
+
+**Card Comments**:
+```typescript
+await notificationService.notifyCardComment({
+  cardId: card.id,
+  actorId: currentUser.id,
+  commentId: comment.id,
+  commentText: text
+});
+```
+
+**Custom Notifications**:
+To add notifications for new features, inject `NotificationService` and call the appropriate method:
+```typescript
+const notificationService = new NotificationService(prisma);
+await notificationService.notifyMention({
+  mentionedUserId: userId,
+  actorId: currentUser.id,
+  cardId,
+  commentId
+});
+```
+
+### Database Schema
+
+**Notification Model**:
+```prisma
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String?
+  isRead    Boolean          @default(false)
+  userId    String
+  actorId   String?
+  cardId    String?
+  boardId   String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+  
+  user   User   @relation("UserNotifications", fields: [userId], references: [id])
+  actor  User?  @relation("ActorNotifications", fields: [actorId], references: [id])
+  card   Card?  @relation(fields: [cardId], references: [id])
+  board  Board? @relation(fields: [boardId], references: [id])
+  
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+```
+
+**Watched Items**:
+```prisma
+model WatchedCard {
+  userId String
+  cardId String
+  user   User @relation(fields: [userId], references: [id])
+  card   Card @relation(fields: [cardId], references: [id])
+  @@id([userId, cardId])
+}
+
+model WatchedBoard {
+  userId  String
+  boardId String
+  user    User  @relation(fields: [userId], references: [id])
+  board   Board @relation(fields: [boardId], references: [id])
+  @@id([userId, boardId])
+}
+```
+
+### Testing Notifications
+
+1. **Login** with two different user accounts in separate browsers
+2. **Assign User A** to a card while logged in as User B
+3. **Check User A's browser** - notification bell shows unread badge
+4. **Click the bell** - see notification in dropdown
+5. **Add a comment** on an assigned card - watchers get notified
+6. **Mark as read** - badge count decreases
+7. **Navigate to card** by clicking notification
+
+### Browser Notifications (Optional)
+
+To enable native browser notifications, users can grant permission:
+```typescript
+notificationsStore.requestBrowserNotificationPermission();
+```
+
+The system automatically shows browser notifications when:
+- User is not on the active tab
+- Permission is granted
+- New notification arrives via Socket.IO
+
+### Environment Configuration
+
+Ensure `apps/web/src/environments/environment.ts` includes:
+```typescript
+export const environment = {
+  production: false,
+  apiOrigin: 'http://localhost:3000',
+  apiUrl: 'http://localhost:3000',  // Required for Socket.IO
+  publicPrefix: '/uploads'
+};
+```
+
+### Troubleshooting
+
+**Socket.IO not connecting**:
+- Check browser console for "Socket.IO connected" message
+- Verify JWT token is valid in localStorage
+- Ensure API server is running with Socket.IO setup
+
+**Notifications not appearing**:
+- Check that notification triggers are called in API routes
+- Verify user is authenticated and Socket.IO is connected
+- Check database for notification records: `SELECT * FROM "Notification" WHERE "userId" = 'user-id'`
+
+**Real-time not working**:
+- Ensure `@fastify/websocket` is installed in API
+- Verify Socket.IO server is initialized in `main.ts`
+- Check for CORS issues between frontend and backend
+
+---
+
 ## Roadmap
 
 - Multi-label filter (AND/OR)

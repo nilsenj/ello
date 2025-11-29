@@ -1,229 +1,129 @@
-<section
-        *ngIf="modal.isOpen()"
-        class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
-        (mousedown)="onBackdrop($event)"
-        role="dialog"
-        aria-modal="true"
->
-    <div
-            class="w-[min(92vw,760px)] max-w-[760px] max-h-[calc(100vh-48px)] bg-white rounded-xl shadow-2xl flex flex-col"
-            (mousedown)="$event.stopPropagation()"
-    >
+<section *ngIf="modal.isOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
+    (mousedown)="onBackdrop($event)" role="dialog" aria-modal="true">
+    <div class="w-[min(92vw,760px)] max-w-[760px] max-h-[calc(100vh-48px)] bg-white rounded-xl shadow-2xl flex flex-col"
+        (mousedown)="$event.stopPropagation()">
         <!-- header -->
-        <header class="relative px-5 py-3 border-b border-slate-200">
-            <div
-                    class="absolute inset-x-0 top-0 h-1"
-                    [style.background]="bgType()==='color' ? bgValue() : 'transparent'"
-            ></div>
-
-            <div class="flex items-center gap-2 text-slate-800">
-                <span class="font-semibold text-[15px]">Create board</span>
-                <span class="ml-1 inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-          Trello-style
-        </span>
-                <button
-                        class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
-                        (click)="close()"
-                        aria-label="Close"
-                >
-                    <lucide-icon [img]="XIcon" class="h-4 w-4 text-slate-600"></lucide-icon>
-                </button>
-            </div>
+        <header class="relative px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="font-semibold text-lg text-slate-800">Create Board</div>
+            <button
+                class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 transition-colors"
+                (click)="close()" aria-label="Close">
+                <lucide-icon [img]="XIcon" class="h-5 w-5 text-slate-500"></lucide-icon>
+            </button>
         </header>
 
         <!-- body -->
-        <div class="flex-1 overflow-auto px-5 py-4">
-            <!-- preview -->
-            <div class="mb-4 overflow-hidden rounded-xl shadow-lg">
-                <div
-                        class="h-40 rounded-lg shadow-inner p-3 text-slate-900 flex flex-col"
-                        [ngStyle]="{
-      'background': bgType()==='color' ? bgValue() : (bgValue() ? 'url(' + bgValue() + ')' : '#e5e7eb'),
-      'backgroundSize': 'cover',
-      'backgroundPosition':'center'
-    }"
-                >
-                    <div class="font-semibold mb-2">
-                        {{ name().trim() || 'Board title' }}
-                    </div>
-
-                    <!-- one row, top-aligned, centered -->
-                    <div class="flex items-start justify-center gap-3">
-                        <!-- List A (1 item) -->
-                        <div class="w-28 rounded-md bg-white/85 shadow-sm p-2">
-                            <p class="text-[11px] font-medium text-slate-700/90 blur-[1.8px] select-none"
-                               aria-hidden="true">
-                                Backlog
-                            </p>
-                            <div class="mt-1 space-y-1.5">
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Draft homepage hero copy for review
-                                    </p>
-                                </div>
+        <div class="flex-1 overflow-auto px-6 py-6">
+            <div class="grid lg:grid-cols-[1fr_300px] gap-8">
+                <!-- Left: Preview -->
+                <div class="order-2 lg:order-1">
+                    <div
+                        class="flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 p-8 h-full min-h-[300px]">
+                        <div class="w-[300px] h-[200px] rounded-lg shadow-xl relative overflow-hidden transition-all duration-300"
+                            [ngStyle]="{
+                                  'background': bgType()==='color' ? bgValue() : (bgValue() ? 'url(' + bgValue() + ')' : '#e5e7eb'),
+                                  'backgroundSize': 'cover',
+                                  'backgroundPosition':'center'
+                                }">
+                            <!-- Fake UI overlay -->
+                            <div class="absolute inset-0 bg-black/10"></div>
+                            <div class="absolute top-3 left-3 right-3 flex gap-2">
+                                <div class="h-2 w-16 bg-white/30 rounded-sm"></div>
+                                <div class="h-2 w-8 bg-white/30 rounded-sm"></div>
                             </div>
-                        </div>
-
-                        <!-- List B (2 items) -->
-                        <div class="w-36 rounded-md bg-white/85 shadow-sm p-2">
-                            <p class="text-[11px] font-medium text-slate-700/90 blur-[1.8px] select-none"
-                               aria-hidden="true">
-                                In Progress
-                            </p>
-                            <div class="mt-1 space-y-1.5">
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Implement auth flow & session restore
-                                    </p>
+                            <div class="absolute top-8 left-3 flex gap-3">
+                                <div class="w-20 h-28 bg-white/90 rounded shadow-sm p-1.5 flex flex-col gap-1.5">
+                                    <div class="h-1.5 w-10 bg-slate-200 rounded-sm"></div>
+                                    <div class="h-8 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
+                                    <div class="h-8 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
                                 </div>
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Connect board list API and cache queries
-                                    </p>
+                                <div class="w-20 h-28 bg-white/90 rounded shadow-sm p-1.5 flex flex-col gap-1.5">
+                                    <div class="h-1.5 w-12 bg-slate-200 rounded-sm"></div>
+                                    <div class="h-12 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- List C (1 item, wider) -->
-                        <div class="w-44 rounded-md bg-white/85 shadow-sm p-2">
-                            <p class="text-[11px] font-medium text-slate-700/90 blur-[1.8px] select-none"
-                               aria-hidden="true">
-                                Review / QA
-                            </p>
-                            <div class="mt-1 space-y-1.5">
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Cross-browser testing (Safari, Chrome, Firefox)
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- List D (2 items, hidden on small screens) -->
-                        <div class="hidden md:block w-28 rounded-md bg-white/85 shadow-sm p-2">
-                            <p class="text-[11px] font-medium text-slate-700/90 blur-[1.8px] select-none"
-                               aria-hidden="true">
-                                Done
-                            </p>
-                            <div class="mt-1 space-y-1.5">
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Migrate icons to Lucide
-                                    </p>
-                                </div>
-                                <div class="rounded bg-white/90 shadow p-1.5">
-                                    <p class="text-[10px] leading-4 text-slate-700/90 blur-[2px] select-none"
-                                       aria-hidden="true">
-                                        Add Trello-style board modal
-                                    </p>
+                                <div class="w-20 h-28 bg-white/90 rounded shadow-sm p-1.5 flex flex-col gap-1.5">
+                                    <div class="h-1.5 w-8 bg-slate-200 rounded-sm"></div>
+                                    <div class="h-6 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
+                                    <div class="h-6 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
+                                    <div class="h-6 w-full bg-white border border-slate-100 rounded shadow-sm"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- form -->
-            <div class="grid gap-4">
-                <label class="grid gap-1">
-                    <span class="text-sm font-medium text-slate-700">Board title</span>
-                    <input
-                            class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
-                            autofocus
-                            placeholder="e.g., Marketing Q1"
-                            [ngModel]="name()"
-                            (ngModelChange)="name.set($event)"
-                    />
-                </label>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <!-- background -->
-                    <label class="block">
-            <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-700">
-              <lucide-icon [img]="PaletteIcon" class="h-4 w-4 text-slate-500"></lucide-icon>
-              Background
-            </span>
+                <!-- Right: Form -->
+                <div class="order-1 lg:order-2 space-y-6">
+                    <div *ngIf="error()" class="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                        {{ error() }}
+                    </div>
 
-                        <div class="mt-2 grid grid-cols-9 gap-2">
-                            <button
-                                    *ngFor="let c of colorPresets"
-                                    type="button"
-                                    class="h-7 w-7 rounded-md border-2 border-white shadow hover:shadow-md transition"
-                                    [style.background]="c"
-                                    [class.outline]="bgType()==='color' && bgValue()===c"
-                                    [class.outline-2]="bgType()==='color' && bgValue()===c"
-                                    [class.outline-white]="bgType()==='color' && bgValue()===c"
-                                    (click)="pickColor(c)"
-                                    aria-label="Pick color"
-                            ></button>
-                        </div>
+                    <div class="space-y-4">
+                        <label class="block space-y-1.5">
+                            <span class="text-sm font-medium text-slate-700">Board Title</span>
+                            <input
+                                class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                autofocus placeholder="e.g., Q4 Roadmap" [ngModel]="name()"
+                                (ngModelChange)="name.set($event)" />
+                        </label>
 
-                        <ng-container *ngIf="imagePresets.length">
-                            <div class="mt-2 grid grid-cols-5 gap-2">
-                                <button
-                                        *ngFor="let url of imagePresets"
-                                        type="button"
-                                        class="relative aspect-[4/3] w-full rounded-lg border-2 border-white bg-cover bg-center overflow-hidden"
-                                        [style.backgroundImage]="'url(' + url + ')'"
-                                        [class.outline]="bgType()==='image' && bgValue()===url"
-                                        [class.outline-2]="bgType()==='image' && bgValue()===url"
-                                        [class.outline-white]="bgType()==='image' && bgValue()===url"
-                                        (click)="pickImage(url)"
-                                        aria-label="Pick image"
-                                >
-                                    <lucide-icon [img]="ImageIcon"
-                                                 class="absolute right-1.5 bottom-1.5 h-3.5 w-3.5 text-slate-100/90"></lucide-icon>
-                                </button>
+                        <div class="space-y-3">
+                            <span class="text-sm font-medium text-slate-700 block">Background</span>
+                            <div class="grid grid-cols-5 gap-2">
+                                <button *ngFor="let c of colorPresets" type="button"
+                                    class="aspect-square rounded-md shadow-sm hover:scale-110 transition-transform ring-2 ring-transparent focus:outline-none"
+                                    [style.background]="c" [class.ring-blue-500]="bgType()==='color' && bgValue()===c"
+                                    [class.ring-offset-2]="bgType()==='color' && bgValue()===c"
+                                    (click)="pickColor(c)"></button>
                             </div>
-                        </ng-container>
-                    </label>
 
-                    <!-- visibility -->
-                    <label class="grid gap-1">
-            <span class="inline-flex items-center gap-1 text-sm font-medium text-slate-700">
-              <lucide-icon [img]="GlobeIcon" class="h-4 w-4 text-slate-500"></lucide-icon>
-              Visibility
-            </span>
-                        <select
-                                class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
-                                [ngModel]="visibility()"
-                                (ngModelChange)="visibility.set($event)"
-                        >
-                            <option value="private">Private</option>
-                            <option value="workspace">Workspace</option>
-                            <option value="public">Public</option>
-                        </select>
-                        <div
-                                class="mt-1 text-[12px] text-slate-500"
-                                [innerHTML]="
-                visibility()==='private' ? 'Only board members can view and edit.' :
-                visibility()==='workspace' ? 'Workspace members can find and join.' :
-                'Anyone with a link can view.'">
+                            <div *ngIf="imagePresets.length" class="grid grid-cols-4 gap-2 mt-2">
+                                <button *ngFor="let url of imagePresets" type="button"
+                                    class="aspect-video rounded-md bg-cover bg-center shadow-sm hover:opacity-90 transition-opacity ring-2 ring-transparent focus:outline-none"
+                                    [style.backgroundImage]="'url(' + url + ')'"
+                                    [class.ring-blue-500]="bgType()==='image' && bgValue()===url"
+                                    [class.ring-offset-2]="bgType()==='image' && bgValue()===url"
+                                    (click)="pickImage(url)"></button>
+                            </div>
                         </div>
-                    </label>
+
+                        <label class="block space-y-1.5">
+                            <span class="text-sm font-medium text-slate-700">Visibility</span>
+                            <div class="relative">
+                                <select
+                                    class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    [ngModel]="visibility()" (ngModelChange)="visibility.set($event)">
+                                    <option value="private">Private</option>
+                                    <option value="workspace">Workspace</option>
+                                    <option value="public">Public</option>
+                                </select>
+                                <lucide-icon [img]="GlobeIcon"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none"></lucide-icon>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                {{
+                                visibility()==='private' ? 'Only board members can view and edit.' :
+                                visibility()==='workspace' ? 'All workspace members can see this board.' :
+                                'Anyone on the internet can see this board.'
+                                }}
+                            </p>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- footer -->
-        <footer class="sticky bottom-0 border-t border-slate-200 bg-white px-4 py-3 flex justify-end gap-2">
+        <footer class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
             <button
-                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                    (click)="close()"
-            >
+                class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+                (click)="close()">
                 Cancel
             </button>
             <button
-                    class="inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white disabled:opacity-50 hover:bg-slate-900"
-                    [disabled]="!canSubmit() || creating()"
-                    (click)="createBoard()"
-            >
-                <span *ngIf="!creating()">Create</span>
-                <span *ngIf="creating()">Creating…</span>
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                [disabled]="!canSubmit() || creating()" (click)="createBoard()">
+                {{ creating() ? 'Creating...' : 'Create Board' }}
             </button>
         </footer>
     </div>

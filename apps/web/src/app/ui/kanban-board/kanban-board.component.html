@@ -51,7 +51,7 @@
 </div>
 
 <!-- Lists -->
-<div class="p-4 overflow-x-auto">
+<div class="p-4 overflow-x-auto min-h-screen transition-colors" [ngClass]="boardBackground()">
     <!-- Horizontal list reordering -->
     <div cdkDropList [cdkDropListData]="lists()" [cdkDropListOrientation]="'horizontal'"
         (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">

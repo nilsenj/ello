@@ -1,11 +1,15 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { SocketService } from '../data/socket.service';
+import { NotificationsStore } from '../data/notifications-store.service';
 
 type User = { id: string; email: string; name?: string; avatar?: string };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private http = inject(HttpClient);
+    private socketService = inject(SocketService);
+    private notificationsStore = inject(NotificationsStore);
 
     private _user = signal<User | null>(null);
     private _access = signal<string | null>(localStorage.getItem('accessToken'));
@@ -21,6 +25,12 @@ export class AuthService {
             const me = await this.http.get<User>('/api/auth/me').toPromise();
             this._user.set(me ?? null);
             if (me?.id) localStorage.setItem('userId', me.id); // ✅ keep for UI helpers
+
+            // Connect Socket.IO and load notifications
+            if (me && this._access()) {
+                this.socketService.connect(this._access()!);
+                await this.notificationsStore.loadNotifications();
+            }
         } catch {
             await this.tryRefresh(); // has withCredentials: true
         } finally {
@@ -28,7 +38,7 @@ export class AuthService {
         }
     }
 
-// Small helper the guard can await
+    // Small helper the guard can await
     ensureBootstrapped(): Promise<void> {
         return this._bootstrapped() ? Promise.resolve() : this.bootstrap();
     }
@@ -47,14 +57,24 @@ export class AuthService {
             localStorage.setItem('accessToken', res.accessToken);
         }
         this._user.set(res?.user ?? null);
+
+        // Connect Socket.IO and load notifications after login
+        if (res?.accessToken) {
+            this.socketService.connect(res.accessToken);
+            await this.notificationsStore.loadNotifications();
+        }
+
         return res;
     }
 
     async logout() {
-        try { await this.http.post('/api/auth/logout', {}, { withCredentials: true }).toPromise(); } catch {}
+        try { await this.http.post('/api/auth/logout', {}, { withCredentials: true }).toPromise(); } catch { }
         this._user.set(null);
         this._access.set(null);
         localStorage.removeItem('accessToken');
+
+        // Disconnect Socket.IO
+        this.socketService.disconnect();
     }
 
     /** Automatically called by interceptor on 401 */
@@ -79,9 +99,13 @@ export class AuthService {
                 // ⬇️ persist userId because your CardsService uses it in withUser()
                 if (me?.id) localStorage.setItem('userId', me.id);
 
+                // Connect Socket.IO and load notifications
+                this.socketService.connect(res.accessToken);
+                await this.notificationsStore.loadNotifications();
+
                 return true;
             }
-        } catch {}
+        } catch { }
         this._user.set(null);
         this._access.set(null);
         localStorage.removeItem('accessToken');
@@ -98,6 +122,14 @@ export class AuthService {
 
     resetPassword(token: string, password: string) {
         return this.http.post('/api/auth/password/reset', { token, password }, { withCredentials: true }).toPromise();
+    }
+
+    async updateProfile(data: { name?: string; avatar?: string; password?: string }) {
+        const updated = await this.http.patch<User>('/api/auth/me', data).toPromise();
+        if (updated) {
+            this._user.set(updated);
+        }
+        return updated;
     }
 
     get accessToken() { return this._access(); }

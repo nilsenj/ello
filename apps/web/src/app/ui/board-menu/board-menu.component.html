@@ -6,73 +6,127 @@
 
     <!-- Header -->
     <div class="h-12 px-4 border-b flex items-center justify-between bg-white shrink-0">
-        <button *ngIf="view() !== 'main'" (click)="view.set('main')" class="text-gray-500 hover:text-gray-800">
-            ←
+        <button *ngIf="view() !== 'main'" (click)="view.set('main')"
+            class="text-gray-500 hover:text-gray-800 flex items-center gap-1">
+            <lucide-icon [img]="ChevronLeftIcon" [size]="16"></lucide-icon>
         </button>
         <h3 class="font-semibold text-gray-700 flex-1 text-center">
-            {{ view() === 'main' ? 'Menu' : view() === 'background' ? 'Background' : view() === 'activity' ? 'Activity'
+            {{ view() === 'main' ? 'Menu' : view() === 'background' ? 'Background' : view() === 'visibility' ?
+            'Visibility' : view() === 'activity' ? 'Activity'
             : view() === 'members' ? 'Members' : view() === 'archived' ? 'Archived Items' : 'Menu' }}
         </h3>
-        <button (click)="close()" class="text-gray-500 hover:text-gray-800">✕</button>
+        <button (click)="close()" class="text-gray-500 hover:text-gray-800">
+            <lucide-icon [img]="XIcon" [size]="18"></lucide-icon>
+        </button>
     </div>
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto">
         <!-- Menu Items -->
         <div class="p-3 space-y-1" *ngIf="view() === 'main'">
-            <button
+            <button *ngIf="canEditBoard()"
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="view.set('background')">
-                <div class="w-5 h-5 rounded bg-slate-200"></div>
+                <lucide-icon [img]="PaletteIcon" [size]="18" class="text-slate-500"></lucide-icon>
                 Change background
+            </button>
+            <button *ngIf="canEditBoard()"
+                class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
+                (click)="view.set('visibility')">
+                <lucide-icon [img]="UsersIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                Visibility
             </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showActivity()">
-                <span>⚡️</span> Activity
+                <lucide-icon [img]="ActivityIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                Activity
             </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showMembers()">
-                <span>👥</span> Members
+                <lucide-icon [img]="UsersIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                Members
             </button>
             <hr class="my-2 border-slate-200">
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
-                (click)="view.set('archived')">
-                <span>🗄️</span> Archived items
+                (click)="showArchived()">
+                <lucide-icon [img]="ArchiveIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                Archived items
             </button>
+        </div>
+
+        <!-- Visibility View -->
+        <div *ngIf="view() === 'visibility'" class="p-3">
+            <h3 class="font-semibold text-sm mb-3">Board Visibility</h3>
+            <div class="space-y-2">
+                <button (click)="selectVisibility('private')"
+                    class="w-full text-left p-3 rounded-md border transition-all"
+                    [class.border-blue-500]="getCurrentVisibility() === 'private'"
+                    [class.bg-blue-50]="getCurrentVisibility() === 'private'"
+                    [class.border-slate-200]="getCurrentVisibility() !== 'private'">
+                    <div class="font-medium text-sm">Private</div>
+                    <div class="text-xs text-slate-500 mt-1">Only board members can see and edit this board</div>
+                </button>
+                <button (click)="selectVisibility('workspace')"
+                    class="w-full text-left p-3 rounded-md border transition-all"
+                    [class.border-blue-500]="getCurrentVisibility() === 'workspace'"
+                    [class.bg-blue-50]="getCurrentVisibility() === 'workspace'"
+                    [class.border-slate-200]="getCurrentVisibility() !== 'workspace'">
+                    <div class="font-medium text-sm">Workspace</div>
+                    <div class="text-xs text-slate-500 mt-1">All workspace members can see this board</div>
+                </button>
+                <button (click)="selectVisibility('public')"
+                    class="w-full text-left p-3 rounded-md border transition-all"
+                    [class.border-blue-500]="getCurrentVisibility() === 'public'"
+                    [class.bg-blue-50]="getCurrentVisibility() === 'public'"
+                    [class.border-slate-200]="getCurrentVisibility() !== 'public'">
+                    <div class="font-medium text-sm">Public</div>
+                    <div class="text-xs text-slate-500 mt-1">Anyone with the link can view this board</div>
+                </button>
+            </div>
         </div>
 
         <!-- Background View -->
         <div *ngIf="view() === 'background'" class="p-3">
-            <button class="mb-3 text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"
-                (click)="view.set('main')">
-                ← Back
-            </button>
-            <h3 class="font-semibold text-sm mb-2">Background</h3>
-            <!-- (colors/photos placeholder) -->
-            <div class="grid grid-cols-3 gap-2">
-                <div class="h-16 rounded bg-blue-500"></div>
-                <div class="h-16 rounded bg-green-500"></div>
-                <div class="h-16 rounded bg-red-500"></div>
+            <h3 class="font-semibold text-sm mb-3">Board Background</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button *ngFor="let bg of backgrounds"
+                    class="relative h-20 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2"
+                    [class.border-blue-500]="isBackgroundSelected(bg.id)"
+                    [class.border-transparent]="!isBackgroundSelected(bg.id)" (click)="selectBackground(bg.id)">
+                    <div class="absolute inset-0 rounded-md" [ngClass]="bg.class"></div>
+                    <div
+                        class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2 rounded-b-md">
+                        {{ bg.name }}
+                    </div>
+                </button>
             </div>
         </div>
 
         <!-- Archived View -->
         <div *ngIf="view() === 'archived'" class="flex flex-col h-full">
             <div class="p-3 border-b border-slate-200">
-                <button class="mb-2 text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"
-                    (click)="view.set('main')">
-                    ← Back
-                </button>
                 <h3 class="font-semibold text-sm">Archived Items</h3>
                 <div class="mt-2 flex gap-2 text-xs">
-                    <button class="px-2 py-1 rounded bg-slate-100 font-medium text-slate-700">Cards</button>
-                    <button class="px-2 py-1 rounded hover:bg-slate-100 text-slate-500">Lists</button>
+                    <button class="px-2 py-1 rounded font-medium" [class.bg-slate-100]="archivedView() === 'cards'"
+                        [class.text-slate-700]="archivedView() === 'cards'"
+                        [class.hover:bg-slate-100]="archivedView() !== 'cards'"
+                        [class.text-slate-500]="archivedView() !== 'cards'" (click)="switchToArchivedCards()">
+                        Cards
+                    </button>
+                    <button class="px-2 py-1 rounded font-medium" [class.bg-slate-100]="archivedView() === 'lists'"
+                        [class.text-slate-700]="archivedView() === 'lists'"
+                        [class.hover:bg-slate-100]="archivedView() !== 'lists'"
+                        [class.text-slate-500]="archivedView() !== 'lists'" (click)="switchToArchivedLists()">
+                        Lists
+                    </button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 space-y-2">
+
+            <!-- Archived Cards -->
+            <div *ngIf="archivedView() === 'cards'" class="flex-1 overflow-y-auto p-3 space-y-2">
                 <div *ngFor="let card of archivedCards()"
                     class="p-2 rounded border border-slate-200 bg-white shadow-sm">
                     <div class="text-sm font-medium text-slate-800 mb-1">{{ card.title }}</div>
@@ -86,15 +140,27 @@
                     No archived cards
                 </div>
             </div>
+
+            <!-- Archived Lists -->
+            <div *ngIf="archivedView() === 'lists'" class="flex-1 overflow-y-auto p-3 space-y-2">
+                <div *ngFor="let list of archivedLists()"
+                    class="p-2 rounded border border-slate-200 bg-white shadow-sm">
+                    <div class="text-sm font-medium text-slate-800 mb-1">{{ list.name }}</div>
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span>{{ (list.cards || []).length }} card(s)</span>
+                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreList(list)">Send to
+                            board</button>
+                    </div>
+                </div>
+                <div *ngIf="archivedLists().length === 0" class="text-center py-8 text-sm text-slate-500">
+                    No archived lists
+                </div>
+            </div>
         </div>
 
         <!-- Activity View -->
         <div *ngIf="view() === 'activity'" class="flex flex-col h-full">
             <div class="p-3 border-b border-slate-200">
-                <button class="mb-2 text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"
-                    (click)="view.set('main')">
-                    ← Back
-                </button>
                 <h3 class="font-semibold text-sm">Activity</h3>
             </div>
             <div class="flex-1 overflow-y-auto p-3 space-y-3">
@@ -121,33 +187,53 @@
         </div>
 
         <!-- Members View -->
-        <div *ngIf="view() === 'members'" class="flex flex-col h-full">
-            <div class="p-3 border-b border-slate-200">
-                <button class="mb-2 text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1"
-                    (click)="view.set('main')">
-                    ← Back
+        <div *ngIf="view() === 'members'" class="p-3">
+            <h3 class="font-semibold text-sm mb-3">Board Members</h3>
+
+            <!-- Invite Form -->
+            <div class="mb-4 p-3 bg-slate-50 rounded-md border border-slate-200">
+                <div class="text-xs font-medium text-slate-500 mb-2">Invite to board</div>
+                <div class="flex gap-2 mb-2">
+                    <input type="email" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)"
+                        placeholder="Email address"
+                        class="flex-1 px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500">
+                    <select [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)"
+                        class="px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500 bg-white">
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <button (click)="inviteMember()" [disabled]="!inviteEmail() || isInviting()"
+                    class="w-full px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ isInviting() ? 'Inviting...' : 'Invite' }}
                 </button>
-                <h3 class="font-semibold text-sm">Members</h3>
-                <input type="text"
-                    class="mt-2 w-full px-2 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                    placeholder="Search members..." (input)="onMemberSearch($event)">
+                <div *ngIf="inviteError()" class="mt-2 text-xs text-red-600">
+                    {{ inviteError() }}
+                </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-3 space-y-3">
-                <div *ngFor="let m of members()" class="flex items-center gap-3">
+
+            <!-- Search -->
+            <div class="mb-3">
+                <input type="text" placeholder="Search members..." (input)="onMemberSearch($event)"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500">
+            </div>
+
+            <!-- List -->
+            <div class="space-y-2">
+                <div *ngFor="let m of members()" class="flex items-center gap-2 p-2 rounded hover:bg-slate-50">
                     <div
-                        class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img *ngIf="m.avatar" [src]="m.avatar" class="w-full h-full object-cover">
-                        <span *ngIf="!m.avatar" class="text-xs font-medium text-slate-600">
-                            {{ (m.name || 'U').slice(0,2).toUpperCase() }}
-                        </span>
+                        class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium text-xs">
+                        {{ m.avatar ? '' : (m.name | slice:0:2).toUpperCase() }}
+                        <img *ngIf="m.avatar" [src]="m.avatar" class="w-full h-full rounded-full object-cover">
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium text-slate-900 truncate">{{ m.name }}</div>
                         <div class="text-xs text-slate-500 truncate">{{ getMemberHandle(m) }}</div>
                     </div>
-                    <select
-                        class="text-xs border-none bg-transparent font-medium text-slate-600 focus:ring-0 cursor-pointer"
-                        [ngModel]="m.role" (ngModelChange)="updateRole(m.id, $event)">
+                    <select [ngModel]="m.role" (ngModelChange)="updateRole(m.id, $event)"
+                        class="text-xs border-none bg-transparent text-slate-500 font-medium focus:ring-0 cursor-pointer hover:text-slate-700">
+                        <option value="owner">Owner</option>
                         <option value="admin">Admin</option>
                         <option value="member">Member</option>
                         <option value="viewer">Viewer</option>

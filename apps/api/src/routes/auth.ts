@@ -95,4 +95,35 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
             return reply.code(401).send({ error: 'Invalid token' });
         }
     });
+
+    // PATCH /api/auth/me
+    app.patch('/api/auth/me', async (req: FastifyRequest<{ Body: { name?: string; avatar?: string; password?: string } }>, reply) => {
+        const auth = req.headers.authorization || '';
+        const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+        if (!token) return reply.code(401).send({ error: 'No token' });
+
+        let userId: string;
+        try {
+            const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+            userId = payload.sub;
+        } catch {
+            return reply.code(401).send({ error: 'Invalid token' });
+        }
+
+        const { name, avatar, password } = req.body || {};
+        const data: any = {};
+        if (name !== undefined) data.name = name;
+        if (avatar !== undefined) data.avatar = avatar;
+        if (password) {
+            data.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
+        }
+
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data,
+            select: { id: true, email: true, name: true, avatar: true }
+        });
+
+        return updated;
+    });
 }

@@ -70,7 +70,12 @@ export class CardsService {
         this.store.setLists(clone);
 
         try {
-            const created = await this.createCard(listId, title);
+            // Call API directly without calling createCard to avoid double insertion
+            const created = await firstValueFrom(
+                this.http.post<Card>(`/api/lists/${listId}/cards`, { title })
+            );
+
+            // Replace optimistic card with real one
             const fresh = this.store.lists();
             const i2 = fresh.findIndex(l => l.id === listId);
             if (i2 !== -1) {

@@ -1,33 +1,83 @@
 // apps/api/src/routes/boards.ts
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import {PrismaClient, Role} from '@prisma/client';
-import {ensureUser} from "../utils/ensure-user.js";
-import {Prisma} from "@prisma/client/extension";
+import { PrismaClient, Role } from '@prisma/client';
+import { ensureUser } from "../utils/ensure-user.js";
+import { Prisma } from "@prisma/client/extension";
 
 type CreateBoardBody = { workspaceId: string; name: string; description?: string };
 type ReorderListsBody = { listIds: string[] };
 
 const STEP = 10;
-const PAD  = 6;
+const PAD = 6;
 const pad = (n: number) => n.toString().padStart(PAD, '0');
 
+import { NotificationService } from '../services/notification-service.js';
+import { emitToBoard } from '../socket.js';
+
 export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaClient) {
-    // List boards
-    app.get('/api/boards', () =>
-        prisma.board.findMany({ orderBy: { createdAt: 'desc' } })
-    );
+    // List boards (member of board OR member of workspace)
+    app.get('/api/boards', (req) => {
+        const user = ensureUser(req);
+        return prisma.board.findMany({
+            where: {
+                OR: [
+                    { members: { some: { userId: user.id } } },
+                    { workspace: { members: { some: { userId: user.id } } } }
+                ]
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    });
 
     // Get board by id (optionally include ordered lists)
-    app.get('/api/boards/:id', (req: FastifyRequest<{ Params: { id: string } }>) => {
+    app.get('/api/boards/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const user = ensureUser(req);
         const { id } = req.params;
-        return prisma.board.findUnique({
+
+        // 1. Fetch board data (clean, without partial members)
+        const board = await prisma.board.findUnique({
             where: { id },
             include: {
-                // return lists in rank order so UI renders correctly
                 lists: { orderBy: { rank: 'asc' } },
                 labels: true
             }
         });
+
+        if (!board) return reply.code(404).send({ error: 'Board not found' });
+
+        // 2. Check permissions
+        const [boardMember, workspaceMember] = await Promise.all([
+            prisma.boardMember.findUnique({
+                where: { userId_boardId: { userId: user.id, boardId: id } },
+                select: { role: true }
+            }),
+            prisma.workspaceMember.findUnique({
+                where: { userId_workspaceId: { userId: user.id, workspaceId: board.workspaceId } },
+                select: { role: true }
+            })
+        ]);
+
+        const isBoardMember = !!boardMember;
+        const isWorkspaceMember = !!workspaceMember;
+        const isWorkspaceAdmin = workspaceMember?.role === 'owner' || workspaceMember?.role === 'admin';
+
+        // Permission Check
+        if (board.visibility === 'public') {
+            // Allow access
+        } else if (isWorkspaceAdmin) {
+            // Allow access to workspace admins/owners
+        } else if (board.visibility === 'workspace') {
+            if (!isWorkspaceMember && !isBoardMember) {
+                return reply.code(403).send({ error: 'Forbidden: Workspace members only' });
+            }
+        } else {
+            // Private (default)
+            if (!isBoardMember) {
+                return reply.code(403).send({ error: 'Forbidden: Board members only' });
+            }
+        }
+
+        return board;
     });
 
     app.post('/api/boards/:id/join', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
@@ -53,10 +103,34 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
 
     // Update board
     app.patch('/api/boards/:id', async (
-        req: FastifyRequest<{ Params: { id: string }, Body: Partial<CreateBoardBody> }>
+        req: FastifyRequest<{ Params: { id: string }, Body: Partial<CreateBoardBody> }>,
+        reply
     ) => {
+        const user = ensureUser(req);
         const { id } = req.params;
         const data = req.body;
+
+        // Check permissions
+        const [boardMember, workspaceMember] = await Promise.all([
+            prisma.boardMember.findUnique({
+                where: { userId_boardId: { userId: user.id, boardId: id } }
+            }),
+            prisma.board.findUnique({
+                where: { id },
+                select: { workspace: { select: { members: { where: { userId: user.id } } } } }
+            })
+        ]);
+
+        const isBoardAdmin = boardMember && (boardMember.role === 'owner' || boardMember.role === 'admin');
+
+        // Check if user is workspace admin/owner
+        const workspaceRole = workspaceMember?.workspace.members[0]?.role;
+        const isWorkspaceAdmin = workspaceRole === 'owner' || workspaceRole === 'admin';
+
+        if (!isBoardAdmin && !isWorkspaceAdmin) {
+            return reply.code(403).send({ error: 'Only admins can update board settings' });
+        }
+
         return prisma.board.update({ where: { id }, data });
     });
 
@@ -151,6 +225,39 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         return reply.send({ members });
     });
 
+    // POST /boards/:boardId/members  { email: string, role: Role }
+    app.post<{
+        Params: { boardId: string },
+        Body: { email: string, role: Role }
+    }>('/boards/:boardId/members', async (req, reply) => {
+        const user = ensureUser(req);
+        const { boardId } = req.params;
+        const { email, role } = req.body;
+
+        // TODO auth: ensure caller can add board members
+
+        const targetUser = await prisma.user.findUnique({ where: { email } });
+        if (!targetUser) return reply.code(404).send({ error: 'User not found' });
+
+        const member = await prisma.boardMember.create({
+            data: {
+                boardId,
+                userId: targetUser.id,
+                role: role || 'member'
+            }
+        });
+
+        // Trigger notification
+        const notificationService = new NotificationService(prisma);
+        notificationService.notifyBoardInvite({
+            userId: targetUser.id,
+            actorId: user.id,
+            boardId
+        }).catch(console.error);
+
+        return reply.send(member);
+    });
+
     // PATCH /boards/:boardId/members/:userId  { role: 'owner'|'admin'|'member'|'viewer' }
     app.patch<{
         Params: { boardId: string, userId: string },
@@ -168,5 +275,46 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         });
 
         return reply.send({ ok: true });
+    });
+
+    // PATCH /boards/:id/background  { background: string }
+    app.patch<{
+        Params: { id: string },
+        Body: { background: string }
+    }>('/api/boards/:id/background', async (req, reply) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+        const { background } = req.body;
+
+        // Check permissions
+        const member = await prisma.boardMember.findUnique({
+            where: { userId_boardId: { userId: user.id, boardId: id } }
+        });
+
+        if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
+            return reply.code(403).send({ error: 'Only admins can update board background' });
+        }
+
+        // Validate background value (predefined colors/gradients)
+        const validBackgrounds = [
+            'blue', 'green', 'red', 'purple', 'orange', 'pink',
+            'gradient-blue', 'gradient-green', 'gradient-purple', 'gradient-sunset',
+            'gradient-ocean', 'gradient-forest', 'none'
+        ];
+
+        if (!validBackgrounds.includes(background)) {
+            return reply.code(400).send({ error: 'Invalid background value' });
+        }
+
+        // Update board background
+        const updated = await prisma.board.update({
+            where: { id },
+            data: { background }
+        });
+
+        // Real-time update
+        emitToBoard(id, 'board:updated', updated);
+
+        return reply.send(updated);
     });
 }

@@ -40,6 +40,7 @@ export class ListColumnComponent {
     newTitle = '';
     adding = signal(false);
     showArchiveModal = signal(false);
+    disableCardClick = signal(false);
 
     title = computed(() => this.list.title ?? this.list.name ?? '');
     // Only show active cards in the column
@@ -51,6 +52,17 @@ export class ListColumnComponent {
     connectedTo = computed(() => this.store.lists().map(l => 'list-' + l.id));
 
     trackCard = (_: number, c: Card) => c.id;
+
+    onDragStart() {
+        this.disableCardClick.set(true);
+    }
+
+    onDragEnd() {
+        // Small delay to ensure click event is ignored
+        setTimeout(() => {
+            this.disableCardClick.set(false);
+        }, 50);
+    }
 
     async createCard() {
         const t = this.newTitle.trim();

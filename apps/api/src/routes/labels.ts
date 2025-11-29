@@ -1,7 +1,8 @@
 // apps/api/src/routes/labels.routes.ts
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { PrismaClient } from '@prisma/client';
-import {ensureUser} from "../utils/ensure-user.js";
+import { ensureUser } from "../utils/ensure-user.js";
+import { ensureBoardAccess } from "../utils/permissions.js";
 
 type BoardParams = { boardId: string };
 type LabelBody = { name: string; color: string };
@@ -15,19 +16,16 @@ export async function registerLabelRoutes(app: FastifyInstance, prisma: PrismaCl
         const user = ensureUser(req);
         const { boardId } = req.params;
 
-        // simple membership gate to avoid 403 surprises
-        const member = await prisma.boardMember.findFirst({
-            where: { boardId, userId: user.id },
-            select: { id: true }
-        });
-        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+        await ensureBoardAccess(prisma, boardId, user.id);
 
         const labels = await prisma.label.findMany({ where: { boardId }, orderBy: { name: 'asc' } });
         return reply.send(labels);
     });
 
-    app.post('/api/boards/:boardId/labels', (req: FastifyRequest<{ Params: BoardParams; Body: LabelBody }>) => {
+    app.post('/api/boards/:boardId/labels', async (req: FastifyRequest<{ Params: BoardParams; Body: LabelBody }>) => {
+        const user = ensureUser(req);
         const { boardId } = req.params; const { name, color } = req.body;
+        await ensureBoardAccess(prisma, boardId, user.id);
         return prisma.label.create({ data: { boardId, name, color } });
     });
 

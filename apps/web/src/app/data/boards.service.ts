@@ -10,7 +10,7 @@ import { HttpClient } from "@angular/common/http";
 
 export type MemberRole = 'owner' | 'admin' | 'member' | 'viewer';
 export type BoardMemberLite = { id: string; name: string; avatar?: string; role: MemberRole };
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class BoardsService {
     constructor(
         private api: ApiBaseService,
@@ -54,7 +54,7 @@ export class BoardsService {
     }
 
     async getMembers(boardId: string) {
-        return this.http.get<{ id:string; name:string; avatar?:string }[]>(`/api/boards/${boardId}/members`).toPromise();
+        return this.http.get<{ id: string; name: string; avatar?: string }[]>(`/api/boards/${boardId}/members`).toPromise();
     }
 
     createBoard(workspaceId: string | null, payload: {
@@ -68,10 +68,10 @@ export class BoardsService {
         const inferWorkspaceId$ = workspaceId
             ? of(workspaceId)
             : (this.store.boards().length
-                    ? of(this.store.boards()[0]!.workspaceId) // adjust if your Board type stores it differently
-                    : this.http.get<{ id: string }[]>('/api/workspaces').pipe(
-                        map(ws => ws?.[0]?.id),
-                    )
+                ? of(this.store.boards()[0]!.workspaceId) // adjust if your Board type stores it differently
+                : this.http.get<{ id: string }[]>('/api/workspaces').pipe(
+                    map(ws => ws?.[0]?.id),
+                )
             );
 
         return inferWorkspaceId$.pipe(
@@ -101,7 +101,13 @@ export class BoardsService {
             )
         );
 
-        return Array.isArray(resp) ? resp : (resp?.members ?? []);
+        return Array.isArray(resp) ? resp : resp.members;
+    }
+
+    async addMember(boardId: string, email: string, role: MemberRole) {
+        return firstValueFrom(
+            this.http.post<BoardMemberLite>(`/api/boards/${boardId}/members`, { email, role })
+        );
     }
 
     async updateBoardMemberRole(
@@ -120,5 +126,24 @@ export class BoardsService {
         // (this.store.updateBoardMemberRoleLocally as any)?.(boardId, userId, role);
 
         return res;
+    }
+
+    async updateBoardBackground(boardId: string, background: string): Promise<Board> {
+        const updated = await firstValueFrom(
+            this.http.patch<Board>(`/api/boards/${boardId}/background`, { background })
+        );
+
+        // Update in store
+        const boards = this.store.boards();
+        const next = boards.map(b => b.id === boardId ? { ...b, background } : b);
+        this.store.setBoards(next);
+
+        return updated;
+    }
+
+    async updateBoard(boardId: string, data: Partial<{ name: string; description?: string; visibility?: 'private' | 'workspace' | 'public'; isArchived?: boolean }>): Promise<Board> {
+        return firstValueFrom(
+            this.http.patch<Board>(`/api/boards/${boardId}`, data)
+        );
     }
 }

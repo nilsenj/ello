@@ -17,6 +17,7 @@ import { CardModalService } from '../card-modal/card-modal.service';
 export class TrelloCardComponent {
     @Input({ required: true }) card!: Card;
     @Input({ required: true }) listId!: string;
+    @Input() disableClick = false;
 
     showLabels = false;
     showMore = false;
@@ -31,6 +32,7 @@ export class TrelloCardComponent {
     ) { }
 
     openModal(ev: MouseEvent) {
+        if (this.disableClick) return;
         const target = ev.target as HTMLElement;
         if (target.closest('button, a, input, textarea, [data-stop-open]')) return;
         ev.stopPropagation();

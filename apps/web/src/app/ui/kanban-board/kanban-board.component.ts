@@ -1,5 +1,5 @@
-import { Component, effect, inject, OnInit } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { Component, computed, effect, inject, OnInit, OnDestroy } from '@angular/core';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
     CdkDrag,
@@ -14,6 +14,7 @@ import { BoardStore } from '../../store/board-store.service';
 import { BoardsService } from '../../data/boards.service';
 import { ListsService } from '../../data/lists.service';
 import { CardsService } from '../../data/cards.service';
+import { SocketService } from '../../data/socket.service';
 import { ListColumnComponent } from "../list-column/list-column.component";
 import { CardModalService } from "../card-modal/card-modal.service";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -23,7 +24,7 @@ import { CardModalComponent } from "../card-modal/card-modal.component";
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, BoardMenuComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, BoardMenuComponent, NgClass], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -33,6 +34,7 @@ export class KanbanBoardComponent implements OnInit {
     boardsApi = inject(BoardsService);
     listsApi = inject(ListsService);
     cardsApi = inject(CardsService);
+    socket = inject(SocketService);
     modal = inject(CardModalService);
     route = inject(ActivatedRoute);
     router = inject(Router);
@@ -74,11 +76,131 @@ export class KanbanBoardComponent implements OnInit {
 
             const isOpen = this.modal.isOpen();
             const id = this.modal.cardId();
-            const qp = isOpen && id ? { card: id } : {};
-            this.router.navigate([], { queryParams: qp, queryParamsHandling: 'merge' });
+            // const qp = isOpen && id ? { card: id } : {}; // Original line
+            this.router.navigate([], { queryParams: { card: id || undefined }, queryParamsHandling: 'merge' });
+        });
+
+        // Real-time board updates
+        effect(() => {
+            const boardId = this.store.currentBoardId();
+            if (boardId) {
+                this.socket.subscribeToBoard(boardId);
+            }
+        });
+
+        // Listen for new cards
+        this.socket.on('card:created', (card: Card) => {
+            const currentBoardId = this.store.currentBoardId();
+            // Ensure the card belongs to the current board (via list)
+            // We can't easily check boardId on card without list relation, but we trust the room.
+            // However, we need the listId to upsert.
+            if (card.listId) {
+                this.store.upsertCardLocally(card.listId, card);
+            }
+        });
+
+        // Listen for card moves
+        this.socket.on('card:moved', (data: { cardId: string; toListId: string; rank: string; listId: string }) => {
+            // 1. Remove from source list (data.listId)
+            // 2. Add to target list (data.toListId) with new rank
+            // We can use store.upsertCardLocally if we have the full card, but we only have partial data.
+            // However, we can find the card in the store first.
+
+            const allLists = this.store.lists();
+            let card: Card | undefined;
+
+            // Find the card in current lists
+            for (const l of allLists) {
+                const found = l.cards?.find(c => c.id === data.cardId);
+                if (found) {
+                    card = found;
+                    break;
+                }
+            }
+
+            if (card) {
+                // Update card data
+                const updatedCard = { ...card, listId: data.toListId, rank: data.rank };
+
+                // Remove from old list (if different)
+                // Actually, upsertCardLocally might not handle moving between lists if it just updates by ID.
+                // Let's check BoardStore implementation.
+                // It maps over lists and checks if listId matches.
+                // If we want to move it, we might need to remove it first if the list changed.
+
+                if (data.listId !== data.toListId) {
+                    // Remove from source
+                    const sourceList = allLists.find(l => l.id === data.listId);
+                    if (sourceList) {
+                        const nextSourceCards = (sourceList.cards || []).filter(c => c.id !== data.cardId);
+                        // We need a way to update the list in the store. 
+                        // store.setLists is available.
+
+                        // Let's do it manually for now as store helpers are limited
+                        const nextLists = allLists.map(l => {
+                            if (l.id === data.listId) return { ...l, cards: nextSourceCards };
+                            if (l.id === data.toListId) {
+                                const targetCards = [...(l.cards || [])];
+                                // Insert at correct position based on rank would be ideal, but appending is safer for now 
+                                // or we can try to sort.
+                                // For now, let's just push it and let the user refresh if they care about exact rank, 
+                                // or better: try to insert it.
+                                targetCards.push(updatedCard);
+                                // Sort by rank
+                                targetCards.sort((a, b) => (a.rank || '').localeCompare(b.rank || ''));
+                                return { ...l, cards: targetCards };
+                            }
+                            return l;
+                        });
+                        this.store.setLists(nextLists);
+                    }
+                } else {
+                    // Same list reorder
+                    // Just update the rank and resort
+                    const nextLists = allLists.map(l => {
+                        if (l.id === data.toListId) {
+                            const targetCards = (l.cards || []).map(c => c.id === data.cardId ? updatedCard : c);
+                            targetCards.sort((a, b) => (a.rank || '').localeCompare(b.rank || ''));
+                            return { ...l, cards: targetCards };
+                        }
+                        return l;
+                    });
+                    this.store.setLists(nextLists);
+                }
+            }
+        });
+
+        // Listen for board updates (background)
+        this.socket.on('board:updated', (board: any) => {
+            const current = this.store.boards();
+            const updated = current.map(b => b.id === board.id ? { ...b, ...board } : b);
+            this.store.setBoards(updated);
         });
     }
 
+    // Map board background to CSS classes
+    boardBackground = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        const bg = board?.background;
+
+        const bgMap: Record<string, string> = {
+            'none': 'bg-slate-50',
+            'blue': 'bg-blue-500',
+            'green': 'bg-green-500',
+            'purple': 'bg-purple-500',
+            'red': 'bg-red-500',
+            'orange': 'bg-orange-500',
+            'pink': 'bg-pink-500',
+            'gradient-blue': 'bg-gradient-to-br from-blue-400 to-cyan-500',
+            'gradient-purple': 'bg-gradient-to-br from-purple-400 to-pink-500',
+            'gradient-sunset': 'bg-gradient-to-br from-orange-400 to-red-500',
+            'gradient-forest': 'bg-gradient-to-br from-green-400 to-emerald-600',
+            'gradient-ocean': 'bg-gradient-to-br from-cyan-500 to-blue-700',
+        };
+
+        return bg && bgMap[bg] ? bgMap[bg] : 'bg-slate-50';
+    });
     // whenever modal opens/closes, sync query param
     ngOnInit() {
     }

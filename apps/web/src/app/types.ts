@@ -6,7 +6,8 @@ export type Board = {
     background?: string,
     members: BoardMember[],
     activities: Activity[],
-    workspaceId: string
+    workspaceId: string;
+    visibility?: 'private' | 'workspace' | 'public';
 };
 export type Workspace = { id: string; name: string };
 export type BoardMember = { id: string; userId: string; boardId: string; role: string };

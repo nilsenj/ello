@@ -1,17 +1,27 @@
-import {Component, inject, signal} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {ActivityIcon, ArchiveIcon, ChevronLeftIcon, UsersIcon} from 'lucide-angular';
-import {BoardStore} from '../../store/board-store.service';
-import {ListsService} from '../../data/lists.service';
-import {CardsService} from '../../data/cards.service';
-import {BoardMemberLite, BoardsService, MemberRole} from '../../data/boards.service';
-import {Activity, Card, ListDto} from '../../types';
-import {ActivityService} from '../../data/activity.service'; // Keep Activity type from original import
+import { Component, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+    ActivityIcon,
+    ArchiveIcon,
+    ChevronLeftIcon,
+    LucideAngularModule,
+    PaletteIcon,
+    UsersIcon,
+    XIcon
+} from 'lucide-angular';
+import { BoardStore } from '../../store/board-store.service';
+import { ListsService } from '../../data/lists.service';
+import { CardsService } from '../../data/cards.service';
+import { BoardMemberLite, BoardsService, MemberRole } from '../../data/boards.service';
+import { Activity, Card, ListDto } from '../../types';
+import { ActivityService } from '../../data/activity.service';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
     standalone: true,
     selector: 'board-menu',
-    imports: [CommonModule],
+    imports: [CommonModule, LucideAngularModule, FormsModule],
     templateUrl: './board-menu.component.html',
     styleUrls: ['./board-menu.component.css']
 })
@@ -21,17 +31,40 @@ export class BoardMenuComponent {
     cardsApi = inject(CardsService);
     activityApi = inject(ActivityService);
     boardsApi = inject(BoardsService);
+    authService = inject(AuthService);
     activities = signal<Activity[]>([]);
 
     readonly ChevronLeftIcon = ChevronLeftIcon;
     readonly ArchiveIcon = ArchiveIcon;
     readonly ActivityIcon = ActivityIcon;
     readonly UsersIcon = UsersIcon;
+    readonly XIcon = XIcon;
+    readonly PaletteIcon = PaletteIcon;
 
     members = signal<BoardMemberLite[]>([]);
+    inviteEmail = signal('');
+    inviteRole = signal<MemberRole>('member');
+    inviteError = signal('');
+    isInviting = signal(false);
+
+    // Check if current user can edit board (owner or admin)
+    canEditBoard = computed(() => {
+        const currentUserId = this.authService.user()?.id;
+        if (!currentUserId) return false;
+
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.members) return false;
+
+        const myMembership = board.members.find(m => m.userId === currentUserId);
+        return myMembership?.role === 'owner' || myMembership?.role === 'admin';
+    });
 
     isOpen = signal(false);
-    view = signal<'main' | 'archived-cards' | 'archived-lists' | 'activity' | 'members'>('main');
+    view = signal<'main' | 'background' | 'visibility' | 'archived' | 'activity' | 'members'>('main');
+    archivedView = signal<'cards' | 'lists'>('cards'); // Tab selection for archived view
 
     // Archived items derived from store
     // Note: This assumes the store contains ALL items, including archived ones.
@@ -45,6 +78,45 @@ export class BoardMenuComponent {
     archivedCards = signal<Card[]>([]);
     archivedLists = signal<ListDto[]>([]);
 
+    async selectVisibility(visibility: 'private' | 'workspace' | 'public') {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+
+        try {
+            // Update via PATCH /api/boards/:id
+            await this.boardsApi.updateBoard(boardId, { visibility });
+
+            // Update local store
+            const boards = this.store.boards();
+            const updated = boards.map(b => b.id === boardId ? { ...b, visibility } : b);
+            this.store.setBoards(updated);
+        } catch (err) {
+            console.error('Failed to update visibility:', err);
+        }
+    }
+
+    getCurrentVisibility(): 'private' | 'workspace' | 'public' {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        return board?.visibility || 'private';
+    }
+
+    // Background options
+    backgrounds = [
+        { id: 'none', name: 'Default', class: 'bg-slate-50' },
+        { id: 'blue', name: 'Blue', class: 'bg-blue-500' },
+        { id: 'green', name: 'Green', class: 'bg-green-500' },
+        { id: 'purple', name: 'Purple', class: 'bg-purple-500' },
+        { id: 'red', name: 'Red', class: 'bg-red-500' },
+        { id: 'orange', name: 'Orange', class: 'bg-orange-500' },
+        { id: 'pink', name: 'Pink', class: 'bg-pink-500' },
+        { id: 'gradient-blue', name: 'Ocean', class: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
+        { id: 'gradient-purple', name: 'Purple Sky', class: 'bg-gradient-to-br from-purple-400 to-pink-500' },
+        { id: 'gradient-sunset', name: 'Sunset', class: 'bg-gradient-to-br from-orange-400 to-red-500' },
+        { id: 'gradient-forest', name: 'Forest', class: 'bg-gradient-to-br from-green-400 to-emerald-600' },
+        { id: 'gradient-ocean', name: 'Deep Ocean', class: 'bg-gradient-to-br from-cyan-500 to-blue-700' },
+    ];
+
     open() {
         this.isOpen.set(true);
         this.view.set('main');
@@ -54,33 +126,59 @@ export class BoardMenuComponent {
         this.isOpen.set(false);
     }
 
-    async showArchivedCards() {
-        this.view.set('archived-cards');
+    async showArchived() {
+        this.view.set('archived');
+        this.archivedView.set('cards');
+        await this.loadArchivedCards();
+    }
+
+    async loadArchivedCards() {
         const allLists = this.store.lists();
         // Filter cards that are archived
         const cards = allLists.flatMap(l => l.cards || []).filter(c => c.isArchived);
         this.archivedCards.set(cards);
     }
 
-    async showArchivedLists() {
-        this.view.set('archived-lists');
+    async loadArchivedLists() {
         const allLists = this.store.lists();
         // Filter lists that are archived
         const lists = allLists.filter(l => l.isArchived);
         this.archivedLists.set(lists);
     }
 
+    async switchToArchivedCards() {
+        this.archivedView.set('cards');
+        await this.loadArchivedCards();
+    }
+
+    async switchToArchivedLists() {
+        this.archivedView.set('lists');
+        await this.loadArchivedLists();
+    }
+
+    async showArchivedCards() {
+        this.view.set('archived');
+        this.archivedView.set('cards');
+        await this.loadArchivedCards();
+    }
+
+    async showArchivedLists() {
+        this.view.set('archived');
+        this.archivedView.set('lists');
+        await this.loadArchivedLists();
+    }
+
     async restoreCard(card: Card) {
-        await this.cardsApi.patchCardExtended(card.id, {isArchived: false});
+        await this.cardsApi.patchCardExtended(card.id, { isArchived: false });
         // Update store: set isArchived=false
-        this.store.upsertCardLocally(card.listId, {...card, isArchived: false});
+        this.store.upsertCardLocally(card.listId, { ...card, isArchived: false });
         // Remove from archived view
         // The computed `archivedCards` will automatically update.
         // No need for `this.archivedCards.update(...)` if it's a computed signal.
     }
 
     async restore(cardId: string) { // New method, potentially replaces restoreCard or is an alternative
-        await this.cardsApi.patchCardExtended(cardId, {title: "", isArchived: false});
+        await this.cardsApi.patchCardExtended(cardId, { title: "", isArchived: false });
         // The store update logic for this new method is not provided in the instruction.
         // Assuming the store is updated by the service or will be handled elsewhere.
     }
@@ -94,15 +192,33 @@ export class BoardMenuComponent {
     }
 
     async restoreList(list: ListDto) {
-        await this.listsApi.updateList(list.id, {isArchived: false});
+        await this.listsApi.updateList(list.id, { isArchived: false });
         // Update store: set isArchived=false
         const current = this.store.lists();
-        this.store.setLists(current.map(l => l.id === list.id ? {...l, isArchived: false} : l));
+        this.store.setLists(current.map(l => l.id === list.id ? { ...l, isArchived: false } : l));
         // Remove from archived view
         this.archivedLists.update(lists => lists.filter(l => l.id !== list.id));
     }
 
     // --- Activity ---
+    async selectBackground(background: string) {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+
+        try {
+            await this.boardsApi.updateBoardBackground(boardId, background);
+            // The store is already updated by the service
+        } catch (err) {
+            console.error('Failed to update background:', err);
+        }
+    }
+
+    isBackgroundSelected(backgroundId: string): boolean {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        return board?.background === backgroundId;
+    }
+
     async showActivity() {
         this.view.set('activity');
         const boardId = this.store.currentBoardId();
@@ -112,16 +228,45 @@ export class BoardMenuComponent {
         }
     }
 
-    formatActivity(act: any): string { // Changed parameter name from 'a' to 'act' and type from Activity to any
-        // Original logic for formatActivity was more detailed, new one is simpler.
-        // Keeping the new simpler logic as per instruction.
+    formatActivity(act: Activity): string {
+        const payload = act.payload || {};
+        const cardTitle = act.card?.title || 'a card';
+
         switch (act.type) {
             case 'create_card':
-                return `added ${act.card?.title} to ${act.list?.name}`;
+                const listName = payload.listName || 'a list';
+                return `created card "${cardTitle}" in ${listName}`;
             case 'move_card':
-                return `moved ${act.card?.title} to ${act.list?.name}`;
+                const fromList = payload.fromList || 'a list';
+                const toList = payload.toList || 'another list';
+                return `moved "${cardTitle}" from ${fromList} to ${toList}`;
+            case 'archive_card':
+                return `archived "${cardTitle}"`;
+            case 'restore_card':
+                return `restored "${cardTitle}"`;
+            case 'delete_card':
+                return `deleted "${cardTitle}"`;
             case 'comment_card':
-                return `commented on ${act.card?.title}`;
+                return `commented on "${cardTitle}"`;
+            case 'update_card':
+                if (payload.field === 'title') {
+                    return `renamed card to "${cardTitle}"`;
+                } else if (payload.field === 'description') {
+                    return `updated description on "${cardTitle}"`;
+                }
+                return `updated "${cardTitle}"`;
+            case 'add_label':
+                const labelName = payload.labelName || 'a label';
+                return `added label "${labelName}" to "${cardTitle}"`;
+            case 'remove_label':
+                const removedLabel = payload.labelName || 'a label';
+                return `removed label "${removedLabel}" from "${cardTitle}"`;
+            case 'add_member':
+                const memberName = payload.memberName || 'a member';
+                return `added ${memberName} to "${cardTitle}"`;
+            case 'remove_member':
+                const removedMember = payload.memberName || 'a member';
+                return `removed ${removedMember} from "${cardTitle}"`;
             default:
                 return 'performed an action';
         }
@@ -157,5 +302,31 @@ export class BoardMenuComponent {
             // refresh
             await this.fetchMembers();
         }
+    }
+
+    async inviteMember() {
+        const email = this.inviteEmail().trim();
+        if (!email) return;
+
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+
+        this.isInviting.set(true);
+        this.inviteError.set('');
+
+        try {
+            await this.boardsApi.addMember(boardId, email, this.inviteRole());
+            this.inviteEmail.set('');
+            await this.fetchMembers();
+        } catch (err: any) {
+            this.inviteError.set(err?.error?.error || 'Failed to invite user');
+        } finally {
+            this.isInviting.set(false);
+        }
+    }
+
+    getListName(listId: string): string {
+        const list = this.store.lists().find(l => l.id === listId);
+        return list?.name || 'Unknown List';
     }
 }

@@ -17,6 +17,9 @@ import { registerAuthRoutes } from './routes/auth.js';
 import { registerWorkspaceRoutes } from './routes/workspaces.js';
 import { registerAttachmentRoutes } from './routes/attachments.js';
 import { registerActivityRoutes } from './routes/activity.js';
+import { registerNotificationRoutes } from './routes/notifications.js';
+import { setupSocketIO } from './socket.js';
+import { NotificationService } from './services/notification-service.js';
 
 const prisma = new PrismaClient();
 
@@ -33,6 +36,9 @@ async function bootstrap() {
 
     await app.register(fastifyCors, { origin: true, credentials: true, exposedHeaders: ['Content-Disposition', 'Content-Length', 'Content-Type'] });
     await app.register(cookie, { secret: process.env.COOKIE_SECRET || 'dev-cookie' });
+
+    // Register JWT
+    await app.register(fastifyJwt, { secret: JWT_SECRET });
 
     // ❌ remove multipart here (plugin will handle it)
     // await app.register(fastifyMultipart, ...)
@@ -51,7 +57,11 @@ async function bootstrap() {
     await registerWorkspaceRoutes(app, prisma);
     await registerBoardRoutes(app, prisma);
     await registerListRoutes(app, prisma);
-    await registerCardRoutes(app, prisma);
+
+    // Initialize notification service  
+    const notificationService = new NotificationService(prisma);
+
+    await registerCardRoutes(app, prisma, notificationService);
     await registerImportRoutes(app, prisma);
     await registerLabelRoutes(app, prisma);
 
@@ -62,6 +72,10 @@ async function bootstrap() {
         publicPrefix: '/uploads',
     });
     await registerActivityRoutes(app, prisma);
+    await registerNotificationRoutes(app, prisma);
+
+    // Initialize Socket.IO
+    await setupSocketIO(app, prisma);
 
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`API on ${PUBLIC_BASE_URL}`);

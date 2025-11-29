@@ -5,7 +5,14 @@ import { firstValueFrom } from 'rxjs';
 import { ApiBaseService } from './api-base.service';
 
 /** Minimal workspace shape for pickers/menus */
-export type WorkspaceLite = { id: string; name: string };
+export type WorkspaceLite = {
+    id: string;
+    name: string;
+    description?: string;
+    whoCanCreateBoards?: 'admins' | 'members';
+    whoCanInviteMembers?: 'admins' | 'members';
+    role?: 'owner' | 'admin' | 'member' | 'viewer';
+};
 
 /** Server returns { members: WorkspaceMember[] } from GET /workspaces/:id/members */
 export type WorkspaceMember = {
@@ -14,11 +21,14 @@ export type WorkspaceMember = {
     email?: string;             // optional if you later expose it
     avatar?: string;            // optional
     role: 'owner' | 'admin' | 'member' | 'viewer';
+    status?: 'active' | 'pending';
 };
 
 export type CreateBoardBody = {
     name: string;
     description?: string;
+    background?: string;
+    lists?: string[];
 };
 
 export type CreatedBoard = {
@@ -28,16 +38,59 @@ export type CreatedBoard = {
     workspaceId: string;
 };
 
+export type WorkspaceSettings = {
+    id: string;
+    name: string;
+    description?: string | null;
+    visibility: 'private' | 'public';
+    whoCanCreateBoards: 'admins' | 'members';
+    whoCanInviteMembers: 'admins' | 'members';
+    allowedEmailDomains?: string | null;
+    defaultBoardVisibility: 'private' | 'workspace' | 'public';
+};
+
+export type WorkspaceSettingsUpdate = {
+    visibility?: 'private' | 'public';
+    whoCanCreateBoards?: 'admins' | 'members';
+    whoCanInviteMembers?: 'admins' | 'members';
+    allowedEmailDomains?: string | null;
+    defaultBoardVisibility?: 'private' | 'workspace' | 'public';
+};
+
 @Injectable({ providedIn: 'root' })
 export class WorkspacesService {
     constructor(
         private api: ApiBaseService,
         private http: HttpClient
-    ) {}
+    ) { }
 
     /** GET /api/workspaces → list of { id, name } */
     async list(): Promise<WorkspaceLite[]> {
         return firstValueFrom(this.http.get<WorkspaceLite[]>('/api/workspaces'));
+    }
+
+    /** POST /api/workspaces */
+    async create(body: { name: string; description?: string }): Promise<WorkspaceLite> {
+        return firstValueFrom(this.http.post<WorkspaceLite>('/api/workspaces', body));
+    }
+
+    /** PUT /api/workspaces/:id */
+    async update(id: string, body: { name?: string; description?: string }): Promise<WorkspaceLite> {
+        return firstValueFrom(this.http.put<WorkspaceLite>(`/api/workspaces/${id}`, body));
+    }
+
+    /** DELETE /api/workspaces/:id */
+    async delete(id: string): Promise<void> {
+        return firstValueFrom(this.http.delete<void>(`/api/workspaces/${id}`));
+    }
+
+    /** POST /api/workspaces/:id/members */
+    async addMember(id: string, email: string, role: 'admin' | 'member' | 'viewer' = 'member'): Promise<WorkspaceMember> {
+        return firstValueFrom(this.http.post<WorkspaceMember>(`/api/workspaces/${id}/members`, { email, role }));
+    }
+
+    async removeMember(workspaceId: string, memberId: string): Promise<void> {
+        return firstValueFrom(this.http.delete<void>(`/api/workspaces/${workspaceId}/members/${memberId}`));
     }
 
     /** POST /api/workspaces/:workspaceId/boards → create a board inside a workspace */
@@ -77,6 +130,39 @@ export class WorkspacesService {
         if (!userId) throw new Error('userId is required');
         await firstValueFrom(
             this.http.patch<void>(`/api/workspaces/${workspaceId}/members/${userId}`, { role })
+        );
+    }
+
+    /**
+     * GET /workspaces/:workspaceId/boards
+     * Get all boards in a workspace
+     */
+    async getBoardsInWorkspace(workspaceId: string): Promise<any[]> {
+        if (!workspaceId) throw new Error('workspaceId is required');
+        return firstValueFrom(
+            this.http.get<any[]>(`/api/workspaces/${workspaceId}/boards`)
+        );
+    }
+
+    /**
+     * GET /workspaces/:id/settings
+     * Get workspace settings (visibility, permissions, etc.)
+     */
+    async getSettings(id: string): Promise<WorkspaceSettings> {
+        if (!id) throw new Error('workspaceId is required');
+        return firstValueFrom(
+            this.http.get<WorkspaceSettings>(`/api/workspaces/${id}/settings`)
+        );
+    }
+
+    /**
+     * PATCH /workspaces/:id/settings
+     * Update workspace settings (admins only)
+     */
+    async updateSettings(id: string, settings: WorkspaceSettingsUpdate): Promise<WorkspaceSettings> {
+        if (!id) throw new Error('workspaceId is required');
+        return firstValueFrom(
+            this.http.patch<WorkspaceSettings>(`/api/workspaces/${id}/settings`, settings)
         );
     }
 

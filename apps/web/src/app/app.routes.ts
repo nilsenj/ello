@@ -61,6 +61,7 @@ export const routes: Routes = [
         canMatch: [authGuard],
         children: [
             { path: '', loadComponent: () => import('./pages/home-page/home-page.component').then(m => m.HomePageComponent), title: 'Boards' },
+            { path: 'w/:workspaceId', loadComponent: () => import('./pages/home-page/home-page.component').then(m => m.HomePageComponent), title: 'Workspace' },
             { path: 'b/:boardId', component: BoardPageComponent, title: 'Board' },
         ],
     },

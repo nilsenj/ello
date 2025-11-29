@@ -47,7 +47,8 @@ export class BoardCreateModalComponent {
     // background picker state you already use in template
 
     // submit state
-    creating = signal(false); // <-- NEW (fixes this.creating)
+    creating = signal(false);
+    error = signal<string | null>(null);
     canSubmit = computed(() => this.name().trim().length > 1);
 
     close() {
@@ -66,6 +67,11 @@ export class BoardCreateModalComponent {
     }
 
     private getCurrentWorkspaceId(): string | null {
+        // 1. Check if passed explicitly via modal service (e.g. from home page)
+        const explicitId = this.modal.workspaceId();
+        if (explicitId) return explicitId;
+
+        // 2. Fallback to current board's workspace (e.g. from header inside a board)
         const curBoardId = this.store.currentBoardId();
         if (!curBoardId) return null;
         const board = this.store.boards().find(b => b.id === curBoardId);
@@ -75,6 +81,7 @@ export class BoardCreateModalComponent {
     async createBoard() {
         if (!this.canSubmit()) return;
         this.creating.set(true);
+        this.error.set(null);
         try {
             // If no workspace found from current board, pass null to let service infer it
             const wsId = this.getCurrentWorkspaceId();
@@ -101,6 +108,9 @@ export class BoardCreateModalComponent {
                 this.router.navigate(['/b', board.id]);
                 this.close();
             }
+        } catch (err: any) {
+            console.error('Failed to create board', err);
+            this.error.set(err?.error?.error || 'Failed to create board');
         } finally {
             this.creating.set(false);
         }

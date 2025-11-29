@@ -1,43 +1,309 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import {PrismaClient, Role} from '@prisma/client';
-import {ensureUser} from "../utils/ensure-user.js";
+import { PrismaClient, Role } from '@prisma/client';
+import { ensureUser } from '../utils/ensure-user.js';
+import { mid } from '../utils/rank.js';
+import { canCreateBoards, canEditSettings, canInviteMembers, isEmailDomainAllowed } from '../utils/workspace-permissions.js';
+import { EmailService } from '../services/email.js';
 
 const DEFAULT_LABELS = [
-    { name: 'green',  color: '#61BD4F' },
-    { name: 'yellow', color: '#F2D600' },
-    { name: 'orange', color: '#FF9F1A' },
-    { name: 'red',    color: '#EB5A46' },
-    { name: 'purple', color: '#C377E0' },
-    { name: 'blue',   color: '#0079BF' },
-    { name: 'pink',   color: '#FF78CB' },
-    { name: 'lime',   color: '#51E898' },
-    { name: 'sky',    color: '#00C2E0' },
-    { name: 'black',  color: '#344563' },
-] as const;
+    { name: 'green', color: '#61BD4F' },
+    { name: 'Priority', color: '#ff5252' },
+    { name: 'Bug', color: '#ff9800' },
+    { name: 'Feature', color: '#4caf50' },
+];
 
-const DEFAULT_LISTS = ['Backlog', 'To Do', 'In Progress', 'Review', 'Done'];
-const rankOf = (i: number) => 'n'.repeat(i + 1); // simple lexorank seed
+const DEFAULT_LISTS = ['To Do', 'In Progress', 'Done'];
 
 export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: PrismaClient) {
-    // minimal list of workspaces (in real app filter by current user)
-    app.get('/api/workspaces', async () => {
-        return prisma.workspace.findMany({ select: { id: true, name: true } });
+    // List all workspaces for the authenticated user
+    app.get('/api/workspaces', async (req, reply) => {
+        const user = ensureUser(req);
+        const rows = await prisma.workspaceMember.findMany({
+            where: { userId: user.id },
+            include: {
+                workspace: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        whoCanCreateBoards: true,
+                        whoCanInviteMembers: true,
+                    }
+                }
+            },
+        });
+        return rows.map(r => ({
+            ...r.workspace,
+            role: r.role,
+        }));
+    });
+
+    // Create workspace
+    app.post('/api/workspaces', async (req: FastifyRequest<{ Body: { name: string; description?: string } }>, reply) => {
+        const user = ensureUser(req);
+        const { name, description } = req.body;
+
+        if (!name?.trim()) return reply.code(400).send({ error: 'name required' });
+
+        const existing = await prisma.workspace.findUnique({ where: { name } });
+        if (existing) return reply.code(409).send({ error: 'workspace already exists' });
+
+        const workspace = await prisma.workspace.create({
+            data: {
+                name: name.trim(),
+                description: description ?? null,
+            },
+        });
+
+        await prisma.workspaceMember.create({
+            data: {
+                workspaceId: workspace.id,
+                userId: user.id,
+                role: 'owner',
+            },
+        });
+
+        return workspace;
+    });
+
+    // Get workspace settings
+    app.get('/api/workspaces/:id/settings', async (
+        req: FastifyRequest<{ Params: { id: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+
+        // Verify user is a member
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+        });
+        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+
+        // Only admins/owners can view settings
+        if (member.role !== 'owner' && member.role !== 'admin') {
+            return reply.code(403).send({ error: 'Only admins can access settings' });
+        }
+
+        const workspace = await prisma.workspace.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                visibility: true,
+                whoCanCreateBoards: true,
+                whoCanInviteMembers: true,
+                allowedEmailDomains: true,
+                defaultBoardVisibility: true,
+            },
+        });
+
+        if (!workspace) return reply.code(404).send({ error: 'Workspace not found' });
+
+        return workspace;
+    });
+
+    // Update workspace settings (admins only)
+    app.patch('/api/workspaces/:id/settings', async (
+        req: FastifyRequest<{
+            Params: { id: string };
+            Body: {
+                visibility?: 'private' | 'public';
+                whoCanCreateBoards?: 'admins' | 'members';
+                whoCanInviteMembers?: 'admins' | 'members';
+                allowedEmailDomains?: string | null;
+                defaultBoardVisibility?: 'private' | 'workspace' | 'public';
+            };
+        }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+
+        // Verify user is admin/owner
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+        });
+        if (!member || !canEditSettings(member)) {
+            return reply.code(403).send({ error: 'Only admins can edit workspace settings' });
+        }
+
+        const {
+            visibility,
+            whoCanCreateBoards,
+            whoCanInviteMembers,
+            allowedEmailDomains,
+            defaultBoardVisibility,
+        } = req.body;
+
+        const workspace = await prisma.workspace.update({
+            where: { id },
+            data: {
+                ...(visibility && { visibility }),
+                ...(whoCanCreateBoards && { whoCanCreateBoards }),
+                ...(whoCanInviteMembers && { whoCanInviteMembers }),
+                ...(allowedEmailDomains !== undefined && { allowedEmailDomains }),
+                ...(defaultBoardVisibility && { defaultBoardVisibility }),
+            },
+        });
+
+        return workspace;
+    });
+
+    // Update workspace (name/description)
+    app.put('/api/workspaces/:id', async (
+        req: FastifyRequest<{ Params: { id: string }; Body: { name?: string; description?: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+        const { name, description } = req.body;
+
+        // Verify admin/owner
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+        });
+        if (!member || !canEditSettings(member)) {
+            return reply.code(403).send({ error: 'Only admins can edit workspace' });
+        }
+
+        const workspace = await prisma.workspace.update({
+            where: { id },
+            data: {
+                ...(name && { name: name.trim() }),
+                ...(description !== undefined && { description }),
+            },
+        });
+        return workspace;
+    });
+
+    // Delete workspace
+    app.delete('/api/workspaces/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+
+        // Only owners can delete
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+        });
+        if (!member || member.role !== 'owner') {
+            return reply.code(403).send({ error: 'Only owners can delete workspace' });
+        }
+
+        await prisma.workspace.delete({ where: { id } });
+        return { ok: true };
+    });
+
+    // Add member to workspace (with permission check and email domain validation)
+    app.post('/api/workspaces/:id/members', async (
+        req: FastifyRequest<{ Params: { id: string }; Body: { email: string; role?: Role } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { id: workspaceId } = req.params;
+        const { email, role = 'member' } = req.body;
+
+        // Verify inviter permissions
+        const inviter = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId } },
+            include: { workspace: true, user: true },
+        });
+        if (!inviter) return reply.code(403).send({ error: 'Forbidden' });
+
+        // Check if user can invite members
+        if (!canInviteMembers(inviter.workspace, inviter)) {
+            return reply.code(403).send({ error: 'You do not have permission to invite members' });
+        }
+
+        // Check email domain restrictions
+        if (!isEmailDomainAllowed(inviter.workspace, email)) {
+            return reply.code(400).send({ error: 'Email domain not allowed for this workspace' });
+        }
+
+        const targetUser = await prisma.user.findUnique({ where: { email } });
+
+        if (!targetUser) {
+            // User doesn't exist, create pending invitation
+            const existingInvite = await prisma.pendingInvitation.findUnique({
+                where: { workspaceId_email: { workspaceId, email } }
+            });
+
+            if (existingInvite) {
+                // Update role if already invited
+                const updated = await prisma.pendingInvitation.update({
+                    where: { id: existingInvite.id },
+                    data: { role: role || 'member' }
+                });
+                return { ...updated, status: 'pending' };
+            }
+
+            const invite = await prisma.pendingInvitation.create({
+                data: {
+                    workspaceId,
+                    email,
+                    role: role || 'member',
+                    inviterId: user.id
+                }
+            });
+
+            // Send invitation email
+            await EmailService.sendInvitationEmail(
+                email,
+                inviter.workspace.name,
+                inviter.user.name || 'A user'
+            );
+
+            return { ...invite, status: 'pending' };
+        }
+
+        // User exists, check if already a member
+        const existingMember = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: targetUser.id, workspaceId } }
+        });
+
+        if (existingMember) {
+            return reply.code(409).send({ error: 'User is already a member of this workspace' });
+        }
+
+        const member = await prisma.workspaceMember.create({
+            data: {
+                workspaceId,
+                userId: targetUser.id,
+                role
+            }
+        });
+        return { ...member, status: 'active' };
     });
 
     // POST /api/workspaces/:workspaceId/boards
     app.post('/api/workspaces/:workspaceId/boards', async (
-        req: FastifyRequest<{ Params: { workspaceId: string }, Body: {
+        req: FastifyRequest<{
+            Params: { workspaceId: string }, Body: {
                 name: string;
                 description?: string | null;
                 background?: string | null;
-                // visibility?: 'private' | 'workspace' | 'public' // not in schema (yet)
-            } }>,
+                lists?: string[];
+                visibility?: 'private' | 'workspace' | 'public';
+            }
+        }>,
         reply
     ) => {
         const user = ensureUser(req);
         const { workspaceId } = req.params;
-        const { name, description, background } = req.body ?? ({} as any);
+        const { name, description, background, lists, visibility } = req.body ?? ({} as any);
         if (!name?.trim()) return reply.code(400).send({ error: 'name required' });
+
+        // Check if user can create boards in this workspace
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId } },
+            include: { workspace: true },
+        });
+        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+
+        if (!canCreateBoards(member.workspace, member)) {
+            return reply.code(403).send({ error: 'You do not have permission to create boards in this workspace' });
+        }
 
         // 1) create the board
         const board = await prisma.board.create({
@@ -46,6 +312,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 description: description ?? null,
                 background: background ?? null,
                 workspaceId,
+                visibility: visibility ?? member.workspace.defaultBoardVisibility ?? 'workspace',
             },
             select: { id: true, name: true, workspaceId: true, description: true, background: true, createdAt: true },
         });
@@ -57,22 +324,49 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             create: { userId: user.id, boardId: board.id, role: 'owner' },
         });
 
-        // 3) seed default lists so UI has something to show
-        await prisma.list.createMany({
-            data: DEFAULT_LISTS.map((title, i) => ({
+        // 3) seed lists - use template lists if provided, otherwise use defaults
+        const listNames = lists && lists.length > 0 ? lists : DEFAULT_LISTS;
+        let prevRank: string | null = null;
+        const listData = listNames.map((title) => {
+            prevRank = mid(prevRank);
+            return {
                 boardId: board.id,
                 name: title,
-                rank: rankOf(i),
-            })),
+                rank: prevRank,
+            };
         });
+        await prisma.list.createMany({ data: listData });
 
-        // 4) seed default labels so the Labels panel isn’t empty
+        // 4) seed default labels so the Labels panel isn't empty
         await prisma.label.createMany({
             data: DEFAULT_LABELS.map(l => ({ boardId: board.id, name: l.name, color: l.color })),
             skipDuplicates: true,
         });
 
         return board;
+    });
+
+    // GET /api/workspaces/:workspaceId/boards - get all boards in a workspace
+    app.get('/api/workspaces/:workspaceId/boards', async (
+        req: FastifyRequest<{ Params: { workspaceId: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { workspaceId } = req.params;
+
+        // Verify workspace membership
+        const member = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId } },
+        });
+        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+
+        // Workspace members see ALL boards in the workspace
+        const boards = await prisma.board.findMany({
+            where: { workspaceId },
+            select: { id: true, name: true, background: true, description: true, createdAt: true, visibility: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        return boards;
     });
 
     // GET /workspaces/:workspaceId/members?query=...
@@ -90,7 +384,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 user: {
                     is: {
                         OR: [
-                            { name:  { contains: q, mode: 'insensitive' } },
+                            { name: { contains: q, mode: 'insensitive' } },
                             { email: { contains: q, mode: 'insensitive' } },
                         ],
                     },
@@ -111,9 +405,32 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             name: r.user.name ?? '',
             avatar: r.user.avatar ?? '',
             role: r.role,
+            status: 'active'
         }));
 
-        return reply.send({ members });
+        // Also fetch pending invitations matching the query
+        const pendingWhere = q
+            ? {
+                workspaceId,
+                email: { contains: q, mode: 'insensitive' }
+            }
+            : { workspaceId };
+
+        const pendingRows = await prisma.pendingInvitation.findMany({
+            where: pendingWhere as any,
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const pending = pendingRows.map(p => ({
+            id: p.id,
+            name: p.email, // Use email as name for pending
+            avatar: '',
+            role: p.role,
+            status: 'pending',
+            email: p.email
+        }));
+
+        return reply.send({ members: [...members, ...pending] });
     });
 
     // PATCH /workspaces/:workspaceId/members/:userId  { role: 'owner'|'admin'|'member'|'viewer' }
@@ -132,5 +449,83 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
 
         return reply.send({ ok: true });
+    });
+
+    // DELETE /workspaces/:workspaceId/members/:memberId
+    app.delete<{
+        Params: { workspaceId: string, memberId: string }
+    }>('/api/workspaces/:workspaceId/members/:memberId', async (req, reply) => {
+        const user = ensureUser(req);
+        const { workspaceId, memberId } = req.params;
+
+        // 1. Verify requester is admin/owner
+        const requester = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: user.id, workspaceId } },
+            include: { workspace: true }
+        });
+
+        if (!requester) return reply.code(403).send({ error: 'Forbidden' });
+
+        // Allow users to leave (remove themselves)
+        const isSelf = memberId === user.id;
+
+        if (!isSelf && requester.role !== 'owner' && requester.role !== 'admin') {
+            return reply.code(403).send({ error: 'Only admins can remove members' });
+        }
+
+        // 2. Check if removing a pending invitation
+        // We assume memberId could be a PendingInvitation ID or a User ID
+
+        // Try to find pending invitation first
+        const pending = await prisma.pendingInvitation.findUnique({
+            where: { id: memberId }
+        });
+
+        if (pending) {
+            if (pending.workspaceId !== workspaceId) {
+                return reply.code(404).send({ error: 'Invitation not found in this workspace' });
+            }
+            await prisma.pendingInvitation.delete({ where: { id: memberId } });
+            return { ok: true };
+        }
+
+        // 3. Try to find active member (memberId is treated as userId here)
+        const memberToRemove = await prisma.workspaceMember.findUnique({
+            where: { userId_workspaceId: { userId: memberId, workspaceId } },
+            include: { user: true }
+        });
+
+        if (!memberToRemove) {
+            return reply.code(404).send({ error: 'Member not found' });
+        }
+
+        // Prevent owners from removing themselves (only other owners can remove an owner)
+        if (memberToRemove.role === 'owner' && isSelf) {
+            return reply.code(403).send({ error: 'Owners cannot remove themselves. Another owner must remove you.' });
+        }
+
+        // Prevent removing the last owner
+        if (memberToRemove.role === 'owner') {
+            const ownersCount = await prisma.workspaceMember.count({
+                where: { workspaceId, role: 'owner' }
+            });
+            if (ownersCount <= 1) {
+                return reply.code(400).send({ error: 'Cannot remove the last owner' });
+            }
+        }
+
+        await prisma.workspaceMember.delete({
+            where: { userId_workspaceId: { userId: memberId, workspaceId } }
+        });
+
+        // Send email notification if removed by someone else
+        if (!isSelf) {
+            await EmailService.sendMemberRemovedEmail(
+                memberToRemove.user.email,
+                requester.workspace.name
+            );
+        }
+
+        return { ok: true };
     });
 }
