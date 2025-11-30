@@ -8,8 +8,13 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test"]
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "test"
+        ]
       }
     }
-  }
+  },
+  "nxCloudId": "692b8b48dd5fc829dbb645c8"
 }
