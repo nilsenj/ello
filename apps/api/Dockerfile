@@ -30,4 +30,4 @@ RUN pnpm -F api run db:generate
 EXPOSE 3000
 
 # Start command: Run migrations then start server
-CMD ["sh", "-c", "npx prisma migrate deploy && pnpm -F api run serve"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma && pnpm -F api run serve"]
