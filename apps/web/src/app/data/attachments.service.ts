@@ -40,8 +40,12 @@ export class AttachmentsService {
     private http = inject(HttpClient);
     private cfg = inject(APP_CONFIG); // { apiOrigin, publicPrefix }
 
+    private getUrl(path: string) {
+        return `${this.cfg.apiOrigin}${path}`;
+    }
+
     list(cardId: string) {
-        return this.http.get<AttachmentDto[]>(`/api/cards/${cardId}/attachments`, { withCredentials: true });
+        return this.http.get<AttachmentDto[]>(this.getUrl(`/api/cards/${cardId}/attachments`), { withCredentials: true });
     }
 
     makeAttachmentUrlFactory() {
@@ -71,14 +75,14 @@ export class AttachmentsService {
         const form = new FormData();
         form.append('file', file, file.name);
         if (name) form.append('name', name);
-        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, form, { withCredentials: true });
+        return this.http.post<AttachmentDto>(this.getUrl(`/api/cards/${cardId}/attachments`), form, { withCredentials: true });
     }
 
     /**
      * Attach by external URL
      */
     attachUrl(cardId: string, url: string, name?: string, mime?: string, size?: number) {
-        return this.http.post<AttachmentDto>(`/api/cards/${cardId}/attachments`, { url, name, mime, size }, { withCredentials: true });
+        return this.http.post<AttachmentDto>(this.getUrl(`/api/cards/${cardId}/attachments`), { url, name, mime, size }, { withCredentials: true });
     }
 
     /**
@@ -89,38 +93,38 @@ export class AttachmentsService {
         form.append('file', file, file.name);
         if (name) form.append('name', name);
 
-        const req = new HttpRequest('POST', `/api/cards/${cardId}/attachments`, form, {
+        const req = new HttpRequest('POST', this.getUrl(`/api/cards/${cardId}/attachments`), form, {
             reportProgress: true,
         });
         return this.http.request(req) as unknown as import('rxjs').Observable<HttpEvent<AttachmentDto>>;
     }
 
     rename(id: string, name: string) {
-        return this.http.patch<AttachmentDto>(`/api/attachments/${id}`, { name }, { withCredentials: true });
+        return this.http.patch<AttachmentDto>(this.getUrl(`/api/attachments/${id}`), { name }, { withCredentials: true });
     }
 
     setCover(id: string) {
-        return this.http.post<{ ok: true }>(`/api/attachments/${id}/cover`, {}, { withCredentials: true });
+        return this.http.post<{ ok: true }>(this.getUrl(`/api/attachments/${id}/cover`), {}, { withCredentials: true });
     }
 
     removeCover(id: string) {
-        return this.http.delete<{ ok: true }>(`/api/attachments/${id}/cover`, { withCredentials: true });
+        return this.http.delete<{ ok: true }>(this.getUrl(`/api/attachments/${id}/cover`), { withCredentials: true });
     }
 
     delete(id: string) {
-        return this.http.delete<void>(`/api/attachments/${id}`, { withCredentials: true });
+        return this.http.delete<void>(this.getUrl(`/api/attachments/${id}`), { withCredentials: true });
     }
 
     /**
      * Absolute URL resolver (useful if SSR or need to copy/share)
      */
     resolveUrl(id: string) {
-        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, { withCredentials: true });
+        return this.http.get<{ url: string }>(this.getUrl(`/api/attachments/${id}/url`), { withCredentials: true });
     }
 
     /** If you ever need an absolute URL from API */
     resolveAbsoluteUrl(id: string) {
-        return this.http.get<{ url: string }>(`/api/attachments/${id}/url`, { withCredentials: true }).pipe(map(r => r.url));
+        return this.http.get<{ url: string }>(this.getUrl(`/api/attachments/${id}/url`), { withCredentials: true }).pipe(map(r => r.url));
     }
 
 
@@ -141,7 +145,7 @@ export class AttachmentsService {
      * Uses cookie-based auth; set withCredentials=true if API is on another origin.
      */
     async download(id: string, opts?: { withCredentials?: boolean }): Promise<{ filename: string; blob: Blob }> {
-        const url = `/api/attachments/${id}/file?download=1`;
+        const url = this.getUrl(`/api/attachments/${id}/file?download=1`);
         const res = await this.http.get(url, {
             responseType: 'blob',
             observe: 'response',
@@ -191,7 +195,7 @@ export class AttachmentsService {
         id: string,
         opts?: { withCredentials?: boolean }
     ): Observable<DownloadEvent> {
-        const url = `/api/attachments/${id}/file?download=1`;
+        const url = this.getUrl(`/api/attachments/${id}/file?download=1`);
 
         // Body type is for the REQUEST (we have none): null
         const req = new HttpRequest<null>('GET', url, {
@@ -228,7 +232,7 @@ export class AttachmentsService {
      * Browser will send your session cookie automatically.
      */
     openInNewTab(id: string) {
-        const url = `/api/attachments/${id}/file`; // no ?download=1
+        const url = this.getUrl(`/api/attachments/${id}/file`); // no ?download=1
         window.open(url, '_blank', 'noopener');
     }
 }

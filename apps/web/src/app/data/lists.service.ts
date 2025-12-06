@@ -40,18 +40,16 @@ export class ListsService {
     async reorderLists(listIds: string[]): Promise<void> {
         const boardId = this.store.currentBoardId?.();
         if (!boardId) return;
-        await firstValueFrom(
-            this.http.post<void>(`/api/boards/${boardId}/lists/reorder`, { listIds })
-        );
+        await this.api.post<void>(`/api/boards/${boardId}/lists/reorder`, { listIds });
     }
 
     async updateListName(listId: string, name: string) {
-        await firstValueFrom(this.http.patch(`/api/lists/${listId}`, { name }));
+        await this.api.patch(`/api/lists/${listId}`, { name });
         this.store.renameListLocally(listId, name);
     }
 
     async updateList(listId: string, patch: Partial<{ name: string; isArchived: boolean }>) {
-        const updated = await firstValueFrom(this.http.patch<ListDto>(`/api/lists/${listId}`, patch));
+        const updated = await this.api.patch<ListDto>(`/api/lists/${listId}`, patch);
         // Update store
         const lists = this.store.lists();
         const next = lists.map(l => l.id === listId ? { ...l, ...updated } : l);
@@ -63,9 +61,7 @@ export class ListsService {
     async createList(name: string) {
         const boardId = this.store.currentBoardId();
         if (!boardId) return;
-        const created = await firstValueFrom(
-            this.http.post<ListDto>(`/api/boards/${boardId}/lists`, { name })
-        );
+        const created = await this.api.post<ListDto>(`/api/boards/${boardId}/lists`, { name });
         const normalized = this.normalizeList(created);
         this.store.setLists([...this.store.lists(), normalized]);
     }
