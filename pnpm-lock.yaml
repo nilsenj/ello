@@ -145,6 +145,9 @@ importers:
       lucide-angular:
         specifier: ^0.553.0
         version: 0.553.0(@angular/common@18.2.14(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.14.10))(rxjs@7.8.2))(@angular/core@18.2.14(rxjs@7.8.2)(zone.js@0.14.10))
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.2
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.1
