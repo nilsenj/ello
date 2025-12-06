@@ -13,8 +13,8 @@ COPY apps/api/package.json ./apps/api/package.json
 # Copy Web package config (to satisfy workspace check if needed, though strictly not needed for api build)
 COPY apps/web/package.json ./apps/web/package.json
 
-# Install dependencies (frozen lockfile for speed and consistency)
-RUN pnpm install --frozen-lockfile
+# Install dependencies (frozen lockfile for speed and consistency, ignore scripts to skip premature prisma generate)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
@@ -29,5 +29,5 @@ RUN pnpm -F api run db:generate
 # Expose port
 EXPOSE 3000
 
-# Start command
-CMD ["pnpm", "-F", "api", "run", "serve"]
+# Start command: Run migrations then start server
+CMD ["sh", "-c", "npx prisma migrate deploy && pnpm -F api run serve"]

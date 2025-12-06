@@ -12,8 +12,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY apps/web/package.json ./apps/web/package.json
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (ignore scripts to skip premature prisma generate)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source
 COPY . .
