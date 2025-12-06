@@ -1,5 +1,6 @@
 export const environment = {
     production: true,
-    apiOrigin: 'https://api.your-domain.com', // your API origin in prod
+    apiOrigin: '', // Relative path, handled by Nginx proxy
+    apiUrl: '', // Relative path, handled by Nginx proxy
     publicPrefix: '/uploads'
 };
