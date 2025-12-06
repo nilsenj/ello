@@ -31,4 +31,4 @@ EXPOSE 3000
 
 # Start command: Run migrations then start server
 # Start command: Run migrations then start server
-CMD ["sh", "-c", "pnpm -F api run prisma -- migrate deploy --schema=./prisma/schema.prisma && pnpm -F api run serve"]
+CMD ["sh", "-c", "pnpm -F api run prisma -- migrate deploy --schema=./prisma/schema.prisma && pnpm -F api run start"]

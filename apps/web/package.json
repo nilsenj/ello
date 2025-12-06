@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "serve": "vite --host",
-    "build": "vite build",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "dev": "ng serve --proxy-config proxy.conf.json"
   },

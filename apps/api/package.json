@@ -34,6 +34,7 @@
   },
   "scripts": {
     "serve": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
     "build": "echo \"(bundling optional; using tsx for dev)\"",
     "prepare": "prisma generate --schema=./prisma/schema.prisma",
     "db:generate": "pnpm -F api prisma generate --schema=./prisma/schema.prisma",
