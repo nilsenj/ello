@@ -27,16 +27,13 @@ services:
     plan: free
     region: frankfurt
     numInstances: 1
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: kanban-api
-          property: url
+    # No VITE_API_URL needed as we will proxy via Nginx
+    envVars: []
 
 databases:
   - name: kanban-db
     plan: free
     region: frankfurt
     databaseName: kanban
-    user: postgres
+    # Render manages the user automatically
+
