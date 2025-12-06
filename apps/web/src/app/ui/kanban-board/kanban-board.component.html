@@ -32,6 +32,26 @@
             </svg>
         </div>
 
+        <!-- Member filter -->
+        <div class="relative">
+            <select class="ui-select peer pr-8 pl-3 py-1.5 text-sm rounded-md
+               bg-white/95 text-gray-800 shadow-sm border border-white/20
+               hover:bg-white focus:bg-white focus:border-white
+               focus:ring-2 focus:ring-white/40 outline-none transition" [(ngModel)]="activeMemberId"
+                (ngModelChange)="updateActiveMember($event)">
+                <option value="">All members</option>
+                <option *ngFor="let m of store.members()" [value]="m.id">{{ m.name || m.email }}</option>
+            </select>
+
+            <!-- Custom chevron -->
+            <svg class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4
+               text-gray-500 peer-focus:text-gray-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
+                    clip-rule="evenodd" />
+            </svg>
+        </div>
+
         <!-- Board Menu Button -->
         <button
             class="ml-auto text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition"

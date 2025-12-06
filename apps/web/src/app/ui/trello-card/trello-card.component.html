@@ -121,23 +121,32 @@
             (click)="showMore = false">×</button>
 
         <div class="flex flex-col gap-1">
-            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="startEdit()">Edit
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="startEdit()">Edit
                 title</button>
 
-            <div class="h-px bg-gray-200 my-1"></div>
+            <div *ngIf="canEdit()" class="h-px bg-gray-200 my-1"></div>
 
-            <div class="px-2 text-[10px] uppercase tracking-wide text-gray-400">Move</div>
-            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveTop()">Move to
+            <div *ngIf="canEdit()" class="px-2 text-[10px] uppercase tracking-wide text-gray-400">Move</div>
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="moveTop()">Move to
                 top</button>
-            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveUp()">Move up</button>
-            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveDown()">Move down</button>
-            <button class="w-full text-left px-2 py-1 rounded hover:bg-gray-100" (click)="moveBottom()">Move to
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="moveUp()">Move up</button>
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="moveDown()">Move down</button>
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="moveBottom()">Move to
                 bottom</button>
 
-            <hr class="my-1 border-gray-200">
-            <button class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
+            <div *ngIf="canEdit()" class="h-px bg-gray-200 my-1"></div>
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
+                (click)="copy()">Copy</button>
+
+            <hr *ngIf="canEdit()" class="my-1 border-gray-200">
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
                 (click)="archive()">Archive</button>
-            <button class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
+            <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
                 (click)="delete()">Delete</button>
         </div>
     </div>

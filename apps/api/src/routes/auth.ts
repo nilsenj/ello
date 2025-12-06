@@ -33,6 +33,37 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
         const user = await prisma.user.create({ data: { email, name, password: hash } });
 
+        // Check for pending invitations
+        const pendingInvites = await prisma.pendingInvitation.findMany({ where: { email } });
+        for (const invite of pendingInvites) {
+            // Add to workspace
+            try {
+                await prisma.workspaceMember.create({
+                    data: {
+                        workspaceId: invite.workspaceId,
+                        userId: user.id,
+                        role: invite.role
+                    }
+                });
+
+                // Add to board if specified
+                if (invite.boardId) {
+                    await prisma.boardMember.create({
+                        data: {
+                            boardId: invite.boardId,
+                            userId: user.id,
+                            role: invite.role
+                        }
+                    });
+                }
+
+                // Delete invitation
+                await prisma.pendingInvitation.delete({ where: { id: invite.id } });
+            } catch (err) {
+                console.error('Failed to process pending invitation', err);
+            }
+        }
+
         // dev UX: auto-issue tokens on register
         const accessToken = signAccess(user);
         const refreshToken = `rt_${user.id}_${Date.now()}`;

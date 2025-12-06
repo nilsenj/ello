@@ -77,8 +77,16 @@ model PendingInvitation {
   inviterId   String
   createdAt   DateTime  @default(now())
 
-  @@unique([workspaceId, email])
+  board       Board?    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId     String?
+
+  // Allow multiple invites per workspace if they are for different boards
+  // Note: In Postgres, multiple rows with NULL boardId are considered distinct for unique constraints unless using NULLS NOT DISTINCT (PG 15+).
+  // For safety and simplicity in this MVP, we'll remove the strict unique constraint on workspace+email
+  // and rely on application logic or just allow multiple.
+  // But to prevent spam, let's keep an index.
   @@index([email])
+  @@index([workspaceId, email])
 }
 
 enum WorkspaceVisibility {
@@ -113,6 +121,7 @@ model Board {
   activities  Activity[]
   notifications Notification[]
   watchedBy   WatchedBoard[]
+  pendingInvitations PendingInvitation[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 

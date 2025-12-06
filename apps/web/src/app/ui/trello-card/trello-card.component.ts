@@ -7,6 +7,8 @@ import { BoardStore } from '../../store/board-store.service';
 import { FormsModule } from '@angular/forms';
 import { LabelsService } from '../../data/labels.service';
 import { CardModalService } from '../card-modal/card-modal.service';
+import { AuthService } from '../../auth/auth.service';
+import { computed, inject } from '@angular/core';
 
 @Component({
     standalone: true,
@@ -24,12 +26,22 @@ export class TrelloCardComponent {
     editing = false;
     titleDraft = '';
 
+    auth = inject(AuthService);
+
     constructor(
         public store: BoardStore,
-        private cardsApi: CardsService,
+        public cardsApi: CardsService, // made public for use in template if needed
         private labelsApi: LabelsService,
         private modal: CardModalService,
     ) { }
+
+    canEdit = computed(() => {
+        const uid = this.auth.user()?.id;
+        if (!uid) return false;
+        const members = this.store.members();
+        const me = members.find(m => m.id === uid);
+        return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
+    });
 
     openModal(ev: MouseEvent) {
         if (this.disableClick) return;
@@ -231,6 +243,15 @@ export class TrelloCardComponent {
         await this.cardsApi.patchCardExtended(this.card.id, { isDone: next });
         // local optimistic update
         (this.card as any).isDone = next;
+    }
+
+    async copy() {
+        const title = prompt('Name for the copy:', this.card.title + ' (copy)');
+        if (!title) return;
+
+        await this.cardsApi.copyCard(this.card.id, this.listId, title);
+        this.showMore = false;
+        alert('Card copied to bottom of list.');
     }
 
     cardDone(): boolean {

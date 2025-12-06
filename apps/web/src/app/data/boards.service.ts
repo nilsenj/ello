@@ -9,7 +9,7 @@ import { LabelsService } from "./labels.service";
 import { HttpClient } from "@angular/common/http";
 
 export type MemberRole = 'owner' | 'admin' | 'member' | 'viewer';
-export type BoardMemberLite = { id: string; name: string; avatar?: string; role: MemberRole };
+export type BoardMemberLite = { id: string; userId: string; name: string; email: string; avatar?: string; role: MemberRole; status?: 'active' | 'pending' };
 @Injectable({ providedIn: 'root' })
 export class BoardsService {
     constructor(
@@ -33,10 +33,12 @@ export class BoardsService {
     async selectBoard(boardId: string) {
         // reflect selection in UI immediately
         this.store.setCurrentBoardId(boardId);
+        this.addToRecent(boardId);
 
         const loadAll = () => Promise.all([
             this.listsApi.loadLists(boardId),
             this.labelsApi.loadLabels(boardId),
+            this.searchMembers(boardId).then(m => this.store.setMembers(m)),
         ]);
 
         try {
@@ -50,6 +52,22 @@ export class BoardsService {
             } else {
                 throw err;
             }
+        }
+    }
+
+    private addToRecent(boardId: string) {
+        if (typeof window === 'undefined') return; // SSR check
+        try {
+            const key = 'recent_boards';
+            let recent: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+            // remove if exists, add to front
+            recent = recent.filter(id => id !== boardId);
+            recent.unshift(boardId);
+            // keep max 4
+            recent = recent.slice(0, 4);
+            localStorage.setItem(key, JSON.stringify(recent));
+        } catch (e) {
+            // ignore
         }
     }
 

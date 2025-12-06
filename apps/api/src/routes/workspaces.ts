@@ -225,8 +225,9 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
 
         if (!targetUser) {
             // User doesn't exist, create pending invitation
-            const existingInvite = await prisma.pendingInvitation.findUnique({
-                where: { workspaceId_email: { workspaceId, email } }
+            // Use findFirst because there is no unique constraint on [workspaceId, email]
+            const existingInvite = await prisma.pendingInvitation.findFirst({
+                where: { workspaceId, email }
             });
 
             if (existingInvite) {
@@ -248,11 +249,17 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             });
 
             // Send invitation email
-            await EmailService.sendInvitationEmail(
-                email,
-                inviter.workspace.name,
-                inviter.user.name || 'A user'
-            );
+            // Send invitation email (non-blocking)
+            // Fire-and-forget so we don't block the response on slow Ethereal connection
+            setTimeout(() => {
+                EmailService.sendInvitationEmail(
+                    email,
+                    inviter.workspace.name,
+                    inviter.user.name || 'A user'
+                ).catch(err => {
+                    console.error('[Req] Failed to send invitation email (background):', err);
+                });
+            }, 0);
 
             return { ...invite, status: 'pending' };
         }
@@ -519,11 +526,17 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
 
         // Send email notification if removed by someone else
+        // Send email notification if removed by someone else
         if (!isSelf) {
-            await EmailService.sendMemberRemovedEmail(
-                memberToRemove.user.email,
-                requester.workspace.name
-            );
+            // Fire-and-forget
+            setTimeout(() => {
+                EmailService.sendMemberRemovedEmail(
+                    memberToRemove.user.email,
+                    requester.workspace.name
+                ).catch(err => {
+                    console.error('[Req] Failed to send removal email (background):', err);
+                });
+            }, 0);
         }
 
         return { ok: true };

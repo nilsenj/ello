@@ -31,6 +31,12 @@ export class ListsService {
         this.store.setLists(normalized); // <-- write into the store that the UI uses
     }
 
+    /** Fetch lists for a board without updating the store (used for Move/Copy dialogs) */
+    async fetchLists(boardId: string): Promise<ListDto[]> {
+        const lists = await this.api.get<ListDto[]>(`/api/boards/${boardId}/lists`).catch(() => []);
+        return (lists ?? []).map(l => this.normalizeList(l));
+    }
+
     async reorderLists(listIds: string[]): Promise<void> {
         const boardId = this.store.currentBoardId?.();
         if (!boardId) return;

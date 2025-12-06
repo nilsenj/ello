@@ -51,6 +51,7 @@ export class KanbanBoardComponent implements OnInit {
     // filters & inline edit
     filter = '';
     activeLabel = ''; // used by header label filter
+    activeMemberId = ''; // used by header member filter
     editingCard: Record<string, boolean> = {};
     cardTitles: Record<string, string> = {};
     trackList = (_: number, l: ListDto) => l.id;
@@ -216,6 +217,10 @@ export class KanbanBoardComponent implements OnInit {
         this.activeLabel = val || '';
     }
 
+    updateActiveMember(val: string) {
+        this.activeMemberId = val || '';
+    }
+
     // label menu toggles (called from template)
     toggleLabelsMenu(cardId: string) {
         // close all others so only one popover is open at a time
@@ -242,12 +247,21 @@ export class KanbanBoardComponent implements OnInit {
         if (this.activeLabel) {
             const ids = (c: any) => {
                 if (Array.isArray(c.labelIds)) return c.labelIds;
-                if (Array.isArray(c.labels)) return c.labels.map((x: any) => (typeof x === 'string' ? x : x?.id)).filter(Boolean);
+                if (Array.isArray(c.labels)) return c.labels.map((x: any) => (typeof x === 'string' ? x : x?.id ?? x?.labelId)).filter(Boolean);
                 if (Array.isArray(c.cardLabels)) return c.cardLabels.map((x: any) => x?.labelId).filter(Boolean);
                 return [];
             };
             cards = cards.filter((c) => ids(c).includes(this.activeLabel));
         }
+
+        if (this.activeMemberId) {
+            const memberIds = (c: any) => {
+                if (Array.isArray(c.assignees)) return c.assignees.map((x: any) => x?.userId ?? x?.id).filter(Boolean);
+                return [];
+            };
+            cards = cards.filter((c) => memberIds(c).includes(this.activeMemberId));
+        }
+
         return cards;
     };
 

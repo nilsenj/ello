@@ -13,6 +13,7 @@ const pad = (n: number) => n.toString().padStart(PAD, '0');
 
 import { NotificationService } from '../services/notification-service.js';
 import { emitToBoard } from '../socket.js';
+import { EmailService } from '../services/email.js';
 
 export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaClient) {
     // List boards (member of board OR member of workspace)
@@ -205,22 +206,41 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
                 : {}),
         };
 
-        const rows = await prisma.boardMember.findMany({
-            where,
-            include: {
-                user: { select: { id: true, name: true, avatar: true, email: true } },
-            },
-            orderBy: [{ role: 'asc' }, { id: 'asc' }],
-            take: q ? 20 : 100, // limit results
-        });
+        const [rows, pending] = await Promise.all([
+            prisma.boardMember.findMany({
+                where,
+                include: {
+                    user: { select: { id: true, name: true, avatar: true, email: true } },
+                },
+                orderBy: [{ role: 'asc' }, { id: 'asc' }],
+                take: q ? 20 : 100, // limit results
+            }),
+            prisma.pendingInvitation.findMany({
+                where: {
+                    boardId,
+                    ...(q ? { email: { contains: q, mode: 'insensitive' } } : {})
+                }
+            })
+        ]);
 
-        const members = rows.map((r) => ({
-            id: r.user.id,
-            name: r.user.name ?? r.user.email,
-            email: r.user.email,
-            avatar: r.user.avatar ?? undefined,
-            role: r.role,
-        }));
+        const members = [
+            ...rows.map((r) => ({
+                id: r.user.id,
+                name: r.user.name ?? r.user.email,
+                email: r.user.email,
+                avatar: r.user.avatar ?? undefined,
+                role: r.role,
+                status: 'active'
+            })),
+            ...pending.map(p => ({
+                id: p.id, // Use invitation ID as temporary ID
+                name: p.email, // Use email as name
+                email: p.email,
+                avatar: undefined,
+                role: p.role,
+                status: 'pending'
+            }))
+        ];
 
         return reply.send({ members });
     });
@@ -237,7 +257,60 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         // TODO auth: ensure caller can add board members
 
         const targetUser = await prisma.user.findUnique({ where: { email } });
-        if (!targetUser) return reply.code(404).send({ error: 'User not found' });
+
+        // If user not found, create pending invitation
+        if (!targetUser) {
+            const board = await prisma.board.findUnique({
+                where: { id: boardId },
+                include: { workspace: true }
+            });
+            if (!board) return reply.code(404).send({ error: 'Board not found' });
+
+            // Check if already invited
+            const existing = await prisma.pendingInvitation.findFirst({
+                where: {
+                    workspaceId: board.workspaceId,
+                    email,
+                    boardId // Only match if invited to this specific board
+                }
+            });
+
+            if (existing) {
+                return reply.code(400).send({ error: 'User already invited to this board' });
+            }
+
+            await prisma.pendingInvitation.create({
+                data: {
+                    email,
+                    workspaceId: board.workspaceId,
+                    inviterId: user.id,
+                    role: role || 'member',
+                    boardId
+                }
+            });
+
+            const inviter = await prisma.user.findUnique({ where: { id: user.id } });
+
+            // Send email (background)
+            setTimeout(() => {
+                EmailService.sendBoardInvitationEmail(
+                    email,
+                    board.name,
+                    board.workspace.name,
+                    inviter?.name || inviter?.email || 'Someone'
+                ).catch(err => console.error('[Req] Failed to send board invitation email (background):', err));
+            }, 0);
+
+            return reply.send({ status: 'pending', email });
+        }
+
+        // Check if already a member
+        const existingMember = await prisma.boardMember.findUnique({
+            where: { userId_boardId: { userId: targetUser.id, boardId } }
+        });
+        if (existingMember) {
+            return reply.code(400).send({ error: 'User is already a member of this board' });
+        }
 
         const member = await prisma.boardMember.create({
             data: {

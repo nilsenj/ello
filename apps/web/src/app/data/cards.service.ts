@@ -235,4 +235,21 @@ export class CardsService {
     deleteComment(commentId: string) {
         return firstValueFrom(this.http.delete<void>(`/api/comments/${commentId}`));
     }
+
+    // ---------- Activity ----------
+    getCardActivity(cardId: string, limit = 20, offset = 0) {
+        return firstValueFrom(this.http.get<any[]>(`/api/cards/${cardId}/activity`, { params: { limit, offset } }));
+    }
+
+    // ---------- Actions ----------
+    async archiveCard(cardId: string) {
+        await this.patchCardExtended(cardId, { isArchived: true });
+        this.store.removeCardLocally(cardId);
+    }
+
+    async copyCard(cardId: string, toListId: string, title?: string) {
+        return firstValueFrom(
+            this.http.post<Card>(`/api/cards/${cardId}/copy`, { toListId, title })
+        );
+    }
 }

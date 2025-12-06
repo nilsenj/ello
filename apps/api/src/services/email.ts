@@ -60,6 +60,40 @@ export class EmailService {
         return info;
     }
 
+    static async sendBoardInvitationEmail(to: string, boardName: string, workspaceName: string, inviterName: string) {
+        if (!this.transporter) await this.initialize();
+
+        if (!this.transporter) {
+            console.log(`[EmailService] (Mock) Sending board invitation to ${to} for ${boardName}`);
+            return;
+        }
+
+        const info = await this.transporter.sendMail({
+            from: '"Ello" <noreply@ello.com>',
+            to,
+            subject: `You've been invited to join board ${boardName} on Ello`,
+            text: `Hello,\n\n${inviterName} has invited you to join the board "${boardName}" (in workspace "${workspaceName}") on Ello.\n\nClick here to join: http://localhost:4200/signup?email=${encodeURIComponent(to)}\n\nBest,\nThe Ello Team`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2>You've been invited to a board!</h2>
+                    <p><strong>${inviterName}</strong> has invited you to join the board <strong>"${boardName}"</strong> in workspace <strong>"${workspaceName}"</strong> on Ello.</p>
+                    <p>
+                        <a href="http://localhost:4200/signup?email=${encodeURIComponent(to)}" 
+                           style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                           Join Board
+                        </a>
+                    </p>
+                    <p style="color: #666; font-size: 12px;">If you didn't expect this invitation, you can ignore this email.</p>
+                </div>
+            `,
+        });
+
+        console.log(`[EmailService] Board invitation sent: ${info.messageId}`);
+        console.log(`[EmailService] Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+
+        return info;
+    }
+
     static async sendMemberRemovedEmail(to: string, workspaceName: string) {
         if (!this.transporter) await this.initialize();
 
