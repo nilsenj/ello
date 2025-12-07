@@ -26,20 +26,21 @@
             <div class="max-w-5xl mx-auto px-8 py-8" *ngIf="!loading(); else loadingTpl">
 
                 <!-- Starred Boards -->
-                <div *ngIf="starredBoards().length" class="mb-8">
-                    <div class="flex items-center gap-2 mb-4 text-gray-700">
-                        <lucide-icon [img]="StarIcon" class="w-5 h-5"></lucide-icon>
+                <div *ngIf="starredBoards().length" class="mb-6 sm:mb-8 section-spacing">
+                    <div class="section-header text-gray-700">
+                        <lucide-icon [img]="StarIcon" class="w-5 h-5 text-yellow-500"></lucide-icon>
                         <h2 class="text-lg font-bold">Starred boards</h2>
+                        <span class="section-badge">{{ starredBoards().length }}</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                         <a *ngFor="let board of starredBoards()" [routerLink]="['/b', board.id]"
-                            class="block h-24 rounded-md p-3 relative group overflow-hidden hover:opacity-90 transition-opacity border border-slate-200"
+                            class="board-card block rounded-lg p-2.5 sm:p-3 relative group overflow-hidden border border-slate-200"
                             [ngClass]="getBoardBackground(board)">
-                            <div class="relative z-10 font-bold text-shadow-sm" [ngClass]="getBoardTextColor(board)">{{
-                                board.name }}</div>
+                            <div class="relative z-10 font-bold text-shadow-sm text-sm sm:text-base board-name"
+                                [ngClass]="getBoardTextColor(board)">{{board.name }}</div>
                             <button (click)="toggleStar($event, board.id)"
-                                class="absolute bottom-2 right-2 p-1 rounded hover:bg-black/20 text-white z-20 transition-all opacity-100">
+                                class="star-btn absolute bottom-2 right-2 p-1 rounded hover:bg-black/20 text-white z-20 transition-all opacity-100">
                                 <lucide-icon [img]="StarIcon"
                                     class="w-4 h-4 text-yellow-300 fill-yellow-300"></lucide-icon>
                             </button>
@@ -47,76 +48,52 @@
                     </div>
                 </div>
 
-                <!-- Recently Viewed -->
-                <div *ngIf="recentBoards().length" class="mb-8">
-                    <div class="flex items-center gap-2 mb-4 text-gray-700">
-                        <lucide-icon [img]="ClockIcon" class="w-5 h-5"></lucide-icon>
-                        <h2 class="text-lg font-bold">Recently viewed</h2>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <a *ngFor="let board of recentBoards()" [routerLink]="['/b', board.id]"
-                            class="block h-24 rounded-md p-3 relative group overflow-hidden hover:opacity-90 transition-opacity border border-slate-200"
-                            [ngClass]="getBoardBackground(board)">
-                            <div class="relative z-10 font-bold text-shadow-sm" [ngClass]="getBoardTextColor(board)">{{
-                                board.name }}</div>
-                            <button (click)="toggleStar($event, board.id)"
-                                class="absolute bottom-2 right-2 p-1 rounded hover:bg-black/20 text-white z-20 transition-all"
-                                [class.opacity-0]="!isStarred(board.id)"
-                                [class.group-hover:opacity-100]="!isStarred(board.id)">
-                                <lucide-icon [img]="StarIcon" class="w-4 h-4"
-                                    [class.text-yellow-300]="isStarred(board.id)"
-                                    [class.fill-yellow-300]="isStarred(board.id)"></lucide-icon>
-                            </button>
-                        </a>
-                    </div>
-                </div>
-
                 <!-- Selected Workspace -->
-                <div *ngIf="selectedWorkspace() as ws" class="mb-12">
-                    <div class="flex items-center gap-3 mb-4">
+                <div *ngIf="selectedWorkspace() as ws" class="mb-8 sm:mb-12">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4 workspace-header">
                         <div
-                            class="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold">
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm sm:text-base">
                             {{ ws.name.charAt(0).toUpperCase() }}
                         </div>
-                        <h2 class="text-lg font-bold text-gray-900">{{ ws.name }}</h2>
-                        <div class="flex gap-2 ml-4">
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900">{{ ws.name }}</h2>
+                        <div class="flex gap-2 ml-auto sm:ml-4">
                             <button (click)="openWorkspaceMembers(ws)"
-                                class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded">
+                                class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded">
                                 <lucide-icon [img]="UsersIcon" class="w-3 h-3"></lucide-icon>
-                                Members
+                                <span class="hidden sm:inline">Members</span>
                             </button>
                             <button *ngIf="canEditWorkspace(ws)" (click)="openWorkspaceSettings(ws)"
-                                class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded">
+                                class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded">
                                 <lucide-icon [img]="SettingsIcon" class="w-3 h-3"></lucide-icon>
-                                Settings
+                                <span class="hidden sm:inline">Settings</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                         <!-- Boards -->
                         <a *ngFor="let board of getBoardsForWorkspace(ws.id)" [routerLink]="['/b', board.id]"
-                            class="block h-24 rounded-md p-3 relative group overflow-hidden hover:opacity-90 transition-opacity border border-slate-200"
+                            class="board-card block rounded-lg p-2.5 sm:p-3 relative group overflow-hidden border border-slate-200"
                             [ngClass]="getBoardBackground(board)">
 
-                            <div class="relative z-10 font-bold text-shadow-sm" [ngClass]="getBoardTextColor(board)">
+                            <div class="relative z-10 font-bold text-shadow-sm text-sm sm:text-base board-name"
+                                [ngClass]="getBoardTextColor(board)">
                                 {{ board.name }}
                             </div>
 
                             <!-- Archive Button (top-right) -->
                             <button *ngIf="canArchiveBoard(ws)" (click)="requestArchiveBoard($event, board)"
-                                class="absolute top-2 right-2 p-1.5 rounded bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-all z-20"
+                                class="archive-btn absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 sm:p-1.5 rounded bg-black/20 hover:bg-black/40 text-white opacity-0 group-hover:opacity-100 sm:opacity-0 transition-all z-20"
                                 title="Archive board">
-                                <lucide-icon [img]="ArchiveIcon" class="w-4 h-4"></lucide-icon>
+                                <lucide-icon [img]="ArchiveIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></lucide-icon>
                             </button>
 
                             <!-- Star Button (bottom-right) -->
                             <button (click)="toggleStar($event, board.id)"
-                                class="absolute bottom-2 right-2 p-1.5 rounded hover:bg-black/20 text-white z-20 transition-all"
+                                class="star-btn absolute bottom-1.5 sm:bottom-2 right-1.5 sm:right-2 p-1 sm:p-1.5 rounded hover:bg-black/20 text-white z-20 transition-all"
                                 [class.opacity-0]="!isStarred(board.id)"
                                 [class.group-hover:opacity-100]="!isStarred(board.id)">
-                                <lucide-icon [img]="StarIcon" class="w-4 h-4"
+                                <lucide-icon [img]="StarIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4"
                                     [class.text-yellow-300]="isStarred(board.id)"
                                     [class.fill-yellow-300]="isStarred(board.id)"></lucide-icon>
                             </button>
@@ -124,22 +101,63 @@
 
                         <!-- Create Board Button -->
                         <button *ngIf="canCreateBoard(ws)" (click)="openCreateBoard(ws.id)"
-                            class="h-24 rounded-md bg-gray-100 hover:bg-gray-200 flex flex-col items-center justify-center text-gray-600 transition-colors">
-                            <span class="text-sm">Create new board</span>
+                            class="create-board-btn rounded-lg bg-slate-50 flex flex-col items-center justify-center text-gray-500">
+                            <lucide-icon [img]="PlusIcon" class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1"></lucide-icon>
+                            <span class="text-xs sm:text-sm font-medium">Create new board</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Recently Viewed (at bottom with more spacing) -->
+                <div *ngIf="recentBoards().length" class="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200">
+                    <div class="section-header text-gray-700">
+                        <lucide-icon [img]="ClockIcon" class="w-5 h-5 text-blue-500"></lucide-icon>
+                        <h2 class="text-lg font-bold">Recently viewed</h2>
+                        <span class="section-badge">{{ recentBoards().length }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <a *ngFor="let board of recentBoards()" [routerLink]="['/b', board.id]"
+                            class="board-card block rounded-lg p-2.5 sm:p-3 relative group overflow-hidden border border-slate-200"
+                            [ngClass]="getBoardBackground(board)">
+                            <div class="relative z-10 font-bold text-shadow-sm text-sm sm:text-base board-name"
+                                [ngClass]="getBoardTextColor(board)">{{board.name }}</div>
+                            <button (click)="toggleStar($event, board.id)"
+                                class="star-btn absolute bottom-2 right-2 p-1 rounded hover:bg-black/20 text-white z-20 transition-all"
+                                [class.opacity-0]="!isStarred(board.id)"
+                                [class.group-hover:opacity-100]="!isStarred(board.id)">
+                                <lucide-icon [img]="StarIcon" class="w-4 h-4"
+                                    [class.text-yellow-300]="isStarred(board.id)"
+                                    [class.fill-yellow-300]="isStarred(board.id)"></lucide-icon>
+                            </button>
+                        </a>
                     </div>
                 </div>
             </div>
 
             <ng-template #loadingTpl>
-                <div class="max-w-5xl mx-auto px-8 py-8 animate-pulse">
-                    <!-- Pending header -->
-                    <div class="h-8 w-48 bg-slate-200 rounded mb-6"></div>
+                <div class="max-w-5xl mx-auto px-8 py-8">
+                    <!-- Skeleton header -->
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="h-5 w-5 skeleton-shimmer rounded"></div>
+                        <div class="h-6 w-40 skeleton-shimmer rounded"></div>
+                        <div class="h-5 w-6 skeleton-shimmer rounded-full"></div>
+                    </div>
                     <!-- Grid skeleton -->
-                    <div class="grid grid-cols-4 gap-4">
-                        <div class="h-24 bg-slate-200 rounded-md"></div>
-                        <div class="h-24 bg-slate-200 rounded-md"></div>
-                        <div class="h-24 bg-slate-200 rounded-md"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
+                    </div>
+                    <!-- Second section -->
+                    <div class="flex items-center gap-2 mt-8 mb-4">
+                        <div class="h-5 w-5 skeleton-shimmer rounded"></div>
+                        <div class="h-6 w-32 skeleton-shimmer rounded"></div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
+                        <div class="h-24 skeleton-shimmer rounded-lg"></div>
                     </div>
                 </div>
             </ng-template>

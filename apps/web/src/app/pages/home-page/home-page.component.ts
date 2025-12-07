@@ -4,7 +4,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { BoardStore } from '../../store/board-store.service';
 import { WorkspaceLite, WorkspacesService } from '../../data/workspaces.service';
 import { BoardsService } from '../../data/boards.service';
-import { ArchiveIcon, ClockIcon, LucideAngularModule, Settings, StarIcon, Users, XIcon } from 'lucide-angular';
+import { ArchiveIcon, ClockIcon, LucideAngularModule, Plus, Settings, StarIcon, Users, XIcon } from 'lucide-angular';
 import { BoardCreateModalComponent } from '../../components/board-create-modal/board-create-modal.component';
 import { BoardCreateModalService } from '../../components/board-create-modal/board-create-modal.service';
 import { WorkspaceCreateModalComponent } from '../../components/workspace-create-modal/workspace-create-modal.component';
@@ -40,6 +40,7 @@ export class HomePageComponent implements OnInit {
     readonly UsersIcon = Users;
     readonly ClockIcon = ClockIcon;
     readonly StarIcon = StarIcon;
+    readonly PlusIcon = Plus;
 
     // Services
     private router = inject(Router);
