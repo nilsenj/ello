@@ -239,7 +239,16 @@ export class KanbanBoardComponent implements OnInit {
 
     isLightBoard = computed(() => {
         const board = this.store.boards().find(b => b.id === this.store.currentBoardId());
-        return !board?.background || board.background === 'none';
+        const bg = board?.background;
+
+        // Light backgrounds: no background, 'none', empty string, null, or bg-slate-50 (default)
+        if (!bg || bg === 'none' || bg === '' || bg === 'bg-slate-50') {
+            return true;
+        }
+
+        // Image backgrounds are typically scenic photos with good contrast, treat as dark
+        // You might want to analyze the image color in the future
+        return false;
     });
 
     // whenever modal opens/closes, sync query param

@@ -411,7 +411,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         const q = (req.query.query || '').trim();
 
         // ✅ Prisma relation filter must use `is: { ... }`
-        const where = q
+        const where: any = q
             ? {
                 workspaceId,
                 user: {
@@ -423,7 +423,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                     },
                 },
             }
-            : { workspaceId, user: { OR: [{ name: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] } as any };
+            : { workspaceId };
 
         const rows = await prisma.workspaceMember.findMany({
             where,
