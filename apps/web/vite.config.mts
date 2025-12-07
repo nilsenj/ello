@@ -19,10 +19,9 @@ export default defineConfig(({ mode }) => {
         ],
         resolve: {
             alias: {
-                ...(mode === 'production' ? {
-                    // Force replace the specific environment file
-                    [resolve(__dirname, 'src/environments/environment.ts')]: resolve(__dirname, 'src/environments/environment.prod.ts'),
-                } : {}),
+                '@env': mode === 'production'
+                    ? resolve(__dirname, 'src/environments/environment.prod.ts')
+                    : resolve(__dirname, 'src/environments/environment.ts'),
             }
         },
         server: {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpHeaders } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '@env';
 import { AppNotification } from './notification.model';
 import { ApiBaseService } from './api-base.service';
 
