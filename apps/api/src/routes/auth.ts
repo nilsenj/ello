@@ -34,7 +34,17 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         const user = await prisma.user.create({ data: { email, name, password: hash } });
 
         // Auto-create Personal Workspace
-        const workspaceName = name ? `${name}'s Workspace` : 'My Workspace';
+        let baseName = name ? `${name} Workspace` : 'Personal Workspace';
+        let workspaceName = baseName;
+        let counter = 1;
+
+        // Ensure unique workspace name
+        // Limit attempts to avoid infinite loops in pathological cases
+        while ((await prisma.workspace.findUnique({ where: { name: workspaceName } })) && counter < 100) {
+            workspaceName = `${baseName} ${counter}`;
+            counter++;
+        }
+
         const personalWorkspace = await prisma.workspace.create({
             data: {
                 name: workspaceName,
