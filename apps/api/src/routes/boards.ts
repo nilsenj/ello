@@ -16,14 +16,30 @@ import { emitToBoard } from '../socket.js';
 import { EmailService } from '../services/email.js';
 
 export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaClient) {
-    // List boards (member of board OR member of workspace)
+    // List boards (member of board OR member of workspace AND visible)
     app.get('/api/boards', (req) => {
         const user = ensureUser(req);
         return prisma.board.findMany({
             where: {
                 OR: [
+                    // 1. Direct board membership
                     { members: { some: { userId: user.id } } },
-                    { workspace: { members: { some: { userId: user.id } } } }
+                    // 2. Visible to workspace (and user is member)
+                    {
+                        visibility: 'workspace',
+                        workspace: { members: { some: { userId: user.id } } }
+                    },
+                    // 3. User is Workspace Admin/Owner (can see everything in their workspaces)
+                    {
+                        workspace: {
+                            members: {
+                                some: {
+                                    userId: user.id,
+                                    role: { in: ['owner', 'admin'] }
+                                }
+                            }
+                        }
+                    }
                 ]
             },
             orderBy: { createdAt: 'desc' }
@@ -365,7 +381,18 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         });
 
         if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
-            return reply.code(403).send({ error: 'Only admins can update board background' });
+            // Check if workspace admin
+            const board = await prisma.board.findUnique({
+                where: { id },
+                include: { workspace: { include: { members: { where: { userId: user.id } } } } }
+            });
+
+            const wsRole = board?.workspace?.members?.[0]?.role;
+            const isWsAdmin = wsRole === 'owner' || wsRole === 'admin';
+
+            if (!isWsAdmin) {
+                return reply.code(403).send({ error: 'Only admins can update board background' });
+            }
         }
 
         // Validate background value (predefined colors/gradients)
@@ -375,7 +402,7 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
             'gradient-ocean', 'gradient-forest', 'none'
         ];
 
-        if (!validBackgrounds.includes(background)) {
+        if (!validBackgrounds.includes(background) && !background.startsWith('http')) {
             return reply.code(400).send({ error: 'Invalid background value' });
         }
 

@@ -57,6 +57,11 @@ export class HomePageComponent implements OnInit {
     workspaces = signal<WorkspaceLite[]>([]);
     boards = this.store.boards; // Signal<Board[]>
     loading = signal<boolean>(true);
+    sidebarOpen = signal<boolean>(false);
+
+    toggleSidebar() {
+        this.sidebarOpen.update(v => !v);
+    }
 
     // Recent
     recentBoards = computed(() => {

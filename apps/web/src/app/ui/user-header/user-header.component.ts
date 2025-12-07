@@ -51,24 +51,22 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
     `],
     template: `
         <header class="hdr w-full relative z-50">
-            <div class="mx-auto max-w-full px-4 py-2 flex items-center justify-between relative">
+            <div class="mx-auto max-w-full px-4 py-2 flex items-center justify-between relative min-h-[52px]">
 
                 <!-- Left: Logo & Board Switcher -->
-                <div class="flex items-center gap-3 shrink-0">
+                <div class="flex items-center gap-3 shrink-0" [class.hidden]="mobileSearchOpen()">
                     <a class="flex items-center gap-2.5 group" [routerLink]="['/']">
-                        <!-- New Logo: Abstract 'e' / Board columns -->
+                        <!-- Logo Icon -->
                         <div class="relative w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors backdrop-blur-sm shadow-sm ring-1 ring-white/20">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white drop-shadow-sm">
-                                <!-- Left column (shorter) -->
                                 <rect x="4" y="4" width="6" height="16" rx="2" fill="currentColor" fill-opacity="0.9" />
-                                <!-- Right column (top part) -->
                                 <rect x="14" y="4" width="6" height="7" rx="2" fill="currentColor" fill-opacity="0.7" />
-                                <!-- Right column (bottom part) -->
                                 <rect x="14" y="13" width="6" height="7" rx="2" fill="currentColor" fill-opacity="0.5" />
                             </svg>
                         </div>
                         
-                        <span class="text-2xl font-black tracking-tighter text-white drop-shadow-sm group-hover:opacity-90 transition-opacity"
+                        <!-- Text hidden on mobile -->
+                        <span class="hidden md:block text-2xl font-black tracking-tighter text-white drop-shadow-sm group-hover:opacity-90 transition-opacity"
                               style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
                             ello
                         </span>
@@ -83,14 +81,24 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                 </div>
 
                 <!-- Center: Create & Search -->
-                <div class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 w-full max-w-[600px] justify-center">
+                <!-- On mobile: taking full width if search open, or just an icon property -->
+                <div class="flex items-center gap-2" [ngClass]="{
+                    'absolute inset-0 bg-[var(--board-header,#026AA7)] z-20 px-4 justify-center': mobileSearchOpen(),
+                    'absolute left-1/2 -translate-x-1/2 hidden md:flex': !mobileSearchOpen()
+                }">
+                    <!-- Back button for mobile search -->
+                    <button *ngIf="mobileSearchOpen()" (click)="toggleMobileSearch()" class="text-white mr-2 md:hidden">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+                    </button>
+
                     <header-create-menu
+                        class="hidden md:block"
                         (createBoard)="onCreateBoardClick()"
                         (createCard)="onAddCardClick()">
                     </header-create-menu>
 
-                    <!-- Search -->
-                    <div class="flex-1 max-w-[400px] relative">
+                    <!-- Search Input -->
+                    <div class="flex-1 w-full max-w-[400px] relative">
                         <div class="relative">
                             <input
                                 class="w-full rounded-md px-3 py-1.5 pl-9 text-sm text-[#172b4d] bg-white/90 focus:bg-white transition-colors border-none outline-none ring-2 ring-transparent focus:ring-blue-300/50"
@@ -99,15 +107,16 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                                 (ngModelChange)="query.set($event); onSearch()"
                                 (keydown.enter)="onEnter()"
                                 (blur)="onBlur($event)"
+                                #searchInput
                             />
                             <!-- Search Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </div>
-
-                        <!-- Search Results Dropdown -->
+                        
+                        <!-- Results Dropdown -->
                         <div *ngIf="query().trim().length > 0 && showResults()" 
-                             class="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-xl border border-gray-200 overflow-hidden z-50 max-h-[400px] overflow-y-auto">
-                            
+                             class="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-xl border border-gray-200 overflow-hidden z-20 max-h-[80vh] overflow-y-auto">
+                             
                             <div *ngIf="filteredBoards().length === 0" class="p-3 text-sm text-gray-500 text-center">
                                 No boards found
                             </div>
@@ -117,7 +126,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                                     {{ group.workspaceName }}
                                 </div>
                                 <button *ngFor="let board of group.boards"
-                                        (click)="onSelectBoard(board.id)"
+                                        (click)="onSelectBoard(board.id); toggleMobileSearch()"
                                         class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 transition-colors">
                                     <div class="w-4 h-4 rounded-sm bg-gray-200 shrink-0" 
                                          [style.background]="getBoardColor(board.background)"></div>
@@ -128,8 +137,18 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </div>
                 </div>
 
-                <!-- Right: Notifications & User -->
-                <div class="ml-auto flex items-center gap-3 shrink-0">
+                <!-- Right: Notifications, Search Toggle (Mobile), User -->
+                <div class="ml-auto flex items-center gap-2 sm:gap-3 shrink-0" [class.hidden]="mobileSearchOpen()">
+                    <!-- Mobile Search Toggle -->
+                    <button class="md:hidden pill p-2 text-white hover:bg-white/20 transition-colors rounded-md" (click)="toggleMobileSearch()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </button>
+
+                    <!-- Mobile Create Button (simplified) -->
+                    <button class="md:hidden pill p-2 text-white hover:bg-white/20 transition-colors rounded-md" (click)="onCreateBoardClick()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    </button>
+
                     <header-notifications
                         [unreadCount]="unreadCount()"
                         [notifications]="notifications()"
@@ -147,7 +166,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                 </div>
             </div>
 
-            <!-- Mount modals once; they overlay the whole page -->
+            <!-- Mount modals -->
             <board-create-modal></board-create-modal>
             <card-create-modal></card-create-modal>
             <user-settings-modal></user-settings-modal>
@@ -235,6 +254,12 @@ export class UserHeaderComponent {
 
     // Search state
     showResults = signal(false);
+    mobileSearchOpen = signal(false);
+
+    toggleMobileSearch() {
+        this.mobileSearchOpen.update(v => !v);
+        // focus input next tick if opening?
+    }
 
     filteredBoards = computed(() => {
         const q = this.query().trim().toLowerCase();

@@ -58,15 +58,45 @@ export class BoardMenuComponent {
     currentUserRole = computed(() => {
         const currentUserId = this.authService.user()?.id;
         if (!currentUserId) return null;
-        const boardId = this.store.currentBoardId();
-        if (!boardId) return null;
-        const board = this.store.boards().find(b => b.id === boardId);
-        return board?.members?.find(m => m.userId === currentUserId)?.role || null;
+
+        // Use the separately loaded members list from the store
+        const members = this.store.members();
+        return members.find(m => m.userId === currentUserId || m.id === currentUserId)?.role || null;
     });
+
+    myWorkspaces = signal<any[]>([]);
+
+    constructor() {
+        this.fetchMyWorkspaces();
+    }
+
+    async fetchMyWorkspaces() {
+        try {
+            const ws = await this.workspacesApi.list();
+            this.myWorkspaces.set(ws);
+        } catch (e) {
+            console.error('Failed to load workspaces for permissions check', e);
+        }
+    }
 
     canEditBoard = computed(() => {
         const role = this.currentUserRole();
-        return role === 'owner' || role === 'admin';
+        if (role === 'owner' || role === 'admin') return true;
+
+        // Fallback: Check if user is Workspace Admin/Owner
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
+
+        const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
+        return ws?.role === 'owner' || ws?.role === 'admin';
+    });
+
+    // Computed signal to track current board's background for reactivity
+    currentBoardBackground = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        return board?.background || null;
     });
 
     canManageMember(member: BoardMemberLite): boolean {
@@ -145,6 +175,13 @@ export class BoardMenuComponent {
         { id: 'gradient-sunset', name: 'Sunset', class: 'bg-gradient-to-br from-orange-400 to-red-500' },
         { id: 'gradient-forest', name: 'Forest', class: 'bg-gradient-to-br from-green-400 to-emerald-600' },
         { id: 'gradient-ocean', name: 'Deep Ocean', class: 'bg-gradient-to-br from-cyan-500 to-blue-700' },
+    ];
+
+    images = [
+        'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1000&q=80'
     ];
 
     open() {
@@ -244,9 +281,7 @@ export class BoardMenuComponent {
     }
 
     isBackgroundSelected(backgroundId: string): boolean {
-        const boardId = this.store.currentBoardId();
-        const board = this.store.boards().find(b => b.id === boardId);
-        return board?.background === backgroundId;
+        return this.currentBoardBackground() === backgroundId;
     }
 
     async showActivity() {

@@ -149,8 +149,52 @@
 
 @media (max-width: 1024px) {
     .cm-body {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 16px;
+    }
+
+    /* On mobile/tablet, flatten columns and reorder sections */
+    .cm-col-main,
+    .cm-col-side {
+        display: contents;
+    }
+
+    /* Mobile order: 1.Description 2.CardDetails 3.AddToCard 4.Actions 5.Comments 6.Activity */
+    .cm-col-main>section:nth-child(1) {
+        order: 1;
+    }
+
+    /* Description */
+    .cm-col-side>section:nth-child(1) {
+        order: 2;
+    }
+
+    /* Card Details */
+    .cm-col-side>.space-y-6>section:nth-child(1) {
+        order: 3;
+    }
+
+    /* Add to Card */
+    .cm-col-side>.space-y-6>section:last-child {
+        order: 4;
+    }
+
+    /* Actions */
+    .cm-col-main>section:nth-child(2) {
+        order: 5;
+    }
+
+    /* Comments */
+    .cm-col-main>section:nth-child(3) {
+        order: 6;
+    }
+
+    /* Activity */
+
+    /* Also need to flatten the space-y-6 container */
+    .cm-col-side>.space-y-6 {
+        display: contents;
     }
 }
 

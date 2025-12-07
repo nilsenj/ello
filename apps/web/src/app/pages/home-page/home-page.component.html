@@ -1,9 +1,22 @@
 <div class="flex flex-col h-screen bg-white">
     <user-header></user-header>
     <div class="flex flex-1 overflow-hidden">
-        <!-- Sidebar -->
-        <workspace-sidebar [workspaces]="workspaces()" [selectedWorkspaceId]="selectedWorkspaceId()"
-            (workspaceSelected)="onWorkspaceSelected($event)" (createWorkspace)="openCreateWorkspace()"
+        <!-- Mobile Sidebar Toggle -->
+        <div class="md:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-white">
+            <span class="font-semibold text-gray-700">Menu</span>
+            <button (click)="toggleSidebar()" class="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-full">
+                <lucide-icon [img]="sidebarOpen() ? XIcon : SettingsIcon" class="w-5 h-5"></lucide-icon>
+            </button>
+        </div>
+
+        <!-- Sidebar (Desktop: Block, Mobile: Drawer) -->
+        <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" *ngIf="sidebarOpen()"
+            (click)="toggleSidebar()"></div>
+
+        <workspace-sidebar [class.translate-x-0]="sidebarOpen()" [class.-translate-x-full]="!sidebarOpen()"
+            class="transform transition-transform duration-300 fixed md:relative z-50 md:z-0 md:translate-x-0 h-full md:h-auto"
+            [workspaces]="workspaces()" [selectedWorkspaceId]="selectedWorkspaceId()"
+            (workspaceSelected)="onWorkspaceSelected($event); toggleSidebar()" (createWorkspace)="openCreateWorkspace()"
             (openSettings)="openWorkspaceSettings($event)" (openMembers)="openWorkspaceMembers($event)"
             (openTemplates)="openTemplates()">
         </workspace-sidebar>

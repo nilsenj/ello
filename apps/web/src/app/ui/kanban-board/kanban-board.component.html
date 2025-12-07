@@ -52,11 +52,20 @@
             </svg>
         </div>
 
+        <!-- Add List Button (Desktop) -->
+        <button
+            class="hidden md:flex ml-auto text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium mr-2"
+            (click)="focusNewList()">
+            <span>+</span>
+            <span>Add list</span>
+        </button>
+
         <!-- Board Menu Button -->
         <button
-            class="ml-auto text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition"
+            class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium ml-auto md:ml-0"
             (click)="menu.open()">
-            <span>•••</span>
+            <span class="hidden sm:inline">•••</span>
+            <span class="sm:hidden">Menu</span>
             <span class="hidden sm:inline">Show menu</span>
         </button>
     </div>
@@ -64,14 +73,24 @@
 
 <board-menu #menu></board-menu>
 
-<!-- Mobile filter -->
-<div class="px-4 pt-3 md:hidden">
-    <input class="w-full rounded-md bg-white/90 px-3 py-2 text-sm  border-none outline-none" type="search"
-        placeholder="Filter cards…" [(ngModel)]="filter" />
+<!-- Mobile Toolbar -->
+<div class="flex items-center gap-2 px-4 py-2 bg-white/5 md:hidden">
+    <!-- Mobile Add List -->
+    <button class="flex-1 text-sm bg-white/90 text-gray-800 px-3 py-1.5 rounded shadow-sm font-medium"
+        (click)="focusNewList()">
+        + Add list
+    </button>
+
+    <!-- Mobile Filter Toggle (simple input for now) -->
+    <div class="flex-1">
+        <input class="w-full rounded-md bg-white/90 px-3 py-1.5 text-sm border-none outline-none" type="search"
+            placeholder="Filter cards…" [(ngModel)]="filter" />
+    </div>
 </div>
 
 <!-- Lists -->
-<div class="p-4 overflow-x-auto min-h-screen transition-colors" [ngClass]="boardBackground()">
+<div class="p-4 overflow-x-auto min-h-screen transition-colors" [ngClass]="boardBackground()"
+    [style.backgroundImage]="boardBackgroundStyle()">
     <!-- Horizontal list reordering -->
     <div cdkDropList [cdkDropListData]="lists()" [cdkDropListOrientation]="'horizontal'"
         (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">
@@ -98,23 +117,26 @@
         </div>
 
         <!-- Add list -->
-        <section class="w-72 shrink-0 rounded-xl bg-white/30 p-3 text-white/95">
+        <section class="w-72 shrink-0 rounded-xl p-3 transition-colors"
+            [ngClass]="isLightBoard() ? 'bg-black/5 hover:bg-black/10' : 'bg-white/30 text-white/95'">
             <div *ngIf="!newListTitle">
-                <button class="w-full rounded-md bg-white/30 hover:bg-white/40 py-2"
+                <button class="w-full rounded-md py-2 transition-colors text-left pl-2 font-medium"
+                    [ngClass]="isLightBoard() ? 'text-gray-600 hover:text-gray-800 hover:bg-black/5' : 'bg-white/30 hover:bg-white/40'"
                     (click)="newListTitle = 'New list'">
                     + Add another list
                 </button>
             </div>
 
             <div *ngIf="newListTitle" class="space-y-2">
-                <input class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
+                <input #newListInput
+                    class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
                     [(ngModel)]="newListTitle" (keydown.enter)="addList()" placeholder="Enter list title…" />
                 <div class="flex gap-2">
                     <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-sm"
                         [disabled]="!newListTitle.trim()" (click)="addList()">Add list
                     </button>
                     <button class="rounded-md bg-transparent px-3 py-1 text-sm hover:underline"
-                        (click)="newListTitle = ''">Cancel
+                        [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">Cancel
                     </button>
                 </div>
             </div>

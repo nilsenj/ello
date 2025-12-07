@@ -36,12 +36,27 @@ export class BoardCreateModalComponent {
     desc = signal(''); // <-- NEW: description text
     visibility = signal<'private' | 'workspace' | 'public'>('private');
     bgType = signal<'color' | 'image' | 'none'>('color'); // 'none' as safe default
-    bgValue = signal<string>('#0079bf'); // default Trello-like blue
+    bgValue = signal<string>('blue'); // default Trello-like blue ID
 
     // presets (Trello-esque)
-    colorPresets = ['#0079bf', '#d29034', '#519839', '#b04632', '#89609e', '#cd5a91', '#4bbf6b', '#00aecc', '#838c91'];
+    // Unified presets matching KanbanBoard and BoardMenu
+    colorPresets = [
+        { id: 'blue', value: '#0079bf' },
+        { id: 'orange', value: '#d29034' },
+        { id: 'green', value: '#519839' },
+        { id: 'red', value: '#b04632' },
+        { id: 'purple', value: '#89609e' },
+        { id: 'pink', value: '#cd5a91' },
+        { id: 'gradient-blue', value: 'linear-gradient(to bottom right, #60a5fa, #06b6d4)' },
+        { id: 'gradient-purple', value: 'linear-gradient(to bottom right, #c084fc, #ec4899)' },
+        { id: 'gradient-sunset', value: 'linear-gradient(to bottom right, #fb923c, #ef4444)' }
+    ];
+
     imagePresets = [
-        // put your CDN/unsplash thumbs here; fallback to colors if empty
+        'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1000&q=80'
     ];
 
     // background picker state you already use in template
@@ -116,9 +131,17 @@ export class BoardCreateModalComponent {
         }
     }
 
-    pickColor(hex: string) {
+    pickColor(id: string) {
         this.bgType.set('color');
-        this.bgValue.set(hex);
+        this.bgValue.set(id);
+    }
+
+    getPreviewStyle() {
+        if (this.bgType() === 'image') {
+            return `url(${this.bgValue()}) center / cover`;
+        }
+        const preset = this.colorPresets.find(c => c.id === this.bgValue());
+        return preset ? preset.value : '#0079bf';
     }
 
     pickImage(url: string) {
@@ -130,6 +153,6 @@ export class BoardCreateModalComponent {
         this.name.set('');
         this.visibility.set('private');
         this.bgType.set('color');
-        this.bgValue.set('#0079bf');
+        this.bgValue.set('blue');
     }
 }

@@ -90,8 +90,8 @@
 
         <!-- Background View -->
         <div *ngIf="view() === 'background'" class="p-3">
-            <h3 class="font-semibold text-sm mb-3">Board Background</h3>
-            <div class="grid grid-cols-2 gap-2">
+            <h3 class="font-semibold text-sm mb-3">Colors</h3>
+            <div class="grid grid-cols-2 gap-2 mb-6">
                 <button *ngFor="let bg of backgrounds"
                     class="relative h-20 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2"
                     [class.border-blue-500]="isBackgroundSelected(bg.id)"
@@ -101,6 +101,15 @@
                         class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2 rounded-b-md">
                         {{ bg.name }}
                     </div>
+                </button>
+            </div>
+
+            <h3 class="font-semibold text-sm mb-3">Photos</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button *ngFor="let img of images"
+                    class="relative h-20 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2 bg-cover bg-center"
+                    [style.backgroundImage]="'url(' + img + ')'" [class.border-blue-500]="isBackgroundSelected(img)"
+                    [class.border-transparent]="!isBackgroundSelected(img)" (click)="selectBackground(img)">
                 </button>
             </div>
         </div>
@@ -190,8 +199,8 @@
         <div *ngIf="view() === 'members'" class="p-3">
             <h3 class="font-semibold text-sm mb-3">Board Members</h3>
 
-            <!-- Invite Form -->
-            <div class="mb-4 p-3 bg-slate-50 rounded-md border border-slate-200 relative">
+            <!-- Invite Form (Admins/Owners only) -->
+            <div *ngIf="canEditBoard()" class="mb-4 p-3 bg-slate-50 rounded-md border border-slate-200 relative">
                 <div class="text-xs font-medium text-slate-500 mb-2">Invite to board</div>
                 <div class="flex gap-2 mb-2">
                     <div class="flex-1 relative">

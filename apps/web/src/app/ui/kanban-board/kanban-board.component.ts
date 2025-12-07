@@ -1,11 +1,12 @@
-import { Component, computed, effect, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
     CdkDrag,
-    CdkDragDrop, CdkDragPlaceholder, CdkDragPreview,
+    CdkDragDrop,
+    CdkDragPlaceholder,
+    CdkDragPreview,
     CdkDropList,
-    CdkDropListGroup,
     moveItemInArray,
     transferArrayItem,
 } from '@angular/cdk/drag-drop';
@@ -18,13 +19,14 @@ import { SocketService } from '../../data/socket.service';
 import { ListColumnComponent } from "../list-column/list-column.component";
 import { CardModalService } from "../card-modal/card-modal.service";
 import { ActivatedRoute, Router } from "@angular/router";
-import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { CardModalComponent } from "../card-modal/card-modal.component";
+
+import { BoardMenuComponent } from "../board-menu/board-menu.component";
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, BoardMenuComponent, NgClass], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -41,6 +43,21 @@ export class KanbanBoardComponent implements OnInit {
 
     // popovers per card
     showLabels: Record<string, boolean> = {};
+
+    @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
+
+    focusNewList() {
+        // scroll to rightmost
+        const scrollContainer = document.querySelector('.overflow-x-auto');
+        if (scrollContainer) {
+            scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
+        }
+        // focus input
+        setTimeout(() => {
+            this.newListInput?.nativeElement?.focus();
+            if (!this.newListTitle) this.newListTitle = ''; // Ensure field maps to something to trigger UI if using ngIf
+        }, 300);
+    }
 
     // ui state
     newListTitle = '';
@@ -185,6 +202,11 @@ export class KanbanBoardComponent implements OnInit {
         const board = this.store.boards().find(b => b.id === boardId);
         const bg = board?.background;
 
+        // If it's an image URL, don't apply CSS classes (use inline style instead)
+        if (bg && bg.startsWith('http')) {
+            return 'bg-cover bg-center bg-no-repeat';
+        }
+
         const bgMap: Record<string, string> = {
             'none': 'bg-slate-50',
             'blue': 'bg-blue-500',
@@ -202,6 +224,24 @@ export class KanbanBoardComponent implements OnInit {
 
         return bg && bgMap[bg] ? bgMap[bg] : 'bg-slate-50';
     });
+
+    // Computed signal for image background style (returns null or url(...) style)
+    boardBackgroundStyle = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        const bg = board?.background;
+
+        if (bg && bg.startsWith('http')) {
+            return `url(${bg})`;
+        }
+        return null;
+    });
+
+    isLightBoard = computed(() => {
+        const board = this.store.boards().find(b => b.id === this.store.currentBoardId());
+        return !board?.background || board.background === 'none';
+    });
+
     // whenever modal opens/closes, sync query param
     ngOnInit() {
     }

@@ -4,6 +4,7 @@ import { ensureUser } from '../utils/ensure-user.js';
 import { mid } from '../utils/rank.js';
 import { canCreateBoards, canEditSettings, canInviteMembers, isEmailDomainAllowed } from '../utils/workspace-permissions.js';
 import { EmailService } from '../services/email.js';
+import { NotificationService } from '../services/notification-service.js';
 
 const DEFAULT_LABELS = [
     { name: 'green', color: '#61BD4F' },
@@ -285,6 +286,15 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 role
             }
         });
+
+        // Notify the new member via Socket.IO
+        const notificationService = new NotificationService(prisma);
+        notificationService.notifyWorkspaceInvite({
+            userId: targetUser.id,
+            actorId: user.id,
+            workspaceId
+        }).catch(console.error);
+
         return { ...member, status: 'active' };
     });
 
@@ -372,9 +382,20 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
         if (!member) return reply.code(403).send({ error: 'Forbidden' });
 
-        // Workspace members see ALL boards in the workspace
+        const isWorkspaceAdmin = member.role === 'owner' || member.role === 'admin';
+
+        // Filter: Admin sees all. Others see Public, Workspace, or Board-Member boards.
+        const where: any = { workspaceId };
+        if (!isWorkspaceAdmin) {
+            where.OR = [
+                { visibility: 'public' },
+                { visibility: 'workspace' },
+                { members: { some: { userId: user.id } } }
+            ];
+        }
+
         const boards = await prisma.board.findMany({
-            where: { workspaceId },
+            where,
             select: { id: true, name: true, background: true, description: true, createdAt: true, visibility: true },
             orderBy: { createdAt: 'desc' }
         });
