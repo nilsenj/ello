@@ -2,21 +2,26 @@ import { defineConfig } from 'vite'
 import angular from '@analogjs/vite-plugin-angular'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig(({ mode }) => {
+    console.log(`Building with mode: ${mode}`); // Debug log
+
     return {
         plugins: [
             angular({
                 jit: false,
-                tsconfig: fileURLToPath(new URL('./tsconfig.app.json', import.meta.url)) as string,
+                tsconfig: resolve(__dirname, 'tsconfig.app.json'),
             }) as any,
             tsconfigPaths() as any
         ],
         resolve: {
             alias: {
                 ...(mode === 'production' ? {
-                    [fileURLToPath(new URL('./src/environments/environment.ts', import.meta.url))]:
-                        fileURLToPath(new URL('./src/environments/environment.prod.ts', import.meta.url)),
+                    // Force replace the specific environment file
+                    [resolve(__dirname, 'src/environments/environment.ts')]: resolve(__dirname, 'src/environments/environment.prod.ts'),
                 } : {}),
             }
         },
@@ -32,6 +37,14 @@ export default defineConfig(({ mode }) => {
         },
         build: {
             modulePreload: false
-        }
+        },
+        test: {
+            globals: true,
+            environment: 'jsdom',
+            setupFiles: ['src/test-setup.ts'],
+            include: ['**/*.spec.ts'],
+            reporters: ['default'],
+            pool: 'forks',
+        },
     };
 })
