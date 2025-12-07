@@ -12,6 +12,7 @@ export class ApiBaseService {
     private http = inject(HttpClient);
 
     private getUrl(path: string): string {
+        if (path.startsWith('http')) return path;
         return `${environment.apiOrigin}${path}`;
     }
 
