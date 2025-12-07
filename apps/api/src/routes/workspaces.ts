@@ -186,9 +186,14 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         // Only owners can delete
         const member = await prisma.workspaceMember.findUnique({
             where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+            include: { workspace: true }
         });
         if (!member || member.role !== 'owner') {
             return reply.code(403).send({ error: 'Only owners can delete workspace' });
+        }
+
+        if (member.workspace.isPersonal) {
+            return reply.code(403).send({ error: 'Cannot delete personal workspace' });
         }
 
         await prisma.workspace.delete({ where: { id } });

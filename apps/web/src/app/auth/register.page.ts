@@ -13,17 +13,30 @@ import { AuthService } from './auth.service';
     <h1 class="text-xl font-semibold mb-4">Create account</h1>
 
     <form #f="ngForm" (ngSubmit)="submit(f)" class="space-y-3">
-      <input class="w-full border rounded p-2" name="name" [(ngModel)]="name" placeholder="Your name" />
-      <input class="w-full border rounded p-2" name="email" [(ngModel)]="email" type="email" required placeholder="Email" />
-      <input class="w-full border rounded p-2" name="password" [(ngModel)]="password" type="password" required placeholder="Password" />
-      <button class="w-full bg-black text-white rounded py-2" [disabled]="pending()">Sign up</button>
+      <div class="space-y-1">
+        <input class="w-full border rounded p-2" name="name" [(ngModel)]="name" required #nameCtrl="ngModel" placeholder="Your name" />
+        <p *ngIf="nameCtrl.touched && nameCtrl.invalid" class="text-xs text-red-500">Name is required.</p>
+      </div>
+
+      <div class="space-y-1">
+        <input class="w-full border rounded p-2" name="email" [(ngModel)]="email" type="email" required email #emailCtrl="ngModel" placeholder="Email" />
+        <p *ngIf="emailCtrl.touched && emailCtrl.invalid" class="text-xs text-red-500">Please enter a valid email.</p>
+      </div>
+
+      <div class="space-y-1">
+        <input class="w-full border rounded p-2" name="password" [(ngModel)]="password" type="password" required minlength="6" #passCtrl="ngModel" placeholder="Password" />
+        <p *ngIf="passCtrl.touched && passCtrl.errors?.['required']" class="text-xs text-red-500">Password is required.</p>
+        <p *ngIf="passCtrl.touched && passCtrl.errors?.['minlength']" class="text-xs text-red-500">Password must be at least 6 characters.</p>
+      </div>
+
+      <button class="w-full bg-black text-white rounded py-2 hover:bg-gray-800 disabled:opacity-50" [disabled]="f.invalid || pending()">Sign up</button>
     </form>
 
     <div class="mt-3 text-sm">
       Have an account? <a routerLink="/login" class="underline">Log in</a>
     </div>
 
-    <p *ngIf="error()" class="text-red-600 mt-3">{{ error() }}</p>
+    <p *ngIf="error()" class="text-red-600 mt-3 text-sm">{{ error() }}</p>
   </div>
   `
 })

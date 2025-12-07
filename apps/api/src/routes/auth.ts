@@ -33,6 +33,18 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
         const user = await prisma.user.create({ data: { email, name, password: hash } });
 
+        // Auto-create Personal Workspace
+        const workspaceName = name ? `${name}'s Workspace` : 'My Workspace';
+        const personalWorkspace = await prisma.workspace.create({
+            data: {
+                name: workspaceName,
+                isPersonal: true,
+                members: {
+                    create: { userId: user.id, role: 'owner' }
+                }
+            }
+        });
+
         // Check for pending invitations
         const pendingInvites = await prisma.pendingInvitation.findMany({ where: { email } });
         for (const invite of pendingInvites) {

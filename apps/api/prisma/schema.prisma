@@ -38,6 +38,7 @@ model Workspace {
   
   // Visibility & Permission Settings
   visibility  WorkspaceVisibility @default(private)
+  isPersonal  Boolean             @default(false)
   
   // Permission Settings
   whoCanCreateBoards  PermissionLevel @default(members)
