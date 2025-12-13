@@ -85,7 +85,7 @@ export class WorkspacesService {
     }
 
     /** POST /api/workspaces/:id/members */
-    async addMember(id: string, email: string, role: 'admin' | 'member' | 'viewer' = 'member'): Promise<WorkspaceMember> {
+    async addMember(id: string, email: string, role: 'owner' | 'admin' | 'member' | 'viewer' = 'member'): Promise<WorkspaceMember> {
         return this.api.post<WorkspaceMember>(`/api/workspaces/${id}/members`, { email, role });
     }
 

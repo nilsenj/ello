@@ -14,6 +14,7 @@ model User {
   name      String?
   avatar    String?
   password  String
+  isPending Boolean  @default(false)
   createdAt DateTime @default(now())
 
   workspaces    WorkspaceMember[]
@@ -198,10 +199,36 @@ model Card {
   watchedBy   WatchedCard[]
   isDone      Boolean      @default(false)
 
+  // Card relations for diagram visualization
+  sourceRelations CardRelation[] @relation("sourceRelations")
+  targetRelations CardRelation[] @relation("targetRelations")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([listId, rank])
+}
+
+// Card-to-card relations for diagram visualization
+enum RelationType {
+  blocks      // Source blocks target from progressing
+  depends_on  // Source depends on target being completed
+  relates_to  // General relation
+  duplicates  // Source duplicates target
+}
+
+model CardRelation {
+  id           String       @id @default(cuid())
+  type         RelationType
+  sourceCard   Card         @relation("sourceRelations", fields: [sourceCardId], references: [id], onDelete: Cascade)
+  sourceCardId String
+  targetCard   Card         @relation("targetRelations", fields: [targetCardId], references: [id], onDelete: Cascade)
+  targetCardId String
+  createdAt    DateTime     @default(now())
+
+  @@unique([sourceCardId, targetCardId, type])
+  @@index([sourceCardId])
+  @@index([targetCardId])
 }
 
 model Label {

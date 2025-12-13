@@ -52,13 +52,78 @@
             </svg>
         </div>
 
-        <!-- Add List Button (Desktop) -->
-        <button
-            class="hidden md:flex ml-auto text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium mr-2"
-            (click)="focusNewList()">
-            <span>+</span>
-            <span>Add list</span>
-        </button>
+
+        <!-- View Dropdown -->
+        <div class="relative ml-auto hidden md:block">
+            <button
+                class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
+                (click)="toggleViewMenu()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16m-7 6h7" />
+                </svg>
+                <span>View</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 opacity-80" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+
+            <!-- Backdrop -->
+            <div *ngIf="showViewMenu" class="fixed inset-0 z-20 cursor-default" (click)="closeViewMenu()"></div>
+
+            <!-- Menu -->
+            <div *ngIf="showViewMenu"
+                class="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30 border border-gray-200 text-gray-800">
+
+                <!-- Board View Link -->
+                <a [routerLink]="[]" [queryParams]="{view: null}" queryParamsHandling="merge" (click)="closeViewMenu()"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                    [class.bg-blue-50]="currentView() === 'board'" [class.text-blue-700]="currentView() === 'board'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                        [class.text-blue-700]="currentView() === 'board'"
+                        [class.text-slate-500]="currentView() !== 'board'" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    </svg>
+                    Board View
+                </a>
+
+                <!-- Table View Link -->
+                <a [routerLink]="[]" [queryParams]="{view: 'table'}" queryParamsHandling="merge"
+                    (click)="closeViewMenu()"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                    [class.bg-blue-50]="currentView() === 'table'" [class.text-blue-700]="currentView() === 'table'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                        [class.text-blue-700]="currentView() === 'table'"
+                        [class.text-slate-500]="currentView() !== 'table'" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Table View
+                </a>
+
+                <!-- Calendar View Link -->
+                <a [routerLink]="[]" [queryParams]="{view: 'calendar'}" queryParamsHandling="merge"
+                    (click)="closeViewMenu()"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                    [class.bg-blue-50]="currentView() === 'calendar'"
+                    [class.text-blue-700]="currentView() === 'calendar'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                        [class.text-blue-700]="currentView() === 'calendar'"
+                        [class.text-slate-500]="currentView() !== 'calendar'" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Calendar
+                </a>
+            </div>
+        </div>
 
         <!-- Board Menu Button -->
         <button
@@ -88,9 +153,17 @@
     </div>
 </div>
 
-<!-- Lists -->
-<div class="p-4 overflow-x-auto min-h-screen transition-colors" [ngClass]="boardBackground()"
-    [style.backgroundImage]="boardBackgroundStyle()">
+<!-- Table View -->
+<board-table-view *ngIf="currentView() === 'table'" [cards]="getAllFilteredCards()"
+    class="flex-1 overflow-hidden bg-slate-50"></board-table-view>
+
+<!-- Calendar View -->
+<board-calendar-view *ngIf="currentView() === 'calendar'" [cards]="getAllFilteredCards()"
+    class="flex-1 overflow-hidden bg-white"></board-calendar-view>
+
+<!-- Lists (Board View) -->
+<div *ngIf="currentView() === 'board'" class="p-4 overflow-x-auto min-h-screen transition-colors"
+    [ngClass]="boardBackground()" [style.backgroundImage]="boardBackgroundStyle()">
     <!-- Horizontal list reordering -->
     <div cdkDropList [cdkDropListData]="lists()" [cdkDropListOrientation]="'horizontal'"
         (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">

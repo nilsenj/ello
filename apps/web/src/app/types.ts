@@ -40,7 +40,7 @@ export type Card = {
     id: string; title: string;
     description?: string;
     rank: string;
-    estimate?: number;
+    estimate?: number | null;
     startDate?: string | null;
     dueDate?: string | null;
     assignees?: AssigneeDto[];

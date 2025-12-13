@@ -241,31 +241,87 @@
 
                 <!-- Panels for Add to Card -->
                 <!-- Labels -->
-                <section *ngIf="isPanelOpen('labels')">
-                    <div class="cm-section-title flex items-center gap-2">
-                        <span class="inline-flex items-center">
-                            <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
-                            Labels
-                        </span>
-                        <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
-                            <lucide-icon [img]="XIcon"></lucide-icon>
-                            Close
-                        </button>
-                    </div>
+                <section *ngIf="isPanelOpen('labels')" data-panel="labels">
+                    <ng-container *ngIf="!isEditingLabel(); else editLabelTpl">
+                        <div class="cm-section-title flex items-center gap-2">
+                            <span class="inline-flex items-center">
+                                <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
+                                Labels
+                            </span>
+                            <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
+                                <lucide-icon [img]="XIcon"></lucide-icon>
+                                Close
+                            </button>
+                        </div>
 
-                    <div class="cm-labels">
-                        <button *ngFor="let lb of (store.labels() || [])" class="cm-label"
-                            [class.is-selected]="selectedLabelIds().has(lb.id)" [style.--c]="lb.color"
-                            (click)="toggleLabel(lb.id)">
-                            <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
-                            <span>{{ lb.name }}</span>
-                            <span class="cm-check" *ngIf="selectedLabelIds().has(lb.id)">✓</span>
+                        <div class="cm-labels">
+                            <div *ngFor="let lb of (store.labels() || [])" class="flex gap-1 items-stretch group/lb">
+                                <button class="cm-label flex-1" [class.is-selected]="selectedLabelIds().has(lb.id)"
+                                    [style.--c]="lb.color" (click)="toggleLabel(lb.id)">
+                                    <span class="cm-dot" [style.backgroundColor]="lb.color"></span>
+                                    <span>{{ lb.name }}</span>
+                                    <span class="cm-check" *ngIf="selectedLabelIds().has(lb.id)">✓</span>
+                                </button>
+                                <button
+                                    class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded opacity-0 group-hover/lb:opacity-100 transition-opacity"
+                                    (click)="startEditLabel(lb)" title="Edit label">
+                                    <lucide-icon [img]="PencilIcon" class="w-4 h-4"></lucide-icon>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="cm-btn w-full justify-center mt-3 bg-slate-100 hover:bg-slate-200 text-slate-600"
+                            (click)="startCreateLabel()">
+                            Create a new label
                         </button>
-                    </div>
+                    </ng-container>
+
+                    <ng-template #editLabelTpl>
+                        <div class="cm-section-title flex items-center gap-2">
+                            <button class="cm-icon-btn -ml-1 mr-1" (click)="cancelLabelEdit()">
+                                <lucide-icon [img]="ChevronLeftIcon" class="w-5 h-5"></lucide-icon>
+                            </button>
+                            {{ labelDraftId() ? 'Edit label' : 'Create label' }}
+                        </div>
+
+                        <div class="space-y-4">
+                            <label class="cm-field">
+                                <span class="cm-field-label">Name</span>
+                                <input class="cm-input" placeholder="Label name" [ngModel]="labelNameDraft()"
+                                    (ngModelChange)="labelNameDraft.set($event)" autoFocus />
+                            </label>
+
+                            <div class="cm-field">
+                                <span class="cm-field-label">Select a color</span>
+                                <div class="grid grid-cols-5 gap-2">
+                                    <button *ngFor="let c of labelColors" type="button"
+                                        class="h-8 rounded cursor-pointer relative ring-offset-1 transition-all"
+                                        [style.backgroundColor]="c" [class.ring-2]="labelColorDraft() === c"
+                                        [class.ring-blue-500]="labelColorDraft() === c"
+                                        (click)="labelColorDraft.set(c)">
+                                        <lucide-icon [img]="CheckIcon" *ngIf="labelColorDraft() === c"
+                                            class="absolute inset-0 m-auto text-white w-4 h-4"></lucide-icon>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2">
+                                <button class="cm-btn-primary" (click)="saveLabel()"
+                                    [disabled]="!labelNameDraft().trim()">
+                                    {{ labelDraftId() ? 'Save' : 'Create' }}
+                                </button>
+
+                                <button *ngIf="labelDraftId()"
+                                    class="cm-btn text-red-600 hover:bg-red-50 border-red-200" (click)="deleteLabel()">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </ng-template>
                 </section>
 
                 <!-- Dates -->
-                <section *ngIf="isPanelOpen('dates')">
+                <section *ngIf="isPanelOpen('dates')" data-panel="dates">
                     <div class="cm-section-title flex items-center gap-2">
                         <span class="inline-flex items-center">
                             <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
@@ -293,14 +349,15 @@
                 <!-- Members -->
                 <ng-container *ngIf="isPanelOpen('members') && data() as c">
                     <members-panel [cardId]="c.id" [assigneesInput]="(c.assignees ?? [])"
-                        (assigneesChange)="onAssigneesChange($event)" (closePanel)="closePanel()" />
+                        (assigneesChange)="onAssigneesChange($event)" (closePanel)="closePanel()"
+                        data-panel="members" />
                 </ng-container>
 
                 <!-- Checklists -->
-                <section *ngIf="isPanelOpen('checklists')">
+                <section *ngIf="isPanelOpen('checklists')" data-panel="checklists">
                     <div class="cm-section-title flex items-center gap-2">
                         <span class="inline-flex items-center">
-                            Checklists
+                            checklists
                         </span>
                         <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                             <lucide-icon [img]="XIcon"></lucide-icon>
@@ -358,7 +415,7 @@
                 </section>
 
                 <!-- Attachments -->
-                <section *ngIf="isPanelOpen('attachments')">
+                <section *ngIf="isPanelOpen('attachments')" data-panel="attachments">
                     <div class="cm-section-title flex items-center gap-2">
                         <span class="inline-flex items-center">
                             <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
@@ -537,7 +594,7 @@
                 </section>
 
                 <!-- Planning -->
-                <section *ngIf="isPanelOpen('planning')">
+                <section *ngIf="isPanelOpen('planning')" data-panel="planning">
                     <div class="cm-section-title flex items-center gap-2">
                         <span class="inline-flex items-center">
                             <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
@@ -605,7 +662,8 @@
                 </section>
 
                 <!-- Move Actions -->
-                <section *ngIf="isPanelOpen('move')">
+                <section *ngIf="isPanelOpen('move')" data-panel="move">
+
                     <div class="cm-section-title flex items-center gap-2">
                         <span class="inline-flex items-center">
                             <lucide-icon [img]="MoveIcon" class="mr-1"></lucide-icon>

@@ -175,7 +175,9 @@ export class CardsService {
         }>
     ) {
         // use HttpClient to get Authorization + refresh from interceptor
-        return this.api.patch(`/api/cards/${id}/extended`, body);
+        const res = await this.api.patch<Card>(`/api/cards/${id}/extended`, body);
+        this.store.patchCardLocally(id, body);
+        return res;
     }
 
     /** Assign a user to a card. Server returns { userId, role, customRole }. */
@@ -241,5 +243,21 @@ export class CardsService {
 
     async copyCard(cardId: string, toListId: string, title?: string) {
         return this.api.post<Card>(`/api/cards/${cardId}/copy`, { toListId, title });
+    }
+
+    // ---------- Relations (for diagram) ----------
+    getCardRelations(cardId: string): Promise<{
+        outgoing: { id: string; type: string; card: { id: string; title: string; listId: string } }[];
+        incoming: { id: string; type: string; card: { id: string; title: string; listId: string } }[];
+    }> {
+        return this.api.get(`/api/cards/${cardId}/relations`);
+    }
+
+    createCardRelation(cardId: string, targetCardId: string, type: 'blocks' | 'depends_on' | 'relates_to' | 'duplicates') {
+        return this.api.post(`/api/cards/${cardId}/relations`, { targetCardId, type });
+    }
+
+    deleteCardRelation(relationId: string) {
+        return this.api.delete(`/api/relations/${relationId}`);
     }
 }

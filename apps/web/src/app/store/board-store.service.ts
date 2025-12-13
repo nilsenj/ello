@@ -57,6 +57,15 @@ export class BoardStore {
         );
     };
 
+    patchCardLocally = (cardId: string, patch: Partial<Card>) => {
+        this._lists.update(arr =>
+            arr.map(l => ({
+                ...l,
+                cards: (l.cards ?? []).map(c => (c.id === cardId ? { ...c, ...patch } : c)),
+            }))
+        );
+    };
+
     // --- labels (normalize to labelIds on the card for fast UI) ---
     private _extractLabelIds(card: any): string[] {
         if (!card) return [];

@@ -3,17 +3,21 @@ import { Injectable, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
+export type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning' | 'move' | 'copy' | 'delete';
+
 @Injectable({ providedIn: 'root' })
 export class CardModalService {
     private router = inject(Router);
-    private route  = inject(ActivatedRoute);
+    private route = inject(ActivatedRoute);
 
     private _isOpen = signal(false);
     private _cardId = signal<string>('');
+    private _initialPanel = signal<PanelName | null>(null);
     private ignoreNext = false;
 
     isOpen = this._isOpen.asReadonly();
     cardId = this._cardId.asReadonly();
+    initialPanel = this._initialPanel.asReadonly();
 
     constructor() {
         this.router.events
@@ -37,8 +41,9 @@ export class CardModalService {
         }
     }
 
-    open(id: string) {
+    open(id: string, panel: PanelName | null = null) {
         this._cardId.set(id);
+        this._initialPanel.set(panel);
         this._isOpen.set(true);
         this.ignoreNext = true;
         this.setHashParam('card', id);
@@ -47,6 +52,7 @@ export class CardModalService {
     close() {
         this._isOpen.set(false);
         this._cardId.set('');
+        this._initialPanel.set(null);
         this.ignoreNext = true;
         this.removeHashParam('card');
     }
@@ -70,6 +76,7 @@ export class CardModalService {
             relativeTo: this.route,
             fragment: params.toString(),  // e.g. 'card=abc123'
             replaceUrl: true,
+            queryParamsHandling: 'merge' // Preserve board View
         });
     }
 
@@ -81,6 +88,7 @@ export class CardModalService {
             relativeTo: this.route,
             fragment: nextFrag as string,  // null removes hash
             replaceUrl: true,
+            queryParamsHandling: 'merge' // Preserve board View
         });
     }
 }

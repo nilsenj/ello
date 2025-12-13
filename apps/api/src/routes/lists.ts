@@ -38,7 +38,11 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
             include: {
                 cards: {
                     orderBy: { rank: 'asc' },
-                    include: { labels: { select: { labelId: true } } },
+                    include: {
+                        labels: { select: { labelId: true } },
+                        assignees: { include: { user: true } },
+                        _count: { select: { comments: true, checklists: true } }
+                    },
                 },
             },
         });
@@ -58,7 +62,18 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
                 rank: c.rank,
                 priority: c.priority,
                 isArchived: c.isArchived,
+                dueDate: c.dueDate,
+                startDate: c.startDate,
+                estimate: c.estimate,
                 labelIds: (c.labels ?? []).map(x => x.labelId),
+                assignees: c.assignees.map(a => ({
+                    userId: a.userId,
+                    id: a.userId, // CardMember has no single ID
+                    user: a.user ? { id: a.user.id, name: a.user.name, avatar: a.user.avatar } : undefined,
+                    role: a.role
+                })),
+                commentCount: (c as any)._count?.comments ?? 0,
+                checklistCount: (c as any)._count?.checklists ?? 0,
             })),
         }));
     });

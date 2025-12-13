@@ -30,8 +30,29 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         const { email, name, password } = req.body || ({} as any);
         if (!email || !password) return reply.code(400).send({ error: 'email and password are required' });
 
-        const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-        const user = await prisma.user.create({ data: { email, name, password: hash } });
+        // Check for existing user (e.g. shadow user from invitation)
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        let user;
+
+        if (existingUser) {
+            if (existingUser.isPending) {
+                // Claim shadow account
+                const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+                user = await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                        name: name || existingUser.name,
+                        password: hash,
+                        isPending: false
+                    }
+                });
+            } else {
+                return reply.code(400).send({ error: 'User already exists' });
+            }
+        } else {
+            const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+            user = await prisma.user.create({ data: { email, name, password: hash } });
+        }
 
         // Auto-create Personal Workspace
         let baseName = name ? `${name} Workspace` : 'Personal Workspace';

@@ -1,10 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+// @ts-ignore
 import { environment } from '@env';
 
 type RequestOptions = {
     headers?: HttpHeaders;
+    params?: Record<string, string>;
 };
 
 @Injectable({ providedIn: 'root' })

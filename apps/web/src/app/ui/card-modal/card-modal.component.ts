@@ -39,14 +39,17 @@ import {
     UsersIcon,
     XCircleIcon,
     XIcon,
+    MoveIcon,
+    ChevronLeftIcon,
+    CheckIcon,
 } from 'lucide-angular';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
-import { CardModalService } from "./card-modal.service";
+import { CardModalService, PanelName } from "./card-modal.service";
 import { FilterByPipe } from '../../shared/filter-by.pipe';
 
 
-type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning' | 'move' | 'copy' | 'delete';
+
 
 @Component({
     standalone: true,
@@ -68,6 +71,10 @@ export class CardModalComponent {
     private sanitizer = inject(DomSanitizer);
 
     // icons
+    readonly MoveIcon = MoveIcon;
+    readonly ChevronLeftIcon = ChevronLeftIcon;
+    readonly CheckIcon = CheckIcon;
+
     readonly XIcon = XIcon;
     readonly TagIcon = TagIcon;
     readonly CalendarIcon = CalendarIcon;
@@ -90,7 +97,7 @@ export class CardModalComponent {
     readonly DownloadIcon = DownloadIcon;
     readonly ArchiveIcon = ArchiveIcon;
     readonly ActivityIcon = ActivityIcon;
-    readonly MoveIcon = ArrowRightIcon; // Need to import this or distinct icon
+
     readonly CopyIcon = CopyIcon; // Need to import this
 
     // ui state
@@ -272,6 +279,22 @@ export class CardModalComponent {
             })();
         }, { allowSignalWrites: true });
 
+        // EFFECT #2 — Sync initial panel from service (Deep Linking)
+        effect(() => {
+            const open = this.modal.isOpen();
+            const init = this.modal.initialPanel();
+            if (open && init) {
+                this.openPanelName.set(init);
+                // Scroll to the panel after a minimal delay to allow rendering
+                setTimeout(() => {
+                    const el = document.querySelector(`[data-panel="${init}"]`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
+        }, { allowSignalWrites: true });
+
         // EFFECT #2 — load labels per board (members logic removed; handled in members-panel)
         effect(() => {
             const boardId = this.store.currentBoardId();
@@ -320,8 +343,70 @@ export class CardModalComponent {
                     next.cardLabels = [...(((c as any).cardLabels ?? [])), { cardId: c.id, labelId: lid }];
                 this.data.set(next);
             }
-        } catch {
-            /* noop */
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // --- Label Editor ---
+    isEditingLabel = signal(false);
+    labelDraftId = signal<string | null>(null); // null = creating new
+    labelNameDraft = signal('');
+    labelColorDraft = signal('#2196f3');
+
+    // Trello-like colors
+    readonly labelColors = [
+        '#61bd4f', '#f2d600', '#ff9f1a', '#eb5a46', '#c377e0', '#0079bf', // green, yellow, orange, red, purple, blue
+        '#00c2e0', '#51e898', '#ff78cb', '#344563'  // sky, lime, pink, dark
+    ];
+
+    startCreateLabel() {
+        this.labelDraftId.set(null);
+        this.labelNameDraft.set('');
+        this.labelColorDraft.set(this.labelColors[0]);
+        this.isEditingLabel.set(true);
+    }
+
+    startEditLabel(label: { id: string, name: string, color: string }) {
+        this.labelDraftId.set(label.id);
+        this.labelNameDraft.set(label.name);
+        this.labelColorDraft.set(label.color);
+        this.isEditingLabel.set(true);
+    }
+
+    cancelLabelEdit() {
+        this.isEditingLabel.set(false);
+        this.labelDraftId.set(null);
+    }
+
+    async saveLabel() {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+        const name = this.labelNameDraft().trim();
+        const color = this.labelColorDraft();
+        if (!name) return;
+
+        try {
+            if (this.labelDraftId()) {
+                await this.labelsApi.renameLabel(this.labelDraftId()!, { name, color });
+            } else {
+                await this.labelsApi.createLabel(boardId, { name, color });
+            }
+            this.isEditingLabel.set(false);
+        } catch (e) {
+            console.error('Failed to save label', e);
+        }
+    }
+
+    async deleteLabel() {
+        const id = this.labelDraftId();
+        if (!id) return;
+        if (!confirm('Start deleting this label? There is no undo.')) return;
+        try {
+            await this.labelsApi.deleteLabel(id);
+            this.isEditingLabel.set(false);
+        } catch (e) {
+            console.error('Failed to delete label', e);
         }
     }
 
@@ -377,8 +462,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklist(c.id, { title: 'Checklist' });
-        // Ensure items is initialized to avoid template errors
-        const checklistWithItems = { ...created, items: [] };
+        const checklistWithItems = { ...(created as object), items: [] };
         this.data.set({ ...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), checklistWithItems] } as any);
     }
 

@@ -6,7 +6,7 @@ import type { Board } from '../types';
 import { BoardStore } from '../store/board-store.service';
 import { ListsService } from './lists.service';
 import { LabelsService } from "./labels.service";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 
 export type MemberRole = 'owner' | 'admin' | 'member' | 'viewer';
 export type BoardMemberLite = { id: string; userId: string; name: string; email: string; avatar?: string; role: MemberRole; status?: 'active' | 'pending' };
@@ -80,31 +80,25 @@ export class BoardsService {
         description?: string | null;
         visibility?: "private" | "workspace" | "public";
         background?: string | null
-    }) {        // If the caller didn’t pass a workspace, try to infer one:
-        // 1) from already-loaded boards, or
-        // 2) fetch the first workspace from API (fallback).
-        const inferWorkspaceId$ = workspaceId
-            ? of(workspaceId)
-            : (this.store.boards().length
-                ? of(this.store.boards()[0]!.workspaceId) // adjust if your Board type stores it differently
-                : this.api.get<{ id: string }[]>('/api/workspaces').then( // changed pipe to then because API returns Promise
-                    ws => ws?.[0]?.id
-                )
-            );
+    }) {
+        // Convert the logic to use async/await for consistency
+        const inferWorkspaceId = async () => {
+            if (workspaceId) return workspaceId;
+            if (this.store.boards().length) {
+                return this.store.boards()[0]!.workspaceId;
+            }
+            const workspaces = await this.api.get<{ id: string }[]>('/api/workspaces');
+            return workspaces?.[0]?.id;
+        };
 
-        return inferWorkspaceId$.pipe(
-            switchMap(wsId => {
-                if (!wsId) throw new Error('No workspace available to create a board');
-                return this.api.post<any>(`/api/workspaces/${wsId}/boards`, { ...payload }).then(
-                    board => {
-                        // minimally merge into store
-                        const next = [...this.store.boards(), board];
-                        this.store.setBoards?.(next); // or whatever setter you have
-                        return board;
-                    }
-                );
-            })
-        ).toPromise();
+        return inferWorkspaceId().then(wsId => {
+            if (!wsId) throw new Error('No workspace available to create a board');
+            return this.api.post<Board>(`/api/workspaces/${wsId}/boards`, payload).then(board => {
+                const next = [...this.store.boards(), board];
+                this.store.setBoards(next);
+                return board;
+            });
+        });
     }
 
     // Replace the existing methods in BoardsService with these:
@@ -115,7 +109,7 @@ export class BoardsService {
         // Some backends return { members: [...] }, others return [...]
         const resp = await this.api.get<{ members: BoardMemberLite[] } | BoardMemberLite[]>(
             `/api/boards/${boardId}/members`,
-            query?.trim() ? { params: { query: query.trim() } } : undefined
+            query?.trim() ? { params: { query: query.trim() } } : {}
         );
 
         return Array.isArray(resp) ? resp : resp.members;

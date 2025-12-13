@@ -29,6 +29,30 @@ export class WorkspaceMembersModalComponent {
     inviteEmail = signal('');
     inviting = signal(false);
 
+    isValidEmail = computed(() => {
+        const email = this.inviteEmail().trim();
+        // Basic email regex
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    });
+
+    inviteRole = signal<'owner' | 'admin' | 'member' | 'viewer'>('member');
+    availableRoles = computed(() => {
+        const ws = this.modal.workspace();
+        if (ws?.role === 'owner') {
+            return ['owner', 'admin', 'member', 'viewer'] as const;
+        }
+        // Admins can assign any role up to Admin
+        return ['admin', 'member', 'viewer'] as const;
+    });
+
+    // Valid roles to display in UI
+    roleLabels: Record<string, string> = {
+        owner: 'Owner',
+        admin: 'Admin',
+        member: 'Member',
+        viewer: 'Viewer'
+    };
+
     // UI State
     toastMessage = signal<string | null>(null);
     toastType = signal<'success' | 'error'>('success');
@@ -47,11 +71,8 @@ export class WorkspaceMembersModalComponent {
     canInvite = computed(() => {
         const ws = this.modal.workspace();
         if (!ws) return false;
-
-        if (ws.whoCanInviteMembers === 'admins') {
-            return ws.role === 'owner' || ws.role === 'admin';
-        }
-        return true;
+        // Strict restriction: Only Owners and Admins can invite
+        return ws.role === 'owner' || ws.role === 'admin';
     });
 
     canRemove = computed(() => {
@@ -71,6 +92,9 @@ export class WorkspaceMembersModalComponent {
         // Owners cannot remove themselves
         if (member.role === 'owner' && member.id === currentUser.id) return false;
 
+        // Admins cannot remove Owners
+        if (ws.role === 'admin' && member.role === 'owner') return false;
+
         return true;
     }
 
@@ -89,6 +113,7 @@ export class WorkspaceMembersModalComponent {
     close() {
         this.modal.close();
         this.inviteEmail.set('');
+        this.inviteRole.set('member');
         this.toastMessage.set(null);
     }
 
@@ -100,14 +125,15 @@ export class WorkspaceMembersModalComponent {
 
     async invite() {
         const ws = this.modal.workspace();
-        if (!ws || !this.inviteEmail().trim() || this.inviting()) return;
+        if (!ws || !this.isValidEmail() || this.inviting()) return;
 
         this.inviting.set(true);
         this.toastMessage.set(null);
 
         try {
-            const res = await this.workspacesApi.addMember(ws.id, this.inviteEmail());
+            const res = await this.workspacesApi.addMember(ws.id, this.inviteEmail(), this.inviteRole());
             this.inviteEmail.set('');
+            this.inviteRole.set('member'); // reset to default
             await this.loadMembers(ws.id); // Reload list
 
             if (res.status === 'pending') {
