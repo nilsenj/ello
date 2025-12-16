@@ -6,10 +6,10 @@ import type { Board } from '../types';
 import { BoardStore } from '../store/board-store.service';
 import { ListsService } from './lists.service';
 import { LabelsService } from "./labels.service";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 
 export type MemberRole = 'owner' | 'admin' | 'member' | 'viewer';
-export type BoardMemberLite = { id: string; name: string; avatar?: string; role: MemberRole };
+export type BoardMemberLite = { id: string; userId: string; name: string; email: string; avatar?: string; role: MemberRole; status?: 'active' | 'pending' };
 @Injectable({ providedIn: 'root' })
 export class BoardsService {
     constructor(
@@ -33,10 +33,12 @@ export class BoardsService {
     async selectBoard(boardId: string) {
         // reflect selection in UI immediately
         this.store.setCurrentBoardId(boardId);
+        this.addToRecent(boardId);
 
         const loadAll = () => Promise.all([
             this.listsApi.loadLists(boardId),
             this.labelsApi.loadLabels(boardId),
+            this.searchMembers(boardId).then(m => this.store.setMembers(m)),
         ]);
 
         try {
@@ -45,7 +47,7 @@ export class BoardsService {
             const status = err?.status ?? err?.statusCode ?? err?.error?.statusCode;
             if (status === 403) {
                 // Not a member yet → join and retry
-                await firstValueFrom(this.http.post(`/api/boards/${boardId}/join`, {}));
+                await this.api.post(`/api/boards/${boardId}/join`, {});
                 await loadAll();
             } else {
                 throw err;
@@ -53,8 +55,24 @@ export class BoardsService {
         }
     }
 
+    private addToRecent(boardId: string) {
+        if (typeof window === 'undefined') return; // SSR check
+        try {
+            const key = 'recent_boards';
+            let recent: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+            // remove if exists, add to front
+            recent = recent.filter(id => id !== boardId);
+            recent.unshift(boardId);
+            // keep max 4
+            recent = recent.slice(0, 4);
+            localStorage.setItem(key, JSON.stringify(recent));
+        } catch (e) {
+            // ignore
+        }
+    }
+
     async getMembers(boardId: string) {
-        return this.http.get<{ id: string; name: string; avatar?: string }[]>(`/api/boards/${boardId}/members`).toPromise();
+        return this.api.get<{ id: string; name: string; avatar?: string }[]>(`/api/boards/${boardId}/members`);
     }
 
     createBoard(workspaceId: string | null, payload: {
@@ -62,30 +80,25 @@ export class BoardsService {
         description?: string | null;
         visibility?: "private" | "workspace" | "public";
         background?: string | null
-    }) {        // If the caller didn’t pass a workspace, try to infer one:
-        // 1) from already-loaded boards, or
-        // 2) fetch the first workspace from API (fallback).
-        const inferWorkspaceId$ = workspaceId
-            ? of(workspaceId)
-            : (this.store.boards().length
-                ? of(this.store.boards()[0]!.workspaceId) // adjust if your Board type stores it differently
-                : this.http.get<{ id: string }[]>('/api/workspaces').pipe(
-                    map(ws => ws?.[0]?.id),
-                )
-            );
+    }) {
+        // Convert the logic to use async/await for consistency
+        const inferWorkspaceId = async () => {
+            if (workspaceId) return workspaceId;
+            if (this.store.boards().length) {
+                return this.store.boards()[0]!.workspaceId;
+            }
+            const workspaces = await this.api.get<{ id: string }[]>('/api/workspaces');
+            return workspaces?.[0]?.id;
+        };
 
-        return inferWorkspaceId$.pipe(
-            switchMap(wsId => {
-                if (!wsId) throw new Error('No workspace available to create a board');
-                return this.http.post<any>(`/api/workspaces/${wsId}/boards`, { ...payload }).pipe(
-                    tap(board => {
-                        // minimally merge into store
-                        const next = [...this.store.boards(), board];
-                        this.store.setBoards?.(next); // or whatever setter you have
-                    })
-                );
-            })
-        ).toPromise();
+        return inferWorkspaceId().then(wsId => {
+            if (!wsId) throw new Error('No workspace available to create a board');
+            return this.api.post<Board>(`/api/workspaces/${wsId}/boards`, payload).then(board => {
+                const next = [...this.store.boards(), board];
+                this.store.setBoards(next);
+                return board;
+            });
+        });
     }
 
     // Replace the existing methods in BoardsService with these:
@@ -94,20 +107,16 @@ export class BoardsService {
         const params = query?.trim() ? { query: query.trim() } : undefined;
 
         // Some backends return { members: [...] }, others return [...]
-        const resp = await firstValueFrom(
-            this.http.get<{ members: BoardMemberLite[] } | BoardMemberLite[]>(
-                `/api/boards/${boardId}/members`,
-                { params }
-            )
+        const resp = await this.api.get<{ members: BoardMemberLite[] } | BoardMemberLite[]>(
+            `/api/boards/${boardId}/members`,
+            query?.trim() ? { params: { query: query.trim() } } : {}
         );
 
         return Array.isArray(resp) ? resp : resp.members;
     }
 
     async addMember(boardId: string, email: string, role: MemberRole) {
-        return firstValueFrom(
-            this.http.post<BoardMemberLite>(`/api/boards/${boardId}/members`, { email, role })
-        );
+        return this.api.post<BoardMemberLite>(`/api/boards/${boardId}/members`, { email, role });
     }
 
     async updateBoardMemberRole(
@@ -115,11 +124,9 @@ export class BoardsService {
         userId: string,
         role: MemberRole
     ): Promise<{ ok: true } | BoardMemberLite> {
-        const res = await firstValueFrom(
-            this.http.patch<{ ok: true } | BoardMemberLite>(
-                `/api/boards/${boardId}/members/${userId}`,
-                { role }
-            )
+        const res = await this.api.patch<{ ok: true } | BoardMemberLite>(
+            `/api/boards/${boardId}/members/${userId}`,
+            { role }
         );
 
         // If you maintain members in the BoardStore and have a local mutator, uncomment:
@@ -129,9 +136,7 @@ export class BoardsService {
     }
 
     async updateBoardBackground(boardId: string, background: string): Promise<Board> {
-        const updated = await firstValueFrom(
-            this.http.patch<Board>(`/api/boards/${boardId}/background`, { background })
-        );
+        const updated = await this.api.patch<Board>(`/api/boards/${boardId}/background`, { background });
 
         // Update in store
         const boards = this.store.boards();
@@ -142,8 +147,6 @@ export class BoardsService {
     }
 
     async updateBoard(boardId: string, data: Partial<{ name: string; description?: string; visibility?: 'private' | 'workspace' | 'public'; isArchived?: boolean }>): Promise<Board> {
-        return firstValueFrom(
-            this.http.patch<Board>(`/api/boards/${boardId}`, data)
-        );
+        return this.api.patch<Board>(`/api/boards/${boardId}`, data);
     }
 }

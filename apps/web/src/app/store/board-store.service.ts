@@ -8,17 +8,20 @@ export class BoardStore {
     private _currentBoardId = signal<string | null>(null);
     private _lists = signal<ListDto[]>([]);
     private _labels = signal<Label[]>([]);
+    private _members = signal<any[]>([]); // BoardMemberLite[]
 
     boards = this._boards.asReadonly();
     currentBoardId = this._currentBoardId.asReadonly();
     lists = this._lists.asReadonly();
     labels = this._labels.asReadonly();
+    members = this._members.asReadonly();
 
     // --- setters (arrow funcs -> safe `this`) ---
     setBoards = (boards: Board[]) => this._boards.set(boards ?? []);
     setCurrentBoardId = (id: string | null) => this._currentBoardId.set(id ?? null);
     setLists = (lists: ListDto[]) => this._lists.set(lists ?? []);
     setLabels = (v: Label[]) => this._labels.set(v ?? []);
+    setMembers = (v: any[]) => this._members.set(v ?? []);
 
     // --- list ops ---
     renameListLocally = (listId: string, name: string) => {
@@ -51,6 +54,15 @@ export class BoardStore {
     removeCardLocally = (cardId: string) => {
         this._lists.update(arr =>
             arr.map(l => ({ ...l, cards: (l.cards ?? []).filter(c => c.id !== cardId) }))
+        );
+    };
+
+    patchCardLocally = (cardId: string, patch: Partial<Card>) => {
+        this._lists.update(arr =>
+            arr.map(l => ({
+                ...l,
+                cards: (l.cards ?? []).map(c => (c.id === cardId ? { ...c, ...patch } : c)),
+            }))
         );
     };
 

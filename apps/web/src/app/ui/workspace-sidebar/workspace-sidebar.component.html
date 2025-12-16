@@ -1,4 +1,4 @@
-<div class="w-64 h-full border-r bg-[#F9FAFB] flex flex-col">
+<div class="w-64 h-full border-r bg-[#F9FAFB] md:bg-[#F9FAFB] bg-white flex flex-col shadow-xl md:shadow-none">
     <div class="p-4">
         <nav class="space-y-1">
             <div class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-md">
@@ -24,13 +24,13 @@
         <div class="space-y-1">
             <div *ngFor="let ws of workspaces()">
                 <div (click)="workspaceSelected.emit(ws.id)"
-                    class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors"
+                    class="workspace-item flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md cursor-pointer transition-colors"
                     [class.bg-blue-50]="selectedWorkspaceId() === ws.id"
                     [class.text-blue-700]="selectedWorkspaceId() === ws.id"
                     [class.text-gray-700]="selectedWorkspaceId() !== ws.id"
                     [class.hover:bg-gray-100]="selectedWorkspaceId() !== ws.id">
                     <div
-                        class="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
+                        class="workspace-avatar w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold">
                         {{ ws.name.charAt(0).toUpperCase() }}
                     </div>
                     {{ ws.name }}

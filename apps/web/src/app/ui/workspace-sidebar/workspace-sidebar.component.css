@@ -1,1 +1,29 @@
 /* Workspace sidebar styles */
+
+/* Smooth transitions on workspace items */
+.workspace-item {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.workspace-item:hover {
+    transform: translateX(2px);
+}
+
+/* Workspace avatar enhancement */
+.workspace-avatar {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.workspace-item:hover .workspace-avatar {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Nav item styling */
+.nav-item {
+    transition: background-color 0.15s ease, padding-left 0.15s ease;
+}
+
+.nav-item:hover {
+    padding-left: 0.875rem;
+}

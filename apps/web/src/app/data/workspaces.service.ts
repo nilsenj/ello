@@ -66,40 +66,38 @@ export class WorkspacesService {
 
     /** GET /api/workspaces → list of { id, name } */
     async list(): Promise<WorkspaceLite[]> {
-        return firstValueFrom(this.http.get<WorkspaceLite[]>('/api/workspaces'));
+        return this.api.get<WorkspaceLite[]>('/api/workspaces');
     }
 
     /** POST /api/workspaces */
     async create(body: { name: string; description?: string }): Promise<WorkspaceLite> {
-        return firstValueFrom(this.http.post<WorkspaceLite>('/api/workspaces', body));
+        return this.api.post<WorkspaceLite>('/api/workspaces', body);
     }
 
     /** PUT /api/workspaces/:id */
     async update(id: string, body: { name?: string; description?: string }): Promise<WorkspaceLite> {
-        return firstValueFrom(this.http.put<WorkspaceLite>(`/api/workspaces/${id}`, body));
+        return this.api.put<WorkspaceLite>(`/api/workspaces/${id}`, body);
     }
 
     /** DELETE /api/workspaces/:id */
     async delete(id: string): Promise<void> {
-        return firstValueFrom(this.http.delete<void>(`/api/workspaces/${id}`));
+        return this.api.delete<void>(`/api/workspaces/${id}`);
     }
 
     /** POST /api/workspaces/:id/members */
-    async addMember(id: string, email: string, role: 'admin' | 'member' | 'viewer' = 'member'): Promise<WorkspaceMember> {
-        return firstValueFrom(this.http.post<WorkspaceMember>(`/api/workspaces/${id}/members`, { email, role }));
+    async addMember(id: string, email: string, role: 'owner' | 'admin' | 'member' | 'viewer' = 'member'): Promise<WorkspaceMember> {
+        return this.api.post<WorkspaceMember>(`/api/workspaces/${id}/members`, { email, role });
     }
 
     async removeMember(workspaceId: string, memberId: string): Promise<void> {
-        return firstValueFrom(this.http.delete<void>(`/api/workspaces/${workspaceId}/members/${memberId}`));
+        return this.api.delete<void>(`/api/workspaces/${workspaceId}/members/${memberId}`);
     }
 
     /** POST /api/workspaces/:workspaceId/boards → create a board inside a workspace */
     async createBoard(workspaceId: string, body: CreateBoardBody): Promise<CreatedBoard> {
         if (!workspaceId) throw new Error('workspaceId is required');
         if (!body?.name?.trim()) throw new Error('Board name is required');
-        return firstValueFrom(
-            this.http.post<CreatedBoard>(`/api/workspaces/${workspaceId}/boards`, body)
-        );
+        return this.api.post<CreatedBoard>(`/api/workspaces/${workspaceId}/boards`, body);
     }
 
     /**
@@ -108,11 +106,8 @@ export class WorkspacesService {
      */
     async searchMembers(workspaceId: string, query = ''): Promise<WorkspaceMember[]> {
         if (!workspaceId) throw new Error('workspaceId is required');
-        const res = await firstValueFrom(
-            this.http.get<{ members: WorkspaceMember[] }>(
-                `/api/workspaces/${workspaceId}/members`,
-                { params: query ? { query } : {} }
-            )
+        const res = await this.api.get<{ members: WorkspaceMember[] }>(
+            `/api/workspaces/${workspaceId}/members` + (query ? `?query=${query}` : '')
         );
         return res.members ?? [];
     }
@@ -128,9 +123,7 @@ export class WorkspacesService {
     ): Promise<void> {
         if (!workspaceId) throw new Error('workspaceId is required');
         if (!userId) throw new Error('userId is required');
-        await firstValueFrom(
-            this.http.patch<void>(`/api/workspaces/${workspaceId}/members/${userId}`, { role })
-        );
+        await this.api.patch<void>(`/api/workspaces/${workspaceId}/members/${userId}`, { role });
     }
 
     /**
@@ -139,9 +132,7 @@ export class WorkspacesService {
      */
     async getBoardsInWorkspace(workspaceId: string): Promise<any[]> {
         if (!workspaceId) throw new Error('workspaceId is required');
-        return firstValueFrom(
-            this.http.get<any[]>(`/api/workspaces/${workspaceId}/boards`)
-        );
+        return this.api.get<any[]>(`/api/workspaces/${workspaceId}/boards`);
     }
 
     /**
@@ -150,9 +141,7 @@ export class WorkspacesService {
      */
     async getSettings(id: string): Promise<WorkspaceSettings> {
         if (!id) throw new Error('workspaceId is required');
-        return firstValueFrom(
-            this.http.get<WorkspaceSettings>(`/api/workspaces/${id}/settings`)
-        );
+        return this.api.get<WorkspaceSettings>(`/api/workspaces/${id}/settings`);
     }
 
     /**
@@ -161,9 +150,7 @@ export class WorkspacesService {
      */
     async updateSettings(id: string, settings: WorkspaceSettingsUpdate): Promise<WorkspaceSettings> {
         if (!id) throw new Error('workspaceId is required');
-        return firstValueFrom(
-            this.http.patch<WorkspaceSettings>(`/api/workspaces/${id}/settings`, settings)
-        );
+        return this.api.patch<WorkspaceSettings>(`/api/workspaces/${id}/settings`, settings);
     }
 
 }

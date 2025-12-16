@@ -1,6 +1,6 @@
 <section *ngIf="modal.isOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
     (mousedown)="onBackdrop($event)" role="dialog" aria-modal="true">
-    <div class="w-[min(92vw,600px)] bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh] relative"
+    <div class="w-full max-w-lg sm:max-w-xl mx-4 bg-white rounded-xl shadow-2xl flex flex-col max-h-[80vh] relative"
         (mousedown)="$event.stopPropagation()">
 
         <!-- Toast -->
@@ -21,12 +21,22 @@
 
         <!-- Body -->
         <div class="p-5 flex flex-col gap-6 overflow-y-auto">
-            <!-- Invite Form (only for admins) -->
-            <div *ngIf="canInvite()" class="flex gap-2">
+            <!-- Invite Form (only for admins/owners) -->
+            <div *ngIf="canInvite()" class="flex flex-col sm:flex-row gap-2">
                 <input type="email" [ngModel]="inviteEmail()" (ngModelChange)="inviteEmail.set($event)"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:border-transparent"
+                    [class.focus:ring-blue-500]="isValidEmail() || !inviteEmail()"
+                    [class.focus:ring-red-500]="!isValidEmail() && inviteEmail()"
+                    [class.border-red-300]="!isValidEmail() && inviteEmail()"
                     placeholder="Enter email address to invite..." />
-                <button (click)="invite()" [disabled]="!inviteEmail().trim() || inviting()"
+
+                <select [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)"
+                    class="pl-3 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]"
+                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%2F%3E%3C%2Fsvg%3E');">
+                    <option *ngFor="let role of availableRoles()" [value]="role">{{ roleLabels[role] }}</option>
+                </select>
+
+                <button (click)="invite()" [disabled]="!isValidEmail() || inviting()"
                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                     <lucide-icon [img]="UserPlusIcon" class="w-4 h-4"></lucide-icon>
                     {{ inviting() ? 'Inviting...' : 'Invite' }}

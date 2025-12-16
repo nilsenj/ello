@@ -272,4 +272,36 @@ export class NotificationService {
             boardId: params.boardId
         });
     }
+
+    /**
+     * Notify user when added to a workspace
+     */
+    async notifyWorkspaceInvite(params: {
+        userId: string;
+        actorId: string;
+        workspaceId: string;
+    }) {
+        if (params.userId === params.actorId) return;
+
+        const [workspace, actor] = await Promise.all([
+            this.prisma.workspace.findUnique({
+                where: { id: params.workspaceId },
+                select: { name: true }
+            }),
+            this.prisma.user.findUnique({
+                where: { id: params.actorId },
+                select: { name: true }
+            })
+        ]);
+
+        if (!workspace) return;
+
+        return this.createNotification({
+            userId: params.userId,
+            actorId: params.actorId,
+            type: 'ADDED_TO_WORKSPACE',
+            title: `${actor?.name || 'Someone'} added you to workspace "${workspace.name}"`,
+            metadata: { workspaceId: params.workspaceId }
+        });
+    }
 }

@@ -4,6 +4,7 @@ import { ensureUser } from '../utils/ensure-user.js';
 import { mid } from '../utils/rank.js';
 import { canCreateBoards, canEditSettings, canInviteMembers, isEmailDomainAllowed } from '../utils/workspace-permissions.js';
 import { EmailService } from '../services/email.js';
+import { NotificationService } from '../services/notification-service.js';
 
 const DEFAULT_LABELS = [
     { name: 'green', color: '#61BD4F' },
@@ -186,9 +187,14 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         // Only owners can delete
         const member = await prisma.workspaceMember.findUnique({
             where: { userId_workspaceId: { userId: user.id, workspaceId: id } },
+            include: { workspace: true }
         });
         if (!member || member.role !== 'owner') {
             return reply.code(403).send({ error: 'Only owners can delete workspace' });
+        }
+
+        if (member.workspace.isPersonal) {
+            return reply.code(403).send({ error: 'Cannot delete personal workspace' });
         }
 
         await prisma.workspace.delete({ where: { id } });
@@ -225,8 +231,9 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
 
         if (!targetUser) {
             // User doesn't exist, create pending invitation
-            const existingInvite = await prisma.pendingInvitation.findUnique({
-                where: { workspaceId_email: { workspaceId, email } }
+            // Use findFirst because there is no unique constraint on [workspaceId, email]
+            const existingInvite = await prisma.pendingInvitation.findFirst({
+                where: { workspaceId, email }
             });
 
             if (existingInvite) {
@@ -248,11 +255,17 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             });
 
             // Send invitation email
-            await EmailService.sendInvitationEmail(
-                email,
-                inviter.workspace.name,
-                inviter.user.name || 'A user'
-            );
+            // Send invitation email (non-blocking)
+            // Fire-and-forget so we don't block the response on slow Ethereal connection
+            setTimeout(() => {
+                EmailService.sendInvitationEmail(
+                    email,
+                    inviter.workspace.name,
+                    inviter.user.name || 'A user'
+                ).catch(err => {
+                    console.error('[Req] Failed to send invitation email (background):', err);
+                });
+            }, 0);
 
             return { ...invite, status: 'pending' };
         }
@@ -273,6 +286,15 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 role
             }
         });
+
+        // Notify the new member via Socket.IO
+        const notificationService = new NotificationService(prisma);
+        notificationService.notifyWorkspaceInvite({
+            userId: targetUser.id,
+            actorId: user.id,
+            workspaceId
+        }).catch(console.error);
+
         return { ...member, status: 'active' };
     });
 
@@ -360,9 +382,20 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
         if (!member) return reply.code(403).send({ error: 'Forbidden' });
 
-        // Workspace members see ALL boards in the workspace
+        const isWorkspaceAdmin = member.role === 'owner' || member.role === 'admin';
+
+        // Filter: Admin sees all. Others see Public, Workspace, or Board-Member boards.
+        const where: any = { workspaceId };
+        if (!isWorkspaceAdmin) {
+            where.OR = [
+                { visibility: 'public' },
+                { visibility: 'workspace' },
+                { members: { some: { userId: user.id } } }
+            ];
+        }
+
         const boards = await prisma.board.findMany({
-            where: { workspaceId },
+            where,
             select: { id: true, name: true, background: true, description: true, createdAt: true, visibility: true },
             orderBy: { createdAt: 'desc' }
         });
@@ -378,7 +411,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         const q = (req.query.query || '').trim();
 
         // ✅ Prisma relation filter must use `is: { ... }`
-        const where = q
+        const where: any = q
             ? {
                 workspaceId,
                 user: {
@@ -390,7 +423,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                     },
                 },
             }
-            : { workspaceId, user: { OR: [{ name: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] } as any };
+            : { workspaceId };
 
         const rows = await prisma.workspaceMember.findMany({
             where,
@@ -519,11 +552,17 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
 
         // Send email notification if removed by someone else
+        // Send email notification if removed by someone else
         if (!isSelf) {
-            await EmailService.sendMemberRemovedEmail(
-                memberToRemove.user.email,
-                requester.workspace.name
-            );
+            // Fire-and-forget
+            setTimeout(() => {
+                EmailService.sendMemberRemovedEmail(
+                    memberToRemove.user.email,
+                    requester.workspace.name
+                ).catch(err => {
+                    console.error('[Req] Failed to send removal email (background):', err);
+                });
+            }, 0);
         }
 
         return { ok: true };

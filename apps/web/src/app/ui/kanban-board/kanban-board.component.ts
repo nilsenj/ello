@@ -1,11 +1,12 @@
-import { Component, computed, effect, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnInit, ViewChild, signal } from '@angular/core';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
     CdkDrag,
-    CdkDragDrop, CdkDragPlaceholder, CdkDragPreview,
+    CdkDragDrop,
+    CdkDragPlaceholder,
+    CdkDragPreview,
     CdkDropList,
-    CdkDropListGroup,
     moveItemInArray,
     transferArrayItem,
 } from '@angular/cdk/drag-drop';
@@ -17,14 +18,17 @@ import { CardsService } from '../../data/cards.service';
 import { SocketService } from '../../data/socket.service';
 import { ListColumnComponent } from "../list-column/list-column.component";
 import { CardModalService } from "../card-modal/card-modal.service";
-import { ActivatedRoute, Router } from "@angular/router";
-import { BoardMenuComponent } from "../board-menu/board-menu.component";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { CardModalComponent } from "../card-modal/card-modal.component";
+
+import { BoardMenuComponent } from "../board-menu/board-menu.component";
+import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
+import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, CdkDropListGroup, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, BoardMenuComponent, NgClass], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent], // ⬅️ include group
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -39,8 +43,39 @@ export class KanbanBoardComponent implements OnInit {
     route = inject(ActivatedRoute);
     router = inject(Router);
 
+    // View State
+    currentView = signal<'board' | 'table' | 'calendar'>('board');
+    boardId = computed(() => this.store.currentBoardId());
+
     // popovers per card
     showLabels: Record<string, boolean> = {};
+
+    @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
+
+    focusNewList() {
+        // scroll to rightmost
+        const scrollContainer = document.querySelector('.overflow-x-auto');
+        if (scrollContainer) {
+            scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
+        }
+        // focus input
+        setTimeout(() => {
+            this.newListInput?.nativeElement?.focus();
+            if (!this.newListTitle) this.newListTitle = ''; // Ensure field maps to something to trigger UI if using ngIf
+        }, 300);
+    }
+
+
+    // ui state
+    showViewMenu = false;
+
+    toggleViewMenu() {
+        this.showViewMenu = !this.showViewMenu;
+    }
+
+    closeViewMenu() {
+        this.showViewMenu = false;
+    }
 
     // ui state
     newListTitle = '';
@@ -51,6 +86,7 @@ export class KanbanBoardComponent implements OnInit {
     // filters & inline edit
     filter = '';
     activeLabel = ''; // used by header label filter
+    activeMemberId = ''; // used by header member filter
     editingCard: Record<string, boolean> = {};
     cardTitles: Record<string, string> = {};
     trackList = (_: number, l: ListDto) => l.id;
@@ -62,6 +98,9 @@ export class KanbanBoardComponent implements OnInit {
         this.route.queryParamMap.subscribe(q => {
             const id = q.get('card');
             if (id) this.modal.open(id);
+
+            const view = q.get('view');
+            this.currentView.set((['board', 'table', 'calendar'].includes(view as any) ? view : 'board') as any);
         });
 
         effect(() => {
@@ -184,6 +223,11 @@ export class KanbanBoardComponent implements OnInit {
         const board = this.store.boards().find(b => b.id === boardId);
         const bg = board?.background;
 
+        // If it's an image URL, don't apply CSS classes (use inline style instead)
+        if (bg && bg.startsWith('http')) {
+            return 'bg-cover bg-center bg-no-repeat';
+        }
+
         const bgMap: Record<string, string> = {
             'none': 'bg-slate-50',
             'blue': 'bg-blue-500',
@@ -201,6 +245,33 @@ export class KanbanBoardComponent implements OnInit {
 
         return bg && bgMap[bg] ? bgMap[bg] : 'bg-slate-50';
     });
+
+    // Computed signal for image background style (returns null or url(...) style)
+    boardBackgroundStyle = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        const bg = board?.background;
+
+        if (bg && bg.startsWith('http')) {
+            return `url(${bg})`;
+        }
+        return null;
+    });
+
+    isLightBoard = computed(() => {
+        const board = this.store.boards().find(b => b.id === this.store.currentBoardId());
+        const bg = board?.background;
+
+        // Light backgrounds: no background, 'none', empty string, null, or bg-slate-50 (default)
+        if (!bg || bg === 'none' || bg === '' || bg === 'bg-slate-50') {
+            return true;
+        }
+
+        // Image backgrounds are typically scenic photos with good contrast, treat as dark
+        // You might want to analyze the image color in the future
+        return false;
+    });
+
     // whenever modal opens/closes, sync query param
     ngOnInit() {
     }
@@ -214,6 +285,10 @@ export class KanbanBoardComponent implements OnInit {
     // header label filter handler (called from template)
     updateActiveLabel(val: string) {
         this.activeLabel = val || '';
+    }
+
+    updateActiveMember(val: string) {
+        this.activeMemberId = val || '';
     }
 
     // label menu toggles (called from template)
@@ -231,24 +306,44 @@ export class KanbanBoardComponent implements OnInit {
         for (const k of Object.keys(this.showLabels)) this.showLabels[k] = false;
     }
 
+    matchesFilter(c: Card): boolean {
+        const q = this.filter.trim().toLowerCase();
+        if (q && !(c.title ?? '').toLowerCase().includes(q)) return false;
+
+        if (this.activeLabel) {
+            const ids = Array.isArray(c.labelIds) ? c.labelIds :
+                (Array.isArray((c as any).labels) ? (c as any).labels.map((x: any) => (typeof x === 'string' ? x : x?.id ?? x?.labelId)).filter(Boolean) : []);
+            if (!ids.includes(this.activeLabel)) return false;
+        }
+
+        if (this.activeMemberId) {
+            const memberIds = Array.isArray(c.assignees) ? c.assignees.map((x: any) => x?.userId || x?.id).filter(Boolean) : [];
+            if (!memberIds.includes(this.activeMemberId)) return false;
+        }
+
+        return true;
+    }
+
+    getAllFilteredCards(): Card[] {
+        const lists = this.store.lists();
+        const allCards: Card[] = [];
+        for (const l of lists) {
+            if (l.cards) {
+                // Ensure listId is present on the card object, as it might be missing in nested responses
+                const cardsWithListId = l.cards.map(c => ({ ...c, listId: l.id }));
+                allCards.push(...cardsWithListId);
+            }
+        }
+        // Unique by ID if any dupes exist (safeguard)
+        const unique = Array.from(new Map(allCards.map(c => [c.id, c])).values());
+        return unique.filter(c => this.matchesFilter(c));
+    }
+
     // filtering logic
     cards = (listId: string) => {
         const list = this.store.lists().find((x) => x.id === listId);
-        let cards = (list?.cards ?? []) as Card[];
-
-        const q = this.filter.trim().toLowerCase();
-        if (q) cards = cards.filter((c) => (c.title ?? '').toLowerCase().includes(q));
-
-        if (this.activeLabel) {
-            const ids = (c: any) => {
-                if (Array.isArray(c.labelIds)) return c.labelIds;
-                if (Array.isArray(c.labels)) return c.labels.map((x: any) => (typeof x === 'string' ? x : x?.id)).filter(Boolean);
-                if (Array.isArray(c.cardLabels)) return c.cardLabels.map((x: any) => x?.labelId).filter(Boolean);
-                return [];
-            };
-            cards = cards.filter((c) => ids(c).includes(this.activeLabel));
-        }
-        return cards;
+        if (!list || !list.cards) return [];
+        return list.cards.filter(c => this.matchesFilter(c));
     };
 
     trackCard = (_: number, c: Card) => c.id;

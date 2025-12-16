@@ -112,9 +112,12 @@
 }
 
 @keyframes priPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot), transparent 88%);
     }
+
     50% {
         box-shadow: 0 6px 18px color-mix(in oklab, var(--pri-dot), transparent 80%);
     }
@@ -140,18 +143,64 @@
     overflow: auto;
     padding: 20px;
     display: grid;
-    grid-template-columns:minmax(0, 1fr) clamp(380px, 34vw, 560px);
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 34vw, 560px);
     gap: 24px;
 }
 
 @media (max-width: 1024px) {
     .cm-body {
-        grid-template-columns:1fr;
+        display: flex;
+        flex-direction: column;
         gap: 16px;
+    }
+
+    /* On mobile/tablet, flatten columns and reorder sections */
+    .cm-col-main,
+    .cm-col-side {
+        display: contents;
+    }
+
+    /* Mobile order: 1.Description 2.CardDetails 3.AddToCard 4.Actions 5.Comments 6.Activity */
+    .cm-col-main>section:nth-child(1) {
+        order: 1;
+    }
+
+    /* Description */
+    .cm-col-side>section:nth-child(1) {
+        order: 2;
+    }
+
+    /* Card Details */
+    .cm-col-side>.space-y-6>section:nth-child(1) {
+        order: 3;
+    }
+
+    /* Add to Card */
+    .cm-col-side>.space-y-6>section:last-child {
+        order: 4;
+    }
+
+    /* Actions */
+    .cm-col-main>section:nth-child(2) {
+        order: 5;
+    }
+
+    /* Comments */
+    .cm-col-main>section:nth-child(3) {
+        order: 6;
+    }
+
+    /* Activity */
+
+    /* Also need to flatten the space-y-6 container */
+    .cm-col-side>.space-y-6 {
+        display: contents;
     }
 }
 
-.cm-col, .cm-col-main, .cm-col-side {
+.cm-col,
+.cm-col-main,
+.cm-col-side {
     min-width: 0;
 }
 
@@ -169,7 +218,8 @@
     font-weight: 600;
 }
 
-.cm-textarea, .cm-input {
+.cm-textarea,
+.cm-input {
     width: 100%;
     border: 1px solid #e6e6e6;
     border-radius: 8px;
@@ -177,7 +227,8 @@
     outline: none;
 }
 
-.cm-textarea:focus, .cm-input:focus {
+.cm-textarea:focus,
+.cm-input:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, .2);
 }
 
@@ -226,13 +277,13 @@
 
 .cm-labels {
     display: grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
 }
 
 @media (max-width: 420px) {
     .cm-labels {
-        grid-template-columns:1fr;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -255,7 +306,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
 }
 
-.cm-label.is-selected, .cm-label[aria-pressed="true"] {
+.cm-label.is-selected,
+.cm-label[aria-pressed="true"] {
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--c), #fff 70%);
 }
 
@@ -336,7 +388,13 @@
 }
 
 /* lucide sizing */
-.cm-btn .lucide, .cm-btn-primary .lucide, .cm-chip .lucide, .cm-link .lucide, .cm-section-title .lucide, .cm-add .lucide, .cm-close .lucide {
+.cm-btn .lucide,
+.cm-btn-primary .lucide,
+.cm-chip .lucide,
+.cm-link .lucide,
+.cm-section-title .lucide,
+.cm-add .lucide,
+.cm-close .lucide {
     width: 1em;
     height: 1em;
     vertical-align: -0.125em;
@@ -354,7 +412,7 @@
 
 .cm-attachment {
     display: grid;
-    grid-template-columns:140px 1fr;
+    grid-template-columns: 140px 1fr;
     gap: 12px;
     align-items: start;
     position: relative;
@@ -430,7 +488,9 @@
     letter-spacing: .02em;
 }
 
-.cm-attachment-video, .cm-attachment-audio, .cm-attachment-pdf {
+.cm-attachment-video,
+.cm-attachment-audio,
+.cm-attachment-pdf {
     width: 100%;
     max-height: 220px;
     border: 0;
@@ -596,4 +656,15 @@
     .cm-action span {
         display: none;
     }
+}
+
+/* Description links (target innerHTML content) */
+.cm-description ::ng-deep a {
+    color: #2563eb;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.cm-description ::ng-deep a:hover {
+    color: #1d4ed8;
 }

@@ -1,4 +1,4 @@
-import {Component, HostListener, inject, signal, computed, effect} from '@angular/core';
+import { Component, HostListener, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -40,8 +40,13 @@ export class CardCreateModalComponent {
         // When modal opens: pick first list by default. When closes: reset.
         effect(() => {
             if (this.modal.isOpen()) {
-                const first = this.lists()[0];
-                if (!this.listId()) this.listId.set(first?.id ?? null);
+                const defs = this.modal.defaults();
+                if (defs.listId) {
+                    this.listId.set(defs.listId);
+                } else if (!this.listId()) {
+                    const first = this.lists()[0];
+                    if (first) this.listId.set(first.id);
+                }
             } else {
                 // reset when closing so next open is clean
                 this.title.set('');
@@ -68,7 +73,16 @@ export class CardCreateModalComponent {
         if (!this.canSubmit() || this.adding()) return;
         this.adding.set(true);
         try {
-            await this.cardsApi.createCardInList(this.listId()!, this.title().trim());
+            const created = await this.cardsApi.createCardInList(this.listId()!, this.title().trim());
+
+            // Handle defaults (e.g. due date)
+            const defs = this.modal.defaults();
+            if (defs.dueDate) {
+                await this.cardsApi.patchCardExtended(created.id, {
+                    dueDate: defs.dueDate.toISOString()
+                });
+            }
+
             this.reset();
             this.close();
         } finally {

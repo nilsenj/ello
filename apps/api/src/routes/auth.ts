@@ -30,8 +30,82 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         const { email, name, password } = req.body || ({} as any);
         if (!email || !password) return reply.code(400).send({ error: 'email and password are required' });
 
-        const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-        const user = await prisma.user.create({ data: { email, name, password: hash } });
+        // Check for existing user (e.g. shadow user from invitation)
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        let user;
+
+        if (existingUser) {
+            if (existingUser.isPending) {
+                // Claim shadow account
+                const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+                user = await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                        name: name || existingUser.name,
+                        password: hash,
+                        isPending: false
+                    }
+                });
+            } else {
+                return reply.code(400).send({ error: 'User already exists' });
+            }
+        } else {
+            const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+            user = await prisma.user.create({ data: { email, name, password: hash } });
+        }
+
+        // Auto-create Personal Workspace
+        let baseName = name ? `${name} Workspace` : 'Personal Workspace';
+        let workspaceName = baseName;
+        let counter = 1;
+
+        // Ensure unique workspace name
+        // Limit attempts to avoid infinite loops in pathological cases
+        while ((await prisma.workspace.findUnique({ where: { name: workspaceName } })) && counter < 100) {
+            workspaceName = `${baseName} ${counter}`;
+            counter++;
+        }
+
+        const personalWorkspace = await prisma.workspace.create({
+            data: {
+                name: workspaceName,
+                isPersonal: true,
+                members: {
+                    create: { userId: user.id, role: 'owner' }
+                }
+            }
+        });
+
+        // Check for pending invitations
+        const pendingInvites = await prisma.pendingInvitation.findMany({ where: { email } });
+        for (const invite of pendingInvites) {
+            // Add to workspace
+            try {
+                await prisma.workspaceMember.create({
+                    data: {
+                        workspaceId: invite.workspaceId,
+                        userId: user.id,
+                        role: invite.role
+                    }
+                });
+
+                // Add to board if specified
+                if (invite.boardId) {
+                    await prisma.boardMember.create({
+                        data: {
+                            boardId: invite.boardId,
+                            userId: user.id,
+                            role: invite.role
+                        }
+                    });
+                }
+
+                // Delete invitation
+                await prisma.pendingInvitation.delete({ where: { id: invite.id } });
+            } catch (err) {
+                console.error('Failed to process pending invitation', err);
+            }
+        }
 
         // dev UX: auto-issue tokens on register
         const accessToken = signAccess(user);

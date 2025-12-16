@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpHeaders } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { AppNotification } from './notification.model';
 import { ApiBaseService } from './api-base.service';
 
@@ -9,8 +8,6 @@ import { ApiBaseService } from './api-base.service';
     providedIn: 'root'
 })
 export class NotificationsService {
-    private apiUrl = environment.apiUrl || 'http://localhost:4200';
-
     constructor(private api: ApiBaseService) { }
 
     /** Дістаємо токен без DI, щоб не створювати цикл */
@@ -22,28 +19,25 @@ export class NotificationsService {
     }
 
     getNotifications(limit = 20, offset = 0): Observable<AppNotification[]> {
-        const url = `${this.apiUrl}/api/notifications?limit=${limit}&offset=${offset}`;
         return from(
-            this.api.get<AppNotification[]>(url, {
+            this.api.get<AppNotification[]>(`/api/notifications?limit=${limit}&offset=${offset}`, {
                 headers: this.authHeaders,
             }),
         );
     }
 
     getUnreadCount(): Observable<{ count: number }> {
-        const url = `${this.apiUrl}/api/notifications/unread/count`;
         return from(
-            this.api.get<{ count: number }>(url, {
+            this.api.get<{ count: number }>('/api/notifications/unread/count', {
                 headers: this.authHeaders,
             }),
         );
     }
 
     markAsRead(notificationId: string): Observable<AppNotification> {
-        const url = `${this.apiUrl}/api/notifications/${notificationId}/read`;
         return from(
             this.api.patch<AppNotification>(
-                url,
+                `/api/notifications/${notificationId}/read`,
                 {},
                 { headers: this.authHeaders },
             ),
@@ -51,10 +45,9 @@ export class NotificationsService {
     }
 
     markAllAsRead(): Observable<{ ok: boolean }> {
-        const url = `${this.apiUrl}/api/notifications/read-all`;
         return from(
             this.api.patch<{ ok: boolean }>(
-                url,
+                '/api/notifications/read-all',
                 {},
                 { headers: this.authHeaders },
             ),
@@ -62,9 +55,8 @@ export class NotificationsService {
     }
 
     deleteNotification(notificationId: string): Observable<{ ok: boolean }> {
-        const url = `${this.apiUrl}/api/notifications/${notificationId}`;
         return from(
-            this.api.delete<{ ok: boolean }>(url, {
+            this.api.delete<{ ok: boolean }>(`/api/notifications/${notificationId}`, {
                 headers: this.authHeaders,
             }),
         );

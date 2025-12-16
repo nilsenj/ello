@@ -4,7 +4,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { BoardStore } from '../../store/board-store.service';
 import { WorkspaceLite, WorkspacesService } from '../../data/workspaces.service';
 import { BoardsService } from '../../data/boards.service';
-import { ArchiveIcon, LucideAngularModule, Settings, Users, XIcon } from 'lucide-angular';
+import { ArchiveIcon, ClockIcon, LucideAngularModule, Plus, Settings, StarIcon, Users, XIcon } from 'lucide-angular';
 import { BoardCreateModalComponent } from '../../components/board-create-modal/board-create-modal.component';
 import { BoardCreateModalService } from '../../components/board-create-modal/board-create-modal.service';
 import { WorkspaceCreateModalComponent } from '../../components/workspace-create-modal/workspace-create-modal.component';
@@ -38,6 +38,9 @@ export class HomePageComponent implements OnInit {
     // Icons
     readonly SettingsIcon = Settings;
     readonly UsersIcon = Users;
+    readonly ClockIcon = ClockIcon;
+    readonly StarIcon = StarIcon;
+    readonly PlusIcon = Plus;
 
     // Services
     private router = inject(Router);
@@ -54,6 +57,28 @@ export class HomePageComponent implements OnInit {
     // State
     workspaces = signal<WorkspaceLite[]>([]);
     boards = this.store.boards; // Signal<Board[]>
+    loading = signal<boolean>(true);
+    sidebarOpen = signal<boolean>(false);
+
+    toggleSidebar() {
+        this.sidebarOpen.update(v => !v);
+    }
+
+    // Recent
+    recentBoards = computed(() => {
+        const ids = this.recentBoardIds();
+        const all = this.boards();
+        return ids.map(id => all.find(b => b.id === id)).filter(Boolean) as any[];
+    });
+    private recentBoardIds = signal<string[]>([]);
+
+    // Starred
+    starredBoards = computed(() => {
+        const ids = this.starredBoardIds();
+        const all = this.boards();
+        return ids.map(id => all.find(b => b.id === id)).filter(Boolean) as any[];
+    });
+    starredBoardIds = signal<string[]>([]);
 
     selectedWorkspaceId = signal<string | null>(null);
     selectedWorkspace = computed(() => {
@@ -66,11 +91,18 @@ export class HomePageComponent implements OnInit {
     boardToArchiveName = signal<string>('');
 
     async ngOnInit() {
-        // Load initial data
-        await Promise.all([
-            this.loadWorkspaces(),
-            this.boardsApi.loadBoards()
-        ]);
+        this.loadRecentIds();
+        this.loadStarredIds();
+
+        try {
+            // Load initial data
+            await Promise.all([
+                this.loadWorkspaces(),
+                this.boardsApi.loadBoards()
+            ]);
+        } finally {
+            this.loading.set(false);
+        }
 
         // Subscribe to route params to update selected workspace
         this.route.paramMap.subscribe(params => {
@@ -86,10 +118,51 @@ export class HomePageComponent implements OnInit {
         });
     }
 
+    private loadRecentIds() {
+        if (typeof window !== 'undefined') {
+            try {
+                const recent: string[] = JSON.parse(localStorage.getItem('recent_boards') || '[]');
+                this.recentBoardIds.set(recent);
+            } catch (e) { /* noop */ }
+        }
+    }
+
+    private loadStarredIds() {
+        if (typeof window !== 'undefined') {
+            try {
+                const starred: string[] = JSON.parse(localStorage.getItem('starred_boards') || '[]');
+                this.starredBoardIds.set(starred);
+            } catch (e) { /* noop */ }
+        }
+    }
+
+    isStarred(boardId: string) {
+        return this.starredBoardIds().includes(boardId);
+    }
+
+    toggleStar(event: Event, boardId: string) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const current = this.starredBoardIds();
+        let next: string[];
+
+        if (current.includes(boardId)) {
+            next = current.filter(id => id !== boardId);
+        } else {
+            next = [boardId, ...current];
+        }
+
+        this.starredBoardIds.set(next);
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('starred_boards', JSON.stringify(next));
+        }
+    }
+
     async loadWorkspaces() {
         const list = await this.workspacesApi.list();
         this.workspaces.set(list);
-        // Initial selection logic moved to route subscription or handled here if route is empty
     }
 
     onWorkspaceSelected(id: string) {
@@ -119,6 +192,16 @@ export class HomePageComponent implements OnInit {
         };
 
         return bg && bgMap[bg] ? bgMap[bg] : 'bg-slate-50';
+    }
+
+    getBoardTextColor(board: any): string {
+        const bg = board?.background;
+        // if background is 'none' (or undefined/null which defaults to slate-50), use dark text
+        if (!bg || bg === 'none') {
+            return 'text-slate-700';
+        }
+        // otherwise (colored backgrounds), use white text
+        return 'text-white';
     }
 
     openCreateBoard(workspaceId?: string) {

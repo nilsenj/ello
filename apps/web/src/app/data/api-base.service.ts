@@ -1,45 +1,62 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+// @ts-ignore
+import { environment } from '@env';
 
 type RequestOptions = {
     headers?: HttpHeaders;
+    params?: Record<string, string>;
 };
 
 @Injectable({ providedIn: 'root' })
 export class ApiBaseService {
     private http = inject(HttpClient);
 
-    get<T>(url: string, options: RequestOptions = {}) {
+    private getUrl(path: string): string {
+        if (path.startsWith('http')) return path;
+        return `${environment.apiOrigin}${path}`;
+    }
+
+    get<T>(path: string, options: RequestOptions = {}) {
         return firstValueFrom(
-            this.http.get<T>(url, {
+            this.http.get<T>(this.getUrl(path), {
                 withCredentials: true,
                 ...options,
             }),
         );
     }
 
-    post<T>(url: string, body: unknown, options: RequestOptions = {}) {
+    post<T>(path: string, body: unknown, options: RequestOptions = {}) {
         return firstValueFrom(
-            this.http.post<T>(url, body, {
+            this.http.post<T>(this.getUrl(path), body, {
                 withCredentials: true,
                 ...options,
             }),
         );
     }
 
-    patch<T>(url: string, body: unknown, options: RequestOptions = {}) {
+    put<T>(path: string, body: unknown, options: RequestOptions = {}) {
         return firstValueFrom(
-            this.http.patch<T>(url, body, {
+            this.http.put<T>(this.getUrl(path), body, {
                 withCredentials: true,
                 ...options,
             }),
         );
     }
 
-    delete<T = unknown>(url: string, options: RequestOptions = {}) {
+    patch<T>(path: string, body: unknown, options: RequestOptions = {}) {
         return firstValueFrom(
-            this.http.delete<T>(url, {
+            this.http.patch<T>(this.getUrl(path), body, {
+                withCredentials: true,
+                ...options,
+            }),
+        );
+    }
+
+    delete<T = unknown>(path: string, options: RequestOptions = {}) {
+        return firstValueFrom(
+            this.http.delete<T>(this.getUrl(path), {
                 withCredentials: true,
                 ...options,
             }),

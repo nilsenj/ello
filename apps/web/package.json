@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "serve": "vite --host",
-    "build": "vite build",
+    "build": "vite build --mode production",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "dev": "ng serve --proxy-config proxy.conf.json"
   },
@@ -19,21 +21,27 @@
     "@angular/platform-browser": "18.2.14",
     "@angular/platform-browser-dynamic": "18.2.14",
     "@angular/router": "18.2.14",
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
     "lucide-angular": "^0.553.0",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
+    "rxjs": "^7.8.1",
     "socket.io-client": "^4.8.1",
     "zone.js": "^0.14.8"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "1.10.0",
+    "@analogjs/vitest-angular": "^2.1.2",
     "@tailwindcss/forms": "^0.5.10",
+    "@testing-library/angular": "^18.1.1",
+    "@testing-library/dom": "^10.4.1",
     "autoprefixer": "^10.4.21",
+    "jsdom": "^27.2.0",
     "postcss": "^8.5.6",
     "sass": "^1.93.3",
     "tailwindcss": "^3.4.18",
     "typescript": "5.5.4",
     "vite": "^5.4.0",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.15"
   }
 }

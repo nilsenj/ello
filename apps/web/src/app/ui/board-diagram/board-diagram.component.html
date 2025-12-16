@@ -1,0 +1,107 @@
+<div class="flex flex-col h-screen bg-slate-100">
+    <user-header></user-header>
+
+    <!-- Diagram Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200 shadow-sm">
+        <div class="flex items-center gap-3">
+            <button (click)="goBack()"
+                    class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+                <lucide-icon [img]="ArrowLeftIcon" class="w-4 h-4"></lucide-icon>
+                Back to Board
+            </button>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <h1 class="text-lg font-semibold text-slate-800">{{ board()?.name }} - Diagram View</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- List Filter -->
+            <select [(ngModel)]="selectedListId" (ngModelChange)="onListFilterChange()"
+                    class="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="all">All Lists</option>
+                <option *ngFor="let list of lists()" [value]="list.id">{{ list.name }}</option>
+            </select>
+
+            <div class="h-6 w-px bg-slate-200"></div>
+
+            <!-- Zoom Controls -->
+            <button (click)="zoomOut()" class="p-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                    title="Zoom Out">
+                <lucide-icon [img]="ZoomOutIcon" class="w-4 h-4"></lucide-icon>
+            </button>
+            <button (click)="resetZoom()" class="p-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                    title="Reset View">
+                <lucide-icon [img]="ResetIcon" class="w-4 h-4"></lucide-icon>
+            </button>
+            <button (click)="zoomIn()" class="p-2 text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                    title="Zoom In">
+                <lucide-icon [img]="ZoomInIcon" class="w-4 h-4"></lucide-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Diagram Canvas -->
+    <div class="flex-1 relative overflow-hidden">
+        <!-- Loading State -->
+        <div *ngIf="loading()" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+            <div class="flex flex-col items-center gap-3">
+                <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-sm text-slate-600">Loading diagram...</span>
+            </div>
+        </div>
+
+        <!-- SVG Canvas -->
+        <svg #canvas class="w-full h-full diagram-canvas"></svg>
+
+        <!-- Legend -->
+        <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur rounded-lg shadow-lg p-4 text-sm">
+            <h3 class="font-semibold text-slate-700 mb-2">Relation Types</h3>
+            <div class="space-y-1.5">
+                <div class="flex items-center gap-2" title="Blocks">
+                    <div class="w-6 h-0.5 bg-red-500"></div>
+                    <span class="text-slate-600">Blocks</span>
+                </div>
+                <div class="flex items-center gap-2" title="Depends on">
+                    <div class="w-6 h-0.5 bg-amber-500"></div>
+                    <span class="text-slate-600">Depends on</span>
+                </div>
+                <div class="flex items-center gap-2" title="Relates to">
+                    <div class="w-6 h-0.5 bg-gray-400" style="border-top: 2px dashed"></div>
+                    <span class="text-slate-600">Relates to</span>
+                </div>
+                <div class="flex items-center gap-2" title="Duplicates">
+                    <div class="w-6 h-0.5 bg-purple-500"></div>
+                    <span class="text-slate-600">Duplicates</span>
+                </div>
+            </div>
+
+            <h3 class="font-semibold text-slate-700 mt-4 mb-2">Priority</h3>
+            <div class="flex gap-2">
+                <div class="flex items-center gap-1" title="Urgent">
+                    <div class="w-3 h-3 rounded-full bg-red-600"></div>
+                    <span class="text-xs text-slate-500">Urgent</span>
+                </div>
+                <div class="flex items-center gap-1" title="High">
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span class="text-xs text-slate-500">High</span>
+                </div>
+                <div class="flex items-center gap-1" title="Medium">
+                    <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span class="text-xs text-slate-500">Medium</span>
+                </div>
+                <div class="flex items-center gap-1" title="Low">
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-xs text-slate-500">Low</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading() && nodes().length === 0" class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center text-slate-500">
+                <div class="text-6xl mb-4">📊</div>
+                <h2 class="text-xl font-semibold mb-2">No cards to display</h2>
+                <p>Add some cards to your board to see them in the diagram view.</p>
+            </div>
+        </div>
+    </div>
+</div>

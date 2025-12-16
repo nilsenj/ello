@@ -3,15 +3,21 @@ import { Component, computed, effect, HostListener, inject, signal, untracked } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import type { CardAssignee, Checklist, CommentDto, ModalCard } from '../../types';
+import type { CardAssignee, Checklist, CommentDto, ModalCard, ListDto, Board } from '../../types';
 
 import { CardsService } from '../../data/cards.service';
 import { BoardStore } from '../../store/board-store.service';
 import { LabelsService } from '../../data/labels.service';
 import { BoardsService } from '../../data/boards.service';
+import { ListsService } from '../../data/lists.service';
+import { AuthService } from '../../auth/auth.service';
 import { AttachmentDto, AttachmentsService } from '../../data/attachments.service';
 import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
 import {
+    ActivityIcon,
+    ArchiveIcon,
+    ArrowRightIcon,
+    CopyIcon,
     BoldIcon,
     CalendarIcon,
     DownloadIcon,
@@ -33,13 +39,17 @@ import {
     UsersIcon,
     XCircleIcon,
     XIcon,
+    MoveIcon,
+    ChevronLeftIcon,
+    CheckIcon,
 } from 'lucide-angular';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
-import { CardModalService } from "./card-modal.service";
+import { CardModalService, PanelName } from "./card-modal.service";
 import { FilterByPipe } from '../../shared/filter-by.pipe';
 
-type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning';
+
+
 
 @Component({
     standalone: true,
@@ -54,11 +64,17 @@ export class CardModalComponent {
     cardsApi = inject(CardsService);
     labelsApi = inject(LabelsService);
     boardsApi = inject(BoardsService);
+    listsApi = inject(ListsService);
+    auth = inject(AuthService);
     store = inject(BoardStore);
     attachmentsApi = inject(AttachmentsService);
     private sanitizer = inject(DomSanitizer);
 
     // icons
+    readonly MoveIcon = MoveIcon;
+    readonly ChevronLeftIcon = ChevronLeftIcon;
+    readonly CheckIcon = CheckIcon;
+
     readonly XIcon = XIcon;
     readonly TagIcon = TagIcon;
     readonly CalendarIcon = CalendarIcon;
@@ -79,6 +95,10 @@ export class CardModalComponent {
     readonly SaveIcon = SaveIcon;
     readonly XCircleIcon = XCircleIcon;
     readonly DownloadIcon = DownloadIcon;
+    readonly ArchiveIcon = ArchiveIcon;
+    readonly ActivityIcon = ActivityIcon;
+
+    readonly CopyIcon = CopyIcon; // Need to import this
 
     // ui state
     loading = signal(false);
@@ -106,6 +126,30 @@ export class CardModalComponent {
     renameDraftId = signal<string | null>(null);
     renameDraftName = signal('');
     isUploading = signal(false);
+
+    // activity
+    activities = signal<any[]>([]);
+
+    // Move / Copy state
+    availableBoards = signal<Board[]>([]);
+    targetBoardId = signal<string | null>(null);
+    targetLists = signal<ListDto[]>([]);
+    targetListId = signal<string | null>(null);
+    targetPosition = signal<string>('bottom');
+    copyTitle = signal('');
+    isBusyAction = signal(false);
+
+    canEdit = computed(() => {
+        const uid = this.auth.user()?.id;
+        if (!uid) return false;
+        const members = this.store.members();
+        const me = members.find(m => m.id === uid);
+        // If not found, assuming no access or viewer? 
+        // Typically if you can see the board you are at least a viewer or it's public.
+        // If public board and not logged in / not member -> viewer.
+        // Safe default: must be explicit member with role != viewer
+        return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
+    });
 
     // side-panels
     private openPanelName = signal<PanelName | null>(null);
@@ -224,6 +268,31 @@ export class CardModalComponent {
                     this.attachments.set([]);
                 }
             })();
+
+            (async () => {
+                try {
+                    const acts = await this.cardsApi.getCardActivity(id);
+                    this.activities.set(acts);
+                } catch {
+                    this.activities.set([]);
+                }
+            })();
+        }, { allowSignalWrites: true });
+
+        // EFFECT #2 — Sync initial panel from service (Deep Linking)
+        effect(() => {
+            const open = this.modal.isOpen();
+            const init = this.modal.initialPanel();
+            if (open && init) {
+                this.openPanelName.set(init);
+                // Scroll to the panel after a minimal delay to allow rendering
+                setTimeout(() => {
+                    const el = document.querySelector(`[data-panel="${init}"]`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
         }, { allowSignalWrites: true });
 
         // EFFECT #2 — load labels per board (members logic removed; handled in members-panel)
@@ -274,8 +343,70 @@ export class CardModalComponent {
                     next.cardLabels = [...(((c as any).cardLabels ?? [])), { cardId: c.id, labelId: lid }];
                 this.data.set(next);
             }
-        } catch {
-            /* noop */
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // --- Label Editor ---
+    isEditingLabel = signal(false);
+    labelDraftId = signal<string | null>(null); // null = creating new
+    labelNameDraft = signal('');
+    labelColorDraft = signal('#2196f3');
+
+    // Trello-like colors
+    readonly labelColors = [
+        '#61bd4f', '#f2d600', '#ff9f1a', '#eb5a46', '#c377e0', '#0079bf', // green, yellow, orange, red, purple, blue
+        '#00c2e0', '#51e898', '#ff78cb', '#344563'  // sky, lime, pink, dark
+    ];
+
+    startCreateLabel() {
+        this.labelDraftId.set(null);
+        this.labelNameDraft.set('');
+        this.labelColorDraft.set(this.labelColors[0]);
+        this.isEditingLabel.set(true);
+    }
+
+    startEditLabel(label: { id: string, name: string, color: string }) {
+        this.labelDraftId.set(label.id);
+        this.labelNameDraft.set(label.name);
+        this.labelColorDraft.set(label.color);
+        this.isEditingLabel.set(true);
+    }
+
+    cancelLabelEdit() {
+        this.isEditingLabel.set(false);
+        this.labelDraftId.set(null);
+    }
+
+    async saveLabel() {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+        const name = this.labelNameDraft().trim();
+        const color = this.labelColorDraft();
+        if (!name) return;
+
+        try {
+            if (this.labelDraftId()) {
+                await this.labelsApi.renameLabel(this.labelDraftId()!, { name, color });
+            } else {
+                await this.labelsApi.createLabel(boardId, { name, color });
+            }
+            this.isEditingLabel.set(false);
+        } catch (e) {
+            console.error('Failed to save label', e);
+        }
+    }
+
+    async deleteLabel() {
+        const id = this.labelDraftId();
+        if (!id) return;
+        if (!confirm('Start deleting this label? There is no undo.')) return;
+        try {
+            await this.labelsApi.deleteLabel(id);
+            this.isEditingLabel.set(false);
+        } catch (e) {
+            console.error('Failed to delete label', e);
         }
     }
 
@@ -331,8 +462,7 @@ export class CardModalComponent {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklist(c.id, { title: 'Checklist' });
-        // Ensure items is initialized to avoid template errors
-        const checklistWithItems = { ...created, items: [] };
+        const checklistWithItems = { ...(created as object), items: [] };
         this.data.set({ ...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), checklistWithItems] } as any);
     }
 
@@ -484,55 +614,108 @@ export class CardModalComponent {
         this.isEditingDesc = false;
     }
 
+    descCharCount = computed(() => (this.descDraft() || '').length);
+
     private textarea() {
         return document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
     }
 
-    wrapSelection(left: string, right: string) {
-        const el = this.textarea();
+    wrapSelection(el: HTMLTextAreaElement, left: string, right: string) {
         if (!el) return;
-        const { selectionStart: a, selectionEnd: b } = el;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
         const val = this.descDraft() || '';
-        const sel = val.slice(a, b);
-        const next = val.slice(0, a) + left + sel + right + val.slice(b);
+        const selected = val.slice(start, end);
+
+        // Check inner consistency first (if selected text itself contains the wrapper at edges)
+        // e.g. selected "**foo**"
+        const isInnerWrapped = selected.startsWith(left) && selected.endsWith(right) && selected.length >= left.length + right.length;
+
+        // Check outer consistency (if text *surrounding* selection is the wrapper)
+        // e.g. text is "**foo**", selected "foo"
+        const isOuterWrapped =
+            val.substring(start - left.length, start) === left &&
+            val.substring(end, end + right.length) === right;
+
+        let next: string;
+        let newStart: number;
+        let newEnd: number;
+
+        if (isInnerWrapped) {
+            // Unwrap inner
+            const inner = selected.substring(left.length, selected.length - right.length);
+            next = val.substring(0, start) + inner + val.substring(end);
+            newStart = start;
+            newEnd = start + inner.length;
+        } else if (isOuterWrapped) {
+            // Unwrap outer
+            next = val.substring(0, start - left.length) + selected + val.substring(end + right.length);
+            newStart = start - left.length;
+            newEnd = end - left.length; // Adjusted end position
+        } else {
+            // Wrap
+            next = val.substring(0, start) + left + selected + right + val.substring(end);
+            newStart = start + left.length;
+            newEnd = end + left.length;
+        }
+
         this.descDraft.set(next);
         queueMicrotask(() => {
             el.focus();
-            el.setSelectionRange(a + left.length, b + left.length);
+            el.setSelectionRange(newStart, newEnd);
         });
     }
 
-    insertPrefix(prefix: string) {
-        const el = this.textarea();
+    insertPrefix(el: HTMLTextAreaElement, prefix: string) {
         if (!el) return;
+        const start = el.selectionStart; // cursor
+        const end = el.selectionEnd;
         const val = this.descDraft() || '';
-        const { selectionStart: a, selectionEnd: b } = el;
-        const blockStart = val.slice(0, a).lastIndexOf('\n') + 1;
-        const next = val.slice(0, blockStart) + prefix + val.slice(blockStart);
+
+        // Find the start of the current line
+        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+
+        // Check if line already starts with prefix
+        const currentLineResult = val.substring(lineStart);
+        if (currentLineResult.startsWith(prefix)) {
+            // Remove prefix (toggle off)
+            const next = val.substring(0, lineStart) + val.substring(lineStart + prefix.length);
+            this.descDraft.set(next);
+            queueMicrotask(() => {
+                el.focus();
+                el.setSelectionRange(Math.max(lineStart, start - prefix.length), Math.max(lineStart, end - prefix.length));
+            });
+        } else {
+            // Insert prefix
+            const next = val.slice(0, lineStart) + prefix + val.slice(lineStart);
+            this.descDraft.set(next);
+            queueMicrotask(() => {
+                el.focus();
+                el.setSelectionRange(start + prefix.length, end + prefix.length);
+            });
+        }
+    }
+
+    makeHeading(el: HTMLTextAreaElement) {
+        this.insertPrefix(el, '# ');
+    }
+
+    insertLink(el: HTMLTextAreaElement) {
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const val = this.descDraft() || '';
+        const selected = val.slice(start, end) || 'link text';
+        const ins = `[${selected}](https://)`;
+        const next = val.slice(0, start) + ins + val.slice(end);
+
         this.descDraft.set(next);
         queueMicrotask(() => {
             el.focus();
-            el.setSelectionRange(a + prefix.length, b + prefix.length);
-        });
-    }
-
-    makeHeading() {
-        this.insertPrefix('# ');
-    }
-
-    insertLink() {
-        const el = this.textarea();
-        if (!el) return;
-        const { selectionStart: a, selectionEnd: b } = el;
-        const val = this.descDraft() || '';
-        const sel = val.slice(a, b) || 'link text';
-        const ins = `[${sel}](https://)`;
-        const next = val.slice(0, a) + ins + val.slice(b);
-        this.descDraft.set(next);
-        queueMicrotask(() => {
-            el.focus();
-            const pos = a + ins.length - 1;
-            el.setSelectionRange(pos, pos);
+            // Highlight the URL part: [text](|highlight|)
+            const urlStart = start + 1 + selected.length + 2; // [ + text + ](
+            const urlEnd = urlStart + 8; // https://
+            el.setSelectionRange(urlStart, urlEnd);
         });
     }
 
@@ -802,6 +985,175 @@ export class CardModalComponent {
             }
         } finally {
             this.isUploading.set(false);
+        }
+    }
+
+    // ------- Actions -------
+    async archiveCard() {
+        const c = this.data();
+        if (!c) return;
+        if (!confirm('Archive this card?')) return;
+        try {
+            await this.cardsApi.archiveCard(c.id);
+            this.close();
+        } catch (err) {
+            console.error('Failed to archive card', err);
+        }
+    }
+
+    deleteCard() {
+        this.openPanel('delete');
+    }
+
+    async doDelete() {
+        const c = this.data();
+        if (!c) return;
+        this.isBusyAction.set(true);
+        try {
+            await this.cardsApi.deleteCard(c.id);
+            this.close();
+        } catch (err) {
+            console.error('Failed to delete card', err);
+        } finally {
+            this.isBusyAction.set(false);
+        }
+    }
+
+
+
+    // ------- Move / Copy Actions -------
+    async prepareMoveOrCopy(type: 'move' | 'copy') {
+        this.isBusyAction.set(true);
+        try {
+            // Load boards if not loaded
+            if (this.availableBoards().length === 0) {
+                await this.boardsApi.loadBoards();
+                this.availableBoards.set(this.store.boards());
+            }
+
+            this.openPanel(type);
+            const c = this.data();
+            const currentBoardId = this.store.currentBoardId();
+
+            // Default to current board/list
+            this.targetBoardId.set(currentBoardId);
+            this.copyTitle.set(c?.title || '');
+
+            if (currentBoardId) {
+                await this.loadTargetLists(currentBoardId);
+                // Try to find current list
+                const found = this.targetLists().find(l => l.cards?.some(x => x.id === c?.id));
+                if (found) {
+                    this.targetListId.set(found.id);
+                } else if (this.targetLists().length > 0) {
+                    this.targetListId.set(this.targetLists()[0].id);
+                }
+            }
+        } finally {
+            this.isBusyAction.set(false);
+        }
+    }
+
+    async onTargetBoardChange(boardId: string) {
+        this.targetBoardId.set(boardId);
+        this.isBusyAction.set(true);
+        try {
+            await this.loadTargetLists(boardId);
+        } finally {
+            this.isBusyAction.set(false);
+        }
+    }
+
+    async loadTargetLists(boardId: string) {
+        // Use the new side-effect-free fetch
+        const lists = await this.listsApi.fetchLists(boardId);
+        this.targetLists.set(lists);
+        if (lists.length > 0) {
+            this.targetListId.set(lists[0].id);
+        } else {
+            this.targetListId.set(null);
+        }
+    }
+
+    async doMove() {
+        const c = this.data();
+        const bid = this.targetBoardId();
+        const lid = this.targetListId();
+        if (!c || !bid || !lid) return;
+
+        this.isBusyAction.set(true);
+        try {
+            // Logic for position
+            // For now simplified to 'top' or 'bottom'. 
+            // If we want exact position we need more logic.
+            // CardsService.moveCard(id, toListId, before?, after?)
+
+            let beforeId: string | undefined;
+            let afterId: string | undefined;
+
+            const targetList = this.targetLists().find(l => l.id === lid);
+            const cards = targetList?.cards || [];
+
+            if (this.targetPosition() === 'top') {
+                if (cards.length > 0) {
+                    afterId = cards[0].id;
+                }
+            } else {
+                // bottom
+                // no before/after needed usually means append
+            }
+
+            await this.cardsApi.moveCard(c.id, lid, beforeId, afterId);
+
+            // If moved to another board, close modal
+            if (bid !== this.store.currentBoardId()) {
+                this.close();
+                // Remove from local store
+                this.store.removeCardLocally(c.id);
+            } else {
+                // Same board, close panel, update local data
+                // Store updates happen via socket or optimistic update in service
+                this.closePanel();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            this.isBusyAction.set(false);
+        }
+    }
+
+    async doCopy() {
+        const c = this.data();
+        const bid = this.targetBoardId();
+        const lid = this.targetListId();
+        const title = this.copyTitle().trim();
+
+        if (!c || !bid || !lid || !title) return;
+
+        this.isBusyAction.set(true);
+        try {
+            await this.cardsApi.copyCard(c.id, lid, title);
+            // If copied to same board, we might want to see it? 
+            // Usually Copy keeps the modal open on the original card.
+            this.closePanel();
+            alert('Card copied!');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            this.isBusyAction.set(false);
+        }
+    }
+
+    // ------- Activity Helper -------
+    formatActivity(act: any) {
+        switch (act.type) {
+            case 'create_card': return `added this card to ${act.payload?.listName || 'a list'}`;
+            case 'move_card': return `moved this card from ${act.payload?.fromList || '...'} to ${act.payload?.toList || '...'}`;
+            case 'comment_card': return `commented on this card`;
+            case 'archive_card': return `archived this card`;
+            case 'restore_card': return `restored this card`;
+            case 'card_completion': return act.payload?.isDone ? `marked this card as complete` : `marked this card as incomplete`;
+            default: return `performed ${act.type}`;
         }
     }
 

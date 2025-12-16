@@ -20,11 +20,7 @@
                     <div
                         class="flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 p-8 h-full min-h-[300px]">
                         <div class="w-[300px] h-[200px] rounded-lg shadow-xl relative overflow-hidden transition-all duration-300"
-                            [ngStyle]="{
-                                  'background': bgType()==='color' ? bgValue() : (bgValue() ? 'url(' + bgValue() + ')' : '#e5e7eb'),
-                                  'backgroundSize': 'cover',
-                                  'backgroundPosition':'center'
-                                }">
+                            [style.background]="getPreviewStyle()">
                             <!-- Fake UI overlay -->
                             <div class="absolute inset-0 bg-black/10"></div>
                             <div class="absolute top-3 left-3 right-3 flex gap-2">
@@ -72,9 +68,10 @@
                             <div class="grid grid-cols-5 gap-2">
                                 <button *ngFor="let c of colorPresets" type="button"
                                     class="aspect-square rounded-md shadow-sm hover:scale-110 transition-transform ring-2 ring-transparent focus:outline-none"
-                                    [style.background]="c" [class.ring-blue-500]="bgType()==='color' && bgValue()===c"
-                                    [class.ring-offset-2]="bgType()==='color' && bgValue()===c"
-                                    (click)="pickColor(c)"></button>
+                                    [style.background]="c.value"
+                                    [class.ring-blue-500]="bgType()==='color' && bgValue()===c.id"
+                                    [class.ring-offset-2]="bgType()==='color' && bgValue()===c.id"
+                                    (click)="pickColor(c.id)"></button>
                             </div>
 
                             <div *ngIf="imagePresets.length" class="grid grid-cols-4 gap-2 mt-2">
@@ -91,7 +88,7 @@
                             <span class="text-sm font-medium text-slate-700">Visibility</span>
                             <div class="relative">
                                 <select
-                                    class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     [ngModel]="visibility()" (ngModelChange)="visibility.set($event)">
                                     <option value="private">Private</option>
                                     <option value="workspace">Workspace</option>

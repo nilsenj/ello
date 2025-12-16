@@ -4,14 +4,27 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@env": [
+        "src/environments/environment.ts"
+      ]
+    },
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "useDefineForClassFields": false,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
   "files": [],
   "references": []
 }

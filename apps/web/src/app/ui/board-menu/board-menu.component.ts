@@ -17,6 +17,7 @@ import { Activity, Card, ListDto } from '../../types';
 import { ActivityService } from '../../data/activity.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
+import { WorkspacesService, WorkspaceMember } from '../../data/workspaces.service';
 
 @Component({
     standalone: true,
@@ -41,39 +42,98 @@ export class BoardMenuComponent {
     readonly XIcon = XIcon;
     readonly PaletteIcon = PaletteIcon;
 
+    workspacesApi = inject(WorkspacesService); // Inject WorkspacesService
+
     members = signal<BoardMemberLite[]>([]);
     inviteEmail = signal('');
     inviteRole = signal<MemberRole>('member');
     inviteError = signal('');
     isInviting = signal(false);
 
+    // Workspace member search for invitation
+    workspaceMembers = signal<WorkspaceMember[]>([]);
+    showInviteDropdown = signal(false);
+
     // Check if current user can edit board (owner or admin)
-    canEditBoard = computed(() => {
+    currentUserRole = computed(() => {
         const currentUserId = this.authService.user()?.id;
-        if (!currentUserId) return false;
+        if (!currentUserId) return null;
 
-        const boardId = this.store.currentBoardId();
-        if (!boardId) return false;
-
-        const board = this.store.boards().find(b => b.id === boardId);
-        if (!board?.members) return false;
-
-        const myMembership = board.members.find(m => m.userId === currentUserId);
-        return myMembership?.role === 'owner' || myMembership?.role === 'admin';
+        // Use the separately loaded members list from the store
+        const members = this.store.members();
+        return members.find(m => m.userId === currentUserId || m.id === currentUserId)?.role || null;
     });
+
+    myWorkspaces = signal<any[]>([]);
+
+    constructor() {
+        this.fetchMyWorkspaces();
+    }
+
+    async fetchMyWorkspaces() {
+        try {
+            const ws = await this.workspacesApi.list();
+            this.myWorkspaces.set(ws);
+        } catch (e) {
+            console.error('Failed to load workspaces for permissions check', e);
+        }
+    }
+
+    canEditBoard = computed(() => {
+        const role = this.currentUserRole();
+        if (role === 'owner' || role === 'admin') return true;
+
+        // Fallback: Check if user is Workspace Admin/Owner
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
+
+        const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
+        return ws?.role === 'owner' || ws?.role === 'admin';
+    });
+
+    // Computed signal to track current board's background for reactivity
+    currentBoardBackground = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        return board?.background || null;
+    });
+
+    canManageMember(member: BoardMemberLite): boolean {
+        const myRole = this.currentUserRole();
+        const myId = this.authService.user()?.id;
+
+        // Cannot change own role
+        if (member.userId === myId) return false;
+
+        // Owner logic: Can manage anyone except other owners
+        if (myRole === 'owner') {
+            return member.role !== 'owner';
+        }
+
+        // Admin logic: Can manage members/viewers/admins, but cannot touch owners
+        if (myRole === 'admin') {
+            return member.role !== 'owner';
+        }
+
+        return false;
+    }
+
+    getAvailableRoles(): MemberRole[] {
+        const myRole = this.currentUserRole();
+        if (myRole === 'owner') {
+            return ['owner', 'admin', 'member', 'viewer'];
+        }
+        if (myRole === 'admin') {
+            // Admin cannot promote to owner
+            return ['admin', 'member', 'viewer'];
+        }
+        return [];
+    }
 
     isOpen = signal(false);
     view = signal<'main' | 'background' | 'visibility' | 'archived' | 'activity' | 'members'>('main');
     archivedView = signal<'cards' | 'lists'>('cards'); // Tab selection for archived view
-
-    // Archived items derived from store
-    // Note: This assumes the store contains ALL items, including archived ones.
-    // If the backend filters them out, we might need a separate API call to fetch archived items.
-    // For now, let's assume we need to fetch them, or they are in the store but hidden.
-    // Actually, usually Kanban boards hide archived items from the main view.
-    // Let's assume the store `lists()` only has visible lists.
-    // We might need a new method in store or service to get archived items.
-    // For MVP, let's implement the UI and hook up the API calls.
 
     archivedCards = signal<Card[]>([]);
     archivedLists = signal<ListDto[]>([]);
@@ -115,6 +175,13 @@ export class BoardMenuComponent {
         { id: 'gradient-sunset', name: 'Sunset', class: 'bg-gradient-to-br from-orange-400 to-red-500' },
         { id: 'gradient-forest', name: 'Forest', class: 'bg-gradient-to-br from-green-400 to-emerald-600' },
         { id: 'gradient-ocean', name: 'Deep Ocean', class: 'bg-gradient-to-br from-cyan-500 to-blue-700' },
+    ];
+
+    images = [
+        'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1000&q=80'
     ];
 
     open() {
@@ -214,9 +281,7 @@ export class BoardMenuComponent {
     }
 
     isBackgroundSelected(backgroundId: string): boolean {
-        const boardId = this.store.currentBoardId();
-        const board = this.store.boards().find(b => b.id === boardId);
-        return board?.background === backgroundId;
+        return this.currentBoardBackground() === backgroundId;
     }
 
     async showActivity() {
@@ -272,6 +337,63 @@ export class BoardMenuComponent {
         }
     }
 
+    async onInviteSearch(e: Event) {
+        const val = (e.target as HTMLInputElement).value;
+        this.inviteEmail.set(val);
+        this.inviteError.set('');
+
+        if (val.trim().length < 1) {
+            this.workspaceMembers.set([]);
+            this.showInviteDropdown.set(false);
+            return;
+        }
+
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return;
+
+        try {
+            const members = await this.workspacesApi.searchMembers(board.workspaceId, val);
+            // Filter out members already on the board
+            const currentMemberIds = new Set(this.members().map(m => m.id));
+            const available = members.filter(m => !currentMemberIds.has(m.id));
+            this.workspaceMembers.set(available);
+            this.showInviteDropdown.set(available.length > 0);
+        } catch (err) {
+            console.error('Failed to search workspace members', err);
+        }
+    }
+
+    selectInviteMember(member: WorkspaceMember) {
+        this.inviteEmail.set(member.email || ''); // Use email if available, or we might need to change addMember to accept userId
+        // Actually boardsApi.addMember takes email. If the workspace member doesn't have email visible, this might be tricky.
+        // But the search endpoint returns email.
+        this.showInviteDropdown.set(false);
+        // Optionally auto-invite? Or just fill the input? Let's fill the input.
+    }
+
+    async inviteMember() {
+        const email = this.inviteEmail().trim();
+        if (!email) return;
+
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+
+        this.isInviting.set(true);
+        this.inviteError.set('');
+
+        try {
+            await this.boardsApi.addMember(boardId, email, this.inviteRole());
+            this.inviteEmail.set('');
+            this.showInviteDropdown.set(false);
+            await this.fetchMembers();
+        } catch (err: any) {
+            this.inviteError.set(err?.error?.error || 'Failed to invite user');
+        } finally {
+            this.isInviting.set(false);
+        }
+    }
+
     // --- Members ---
     async showMembers() {
         this.view.set('members');
@@ -301,27 +423,6 @@ export class BoardMenuComponent {
             await this.boardsApi.updateBoardMemberRole(boardId, userId, role);
             // refresh
             await this.fetchMembers();
-        }
-    }
-
-    async inviteMember() {
-        const email = this.inviteEmail().trim();
-        if (!email) return;
-
-        const boardId = this.store.currentBoardId();
-        if (!boardId) return;
-
-        this.isInviting.set(true);
-        this.inviteError.set('');
-
-        try {
-            await this.boardsApi.addMember(boardId, email, this.inviteRole());
-            this.inviteEmail.set('');
-            await this.fetchMembers();
-        } catch (err: any) {
-            this.inviteError.set(err?.error?.error || 'Failed to invite user');
-        } finally {
-            this.isInviting.set(false);
         }
     }
 

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ApiBaseService } from '../data/api-base.service';
 import { SocketService } from '../data/socket.service';
 import { NotificationsStore } from '../data/notifications-store.service';
 
@@ -7,6 +8,7 @@ type User = { id: string; email: string; name?: string; avatar?: string };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+    private api = inject(ApiBaseService);
     private http = inject(HttpClient);
     private socketService = inject(SocketService);
     private notificationsStore = inject(NotificationsStore);
@@ -22,7 +24,7 @@ export class AuthService {
     async bootstrap() {
         if (!this._access()) { this._bootstrapped.set(true); return; }
         try {
-            const me = await this.http.get<User>('/api/auth/me').toPromise();
+            const me = await this.api.get<User>('/api/auth/me');
             this._user.set(me ?? null);
             if (me?.id) localStorage.setItem('userId', me.id); // ✅ keep for UI helpers
 
@@ -44,13 +46,13 @@ export class AuthService {
     }
 
     async register(payload: { email: string; name?: string; password: string }) {
-        return this.http.post('/api/auth/register', payload, { withCredentials: true }).toPromise();
+        return this.api.post('/api/auth/register', payload);
     }
 
     async login(payload: { email: string; password: string }) {
-        const res = await this.http.post<{
+        const res = await this.api.post<{
             accessToken: string; refreshToken?: string; user: User;
-        }>('/api/auth/login', payload, { withCredentials: true }).toPromise();
+        }>('/api/auth/login', payload);
 
         if (res?.accessToken) {
             this._access.set(res.accessToken);
@@ -68,7 +70,7 @@ export class AuthService {
     }
 
     async logout() {
-        try { await this.http.post('/api/auth/logout', {}, { withCredentials: true }).toPromise(); } catch { }
+        try { await this.api.post('/api/auth/logout', {}); } catch { }
         this._user.set(null);
         this._access.set(null);
         localStorage.removeItem('accessToken');
@@ -81,19 +83,17 @@ export class AuthService {
     // ⬇️ add withCredentials: true on refresh
     async tryRefresh(): Promise<boolean> {
         try {
-            const res = await this.http
+            const res = await this.api
                 .post<{ accessToken: string }>(
                     '/api/auth/refresh',
-                    {},
-                    { withCredentials: true }   // ✅ important
-                )
-                .toPromise();
+                    {}
+                );
 
             if (res?.accessToken) {
                 this._access.set(res.accessToken);
                 localStorage.setItem('accessToken', res.accessToken);
 
-                const me = await this.http.get<User>('/api/auth/me').toPromise();
+                const me = await this.api.get<User>('/api/auth/me');
                 this._user.set(me || null);
 
                 // ⬇️ persist userId because your CardsService uses it in withUser()
@@ -115,17 +115,17 @@ export class AuthService {
 
     // Password reset flows
     requestPassword(email: string) {
-        return this.http.post<{ ok: boolean; resetToken?: string }>(
-            '/api/auth/password/request', { email }, { withCredentials: true }
-        ).toPromise();
+        return this.api.post<{ ok: boolean; resetToken?: string }>(
+            '/api/auth/password/request', { email }
+        );
     }
 
     resetPassword(token: string, password: string) {
-        return this.http.post('/api/auth/password/reset', { token, password }, { withCredentials: true }).toPromise();
+        return this.api.post('/api/auth/password/reset', { token, password });
     }
 
     async updateProfile(data: { name?: string; avatar?: string; password?: string }) {
-        const updated = await this.http.patch<User>('/api/auth/me', data).toPromise();
+        const updated = await this.api.patch<User>('/api/auth/me', data);
         if (updated) {
             this._user.set(updated);
         }

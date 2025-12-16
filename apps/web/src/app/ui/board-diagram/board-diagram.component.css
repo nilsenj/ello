@@ -1,0 +1,55 @@
+/* Diagram canvas styling */
+.diagram-canvas {
+    background-color: #f8fafc;
+    background-image:
+        radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+    cursor: grab;
+}
+
+.diagram-canvas:active {
+    cursor: grabbing;
+}
+
+/* Node hover effects */
+.node rect {
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.node:hover rect {
+    filter: brightness(1.1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+/* Link styling */
+.links line {
+    stroke-opacity: 0.6;
+    transition: stroke-opacity 0.2s ease;
+}
+
+.links line:hover {
+    stroke-opacity: 1;
+    stroke-width: 3;
+}
+
+/* Legend styling */
+.legend {
+    pointer-events: none;
+}
+
+/* Animation for loading */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
