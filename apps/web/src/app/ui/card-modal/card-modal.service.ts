@@ -3,7 +3,16 @@ import { Injectable, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
-export type PanelName = 'labels' | 'members' | 'dates' | 'checklists' | 'attachments' | 'planning' | 'move' | 'copy' | 'delete';
+export type PanelName =
+    | 'labels'
+    | 'members'
+    | 'dates'
+    | 'checklists'
+    | 'attachments'
+    | 'planning'
+    | 'move'
+    | 'copy'
+    | 'delete';
 
 @Injectable({ providedIn: 'root' })
 export class CardModalService {
@@ -23,8 +32,12 @@ export class CardModalService {
         this.router.events
             .pipe(filter(e => e instanceof NavigationEnd))
             .subscribe(() => {
-                if (this.ignoreNext) { this.ignoreNext = false; return; }
-                const id = this.readCardFromHash();
+                if (this.ignoreNext) {
+                    this.ignoreNext = false;
+                    return;
+                }
+
+                const id = this.readCardFromUrl();
                 if (id) {
                     this._cardId.set(id);
                     this._isOpen.set(true);
@@ -34,7 +47,7 @@ export class CardModalService {
                 }
             });
 
-        const idNow = this.readCardFromHash();
+        const idNow = this.readCardFromUrl();
         if (idNow) {
             this._cardId.set(idNow);
             this._isOpen.set(true);
@@ -45,50 +58,45 @@ export class CardModalService {
         this._cardId.set(id);
         this._initialPanel.set(panel);
         this._isOpen.set(true);
+
+        // Update URL for deep-linking without relying on fragment.
+        // (The board view updates query params frequently; fragments can get cleared.)
         this.ignoreNext = true;
-        this.setHashParam('card', id);
+        this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { card: id },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+        });
     }
 
     close() {
         this._isOpen.set(false);
         this._cardId.set('');
         this._initialPanel.set(null);
+
         this.ignoreNext = true;
-        this.removeHashParam('card');
-    }
-
-    // --- Hash helpers ---
-    private get hashParams(): URLSearchParams {
-        const raw = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#/, '');
-        return new URLSearchParams(raw);
-    }
-
-    private readCardFromHash(): string | null {
-        const params = this.hashParams;
-        const id = params.get('card');
-        return id && id.trim() ? id : null;
-    }
-
-    private setHashParam(key: string, value: string) {
-        const params = this.hashParams;
-        params.set(key, value);
         this.router.navigate([], {
             relativeTo: this.route,
-            fragment: params.toString(),  // e.g. 'card=abc123'
+            queryParams: { card: null },
+            queryParamsHandling: 'merge',
             replaceUrl: true,
-            queryParamsHandling: 'merge' // Preserve board View
         });
     }
 
-    private removeHashParam(key: string) {
-        const params = this.hashParams;
-        params.delete(key);
-        const nextFrag = params.toString() || null;
-        this.router.navigate([], {
-            relativeTo: this.route,
-            fragment: nextFrag as string,  // null removes hash
-            replaceUrl: true,
-            queryParamsHandling: 'merge' // Preserve board View
-        });
+    private readCardFromUrl(): string | null {
+        // Prefer query param `?card=`. Fallback to `#card=` if present.
+        try {
+            const url = this.router.parseUrl(this.router.url);
+            const fromQuery = (url.queryParams?.['card'] ?? '').toString().trim();
+            if (fromQuery) return fromQuery;
+
+            const fromFragment = (url.fragment ?? '').toString();
+            const fragParams = new URLSearchParams(fromFragment);
+            const fromHash = (fragParams.get('card') ?? '').trim();
+            return fromHash || null;
+        } catch {
+            return null;
+        }
     }
 }

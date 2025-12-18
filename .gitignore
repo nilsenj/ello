@@ -33,6 +33,10 @@ temp/
 coverage/
 reports/
 
+# Playwright artifacts
+apps/web-e2e/test-results/
+apps/web-e2e/playwright-report/
+
 # Angular caches (apps/web)
 .angular/
 apps/web/.angular/

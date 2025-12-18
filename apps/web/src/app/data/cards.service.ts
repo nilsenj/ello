@@ -237,9 +237,11 @@ export class CardsService {
 
     // ---------- Actions ----------
     async archiveCard(cardId: string) {
+        // Keep the card in local store as archived so it appears in the board menu
+        // under "Archived items" and can be restored.
         await this.patchCardExtended(cardId, { isArchived: true });
-        this.store.removeCardLocally(cardId);
     }
+
 
     async copyCard(cardId: string, toListId: string, title?: string) {
         return this.api.post<Card>(`/api/cards/${cardId}/copy`, { toListId, title });

@@ -20,6 +20,14 @@ const authGuard = async () => {
     });
 };
 
+/** Guard: allow landing page only for guests */
+const guestOnlyGuard = async () => {
+    const auth = inject(AuthService);
+
+    await auth.ensureBootstrapped();
+    return !auth.isAuthed();
+};
+
 /** Guard: resolve /b/_auto → first board id; otherwise route to login with hint */
 const autoBoardGuard = async () => {
     const boards = inject(BoardsService);
@@ -55,6 +63,15 @@ export const routes: Routes = [
         title: 'Create account'
     },
     {path: 'forgot', loadComponent: () => import('./auth/forgot.page').then(m => m.default), title: 'Reset password'},
+
+    // Public landing page (guests only)
+    {
+        path: '',
+        pathMatch: 'full',
+        canMatch: [guestOnlyGuard],
+        loadComponent: () => import('./pages/landing.page').then(m => m.default),
+        title: 'Your personal kanban alternative board'
+    },
 
     // ✅ BYPASS /uploads/** BEFORE ANY GUARDED/SPA ROUTES
     {matcher: uploadsMatcher, component: UploadsBypassComponent},
