@@ -456,7 +456,8 @@
                         </div>
 
                         <!-- Attach by URL -->
-                        <div class="flex items-center gap-2">
+                        <div class="cm-attachments-url-row flex items-center gap-2">
+
                             <input class="cm-input flex-1" placeholder="https://example.com/file.png"
                                 [ngModel]="attachUrlDraft()" (ngModelChange)="attachUrlDraft.set($event)" />
                             <button class="cm-btn inline-flex items-center" (click)="addAttachmentByUrl()">
@@ -477,7 +478,8 @@
                             <div class="cm-attachment-thumb">
                                 <!-- Preview heuristic -->
                                 <ng-container *ngIf="isImage(a); else typeThumb">
-                                    <img [src]="attachmentApiFileUrl(a)" alt="" />
+                                    <img [src]="safeMediaUrl(attachmentApiFileUrl(a))" alt="" />
+
                                 </ng-container>
 
                                 <ng-template #typeThumb>
@@ -539,11 +541,19 @@
                                     <span class="cm-muted">{{ humanBytes(a.size ?? 0) }}</span>
                                     <span class="cm-meta-dot"></span>
 
-                                    <button class="cm-link inline-flex items-center" (click)="downloadAttachment(a)"
-                                        [disabled]="isDownloading(a.id)" aria-label="Download">
+                                    <button *ngIf="isExternal(a)" class="cm-link inline-flex items-center"
+                                        (click)="previewAttachment(a)" aria-label="Visit link">
+                                        <lucide-icon [img]="ExternalLinkIcon" class="mr-1"></lucide-icon>
+                                        Visit
+                                    </button>
+
+                                    <button *ngIf="!isExternal(a)" class="cm-link inline-flex items-center"
+                                        (click)="downloadAttachment(a)" [disabled]="isDownloading(a.id)"
+                                        aria-label="Download">
                                         <lucide-icon [img]="DownloadIcon" class="mr-1"></lucide-icon>
                                         <ng-container *ngIf="!isDownloading(a.id); else dlProg">Download</ng-container>
                                     </button>
+
                                     <ng-template #dlProg>{{ downloadPercent(a.id) }}%</ng-template>
                                 </div>
 

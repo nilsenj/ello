@@ -51,11 +51,11 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
     `],
     template: `
         <header class="hdr w-full relative z-50">
-            <div class="mx-auto max-w-full px-4 py-2 flex items-center justify-between relative min-h-[52px]">
+            <div class="mx-auto max-w-full px-2 sm:px-4 py-2 flex items-center justify-between relative min-h-[52px]">
 
                 <!-- Left: Logo & Board Switcher -->
-                <div class="flex items-center gap-3 shrink-0" [class.hidden]="mobileSearchOpen()">
-                    <a class="flex items-center gap-2.5 group" [routerLink]="['/']">
+                <div class="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1" [class.hidden]="mobileSearchOpen()">
+                    <a class="flex items-center gap-2 group shrink-0" [routerLink]="['/']">
                         <!-- Logo Icon -->
                         <div class="relative w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors backdrop-blur-sm shadow-sm ring-1 ring-white/20">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white drop-shadow-sm">
@@ -66,13 +66,14 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                         </div>
                         
                         <!-- Text hidden on mobile -->
-                        <span class="hidden md:block text-2xl font-black tracking-tighter text-white drop-shadow-sm group-hover:opacity-90 transition-opacity"
-                              style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+                        <span class="hidden lg:block text-2xl font-black tracking-tighter text-white drop-shadow-sm group-hover:opacity-90 transition-opacity"
+                               style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
                             ello
                         </span>
                     </a>
 
                     <header-board-switcher
+                        class="min-w-0"
                         [currentBoardName]="currentBoardName()"
                         [currentBoardId]="store.currentBoardId()"
                         [boardsByWorkspace]="boardsByWorkspace()"
@@ -138,18 +139,19 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                 </div>
 
                 <!-- Right: Notifications, Search Toggle (Mobile), User -->
-                <div class="ml-auto flex items-center gap-2 sm:gap-3 shrink-0" [class.hidden]="mobileSearchOpen()">
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0" [class.hidden]="mobileSearchOpen()">
                     <!-- Mobile Search Toggle -->
-                    <button class="md:hidden pill p-2 text-white hover:bg-white/20 transition-colors rounded-md" (click)="toggleMobileSearch()">
+                    <button class="md:hidden pill p-1.5 sm:p-2 text-white hover:bg-white/20 transition-colors rounded-md shrink-0" (click)="toggleMobileSearch()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </button>
 
                     <!-- Mobile Create Button (simplified) -->
-                    <button class="md:hidden pill p-2 text-white hover:bg-white/20 transition-colors rounded-md" (click)="onCreateBoardClick()">
+                    <button class="md:hidden pill p-1.5 sm:p-2 text-white hover:bg-white/20 transition-colors rounded-md shrink-0" (click)="onCreateBoardClick()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                     </button>
 
                     <header-notifications
+                        class="shrink-0"
                         [unreadCount]="unreadCount()"
                         [notifications]="notifications()"
                         (markAsRead)="markNotificationAsRead($event)"
@@ -158,6 +160,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </header-notifications>
 
                     <header-user-menu
+                        class="shrink-0"
                         [user]="user()"
                         [initials]="initials()"
                         (logout)="logout()"
@@ -165,6 +168,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </header-user-menu>
                 </div>
             </div>
+
 
             <!-- Mount modals -->
             <board-create-modal></board-create-modal>

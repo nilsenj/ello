@@ -27,8 +27,9 @@ export class SocketService implements OnDestroy {
             this.socket.disconnect();
         }
 
-        const socketUrl = environment.apiUrl || 'http://localhost:3000';
-        console.log('[SocketService] Connecting to:', socketUrl);
+        const socketUrl = environment.apiUrl; // Empty string defaults to window.location
+        console.log('[SocketService] Connecting to:', socketUrl || 'current host');
+
 
         this.socket = io(socketUrl, {
             auth: { token },

@@ -42,7 +42,9 @@ import {
     MoveIcon,
     ChevronLeftIcon,
     CheckIcon,
+    ExternalLinkIcon,
 } from 'lucide-angular';
+
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
 import { CardModalService, PanelName } from "./card-modal.service";
@@ -97,6 +99,8 @@ export class CardModalComponent {
     readonly DownloadIcon = DownloadIcon;
     readonly ArchiveIcon = ArchiveIcon;
     readonly ActivityIcon = ActivityIcon;
+    readonly ExternalLinkIcon = ExternalLinkIcon;
+
 
     readonly CopyIcon = CopyIcon; // Need to import this
 
@@ -174,10 +178,17 @@ export class CardModalComponent {
     isAudio = (a: AttachmentDto) => a.mime?.toLowerCase().startsWith('audio/') || this.isExt(a.url, this.reAud);
     isPdf = (a: AttachmentDto) => a.mime?.toLowerCase() === 'application/pdf' || this.isExt(a.url, this.rePdf);
 
+    isExternal(a: AttachmentDto): boolean {
+        const raw = a.url || '';
+        return /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) || raw.startsWith('blob:');
+    }
+
+
     safeMediaUrl(u: string | null | undefined): SafeResourceUrl {
         const url = (u ?? '').trim();
-        return this.sanitizer.bypassSecurityTrustResourceUrl(/^(https?:|blob:)/i.test(url) ? url : 'about:blank');
+        return this.sanitizer.bypassSecurityTrustResourceUrl(/^(https?:|blob:|\/)/i.test(url) ? url : 'about:blank');
     }
+
 
     openPanel(name: PanelName, focusQuery?: string) {
         if (this.openPanelName() !== name) {

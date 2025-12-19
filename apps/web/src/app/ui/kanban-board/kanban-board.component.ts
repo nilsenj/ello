@@ -24,11 +24,13 @@ import { CardModalComponent } from "../card-modal/card-modal.component";
 import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
 import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
+import { LucideAngularModule, FilterIcon, SearchIcon, UserIcon, TagIcon } from 'lucide-angular';
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, LucideAngularModule], // ⬅️ include group
+
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
 })
@@ -50,6 +52,11 @@ export class KanbanBoardComponent implements OnInit {
     // popovers per card
     showLabels: Record<string, boolean> = {};
 
+    readonly FilterIcon = FilterIcon;
+    readonly SearchIcon = SearchIcon;
+    readonly UserIcon = UserIcon;
+    readonly TagIcon = TagIcon;
+
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
 
     focusNewList() {
@@ -68,14 +75,26 @@ export class KanbanBoardComponent implements OnInit {
 
     // ui state
     showViewMenu = false;
+    showFilterMenu = false;
 
     toggleViewMenu() {
         this.showViewMenu = !this.showViewMenu;
+        if (this.showViewMenu) this.showFilterMenu = false;
     }
 
     closeViewMenu() {
         this.showViewMenu = false;
     }
+
+    toggleFilterMenu() {
+        this.showFilterMenu = !this.showFilterMenu;
+        if (this.showFilterMenu) this.showViewMenu = false;
+    }
+
+    closeFilterMenu() {
+        this.showFilterMenu = false;
+    }
+
 
     // ui state
     newListTitle = '';

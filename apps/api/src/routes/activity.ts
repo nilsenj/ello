@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { PrismaClient } from '@prisma/client';
 import { ensureUser } from '../utils/ensure-user.js';
+import { ensureBoardAccess } from '../utils/permissions.js';
+
 
 export async function registerActivityRoutes(app: FastifyInstance, prisma: PrismaClient) {
     app.get('/api/boards/:boardId/activity', async (req: FastifyRequest<{ Params: { boardId: string }, Querystring: { limit?: number, offset?: number } }>, reply) => {
@@ -8,11 +10,9 @@ export async function registerActivityRoutes(app: FastifyInstance, prisma: Prism
         const { boardId } = req.params;
         const { limit = 20, offset = 0 } = req.query || {};
 
-        // Check membership
-        const member = await prisma.boardMember.findFirst({
-            where: { boardId, userId: user.id },
-        });
-        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+        // Check access via board
+        await ensureBoardAccess(prisma, boardId, user.id);
+
 
         const activities = await prisma.activity.findMany({
             where: { boardId },
@@ -41,10 +41,8 @@ export async function registerActivityRoutes(app: FastifyInstance, prisma: Prism
         if (!card) return reply.code(404).send({ error: 'Card not found' });
 
         const boardId = card.list.boardId;
-        const member = await prisma.boardMember.findFirst({
-            where: { boardId, userId: user.id },
-        });
-        if (!member) return reply.code(403).send({ error: 'Forbidden' });
+        await ensureBoardAccess(prisma, boardId, user.id);
+
 
         const activities = await prisma.activity.findMany({
             where: { cardId },

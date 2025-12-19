@@ -416,7 +416,21 @@
     gap: 12px;
     align-items: start;
     position: relative;
+    min-width: 0;
+    /* Allow the grid item to shrink below content size */
 }
+
+@media (max-width: 640px) {
+    .cm-attachment {
+        grid-template-columns: 1fr;
+    }
+
+    .cm-attachment-thumb {
+        width: 100% !important;
+        height: 120px !important;
+    }
+}
+
 
 .cm-attachment-thumb {
     position: relative;
@@ -456,11 +470,19 @@
 .cm-attachment-body {
     display: grid;
     gap: 6px;
+    min-width: 0;
 }
+
 
 .cm-attachment-name {
     font-weight: 600;
+    overflow-wrap: anywhere;
+    /* Ensures long strings like URLs wrap */
+    word-break: break-word;
+    min-width: 0;
 }
+
+
 
 .cm-attachment-meta {
     color: #6b7280;
@@ -468,14 +490,19 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
+    /* Allow meta items to wrap on small screens */
 }
+
 
 .cm-attachment-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     justify-content: space-between;
+    min-width: 0;
 }
+
 
 .cm-ext-badge {
     flex: 0 0 auto;
@@ -517,6 +544,18 @@
 .cm-attachment-thumb:hover .cm-attachment-overlay {
     opacity: 1;
 }
+
+.cm-attachments-url-row {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+    .cm-attachments-url-row .cm-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 
 .cm-overlay-btn {
     border: 0;
@@ -580,7 +619,9 @@
 
 /* Attachment actionbar */
 .cm-actionbar {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
+    /* Allow actions to wrap if the row is narrow */
     align-items: center;
     gap: 8px;
     padding: 0;
@@ -588,7 +629,9 @@
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     width: fit-content;
+    max-width: 100%;
 }
+
 
 .cm-action {
     display: inline-flex;

@@ -5,8 +5,9 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { ensureUser } from "../utils/ensure-user.js";
+import { ensureBoardAccess } from '../utils/permissions.js';
 // If ensureUser lives in ../utils/ensure-user.js, import from there instead:
-// import { ensureUser } from '../utils/ensure-user.js';
+
 import { randomUUID } from 'node:crypto';
 
 type Opts = {
@@ -31,16 +32,9 @@ async function assertBoardMember(prisma: PrismaClient, boardId: string | null, u
         err.statusCode = 404;
         throw err;
     }
-    const member = await prisma.boardMember.findFirst({
-        where: { boardId, userId },
-        select: { id: true },
-    });
-    if (!member) {
-        const err: any = new Error('Forbidden');
-        err.statusCode = 403;
-        throw err;
-    }
+    await ensureBoardAccess(prisma, boardId, userId);
 }
+
 
 function randomName(original?: string) {
     const ext = original ? path.extname(original) : '';
