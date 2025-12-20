@@ -120,15 +120,18 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
     // ---- activity helper -----------------------------------------------------
     const logActivity = async (boardId: string, userId: string, type: string, payload: any, cardId?: string) => {
-        await prisma.activity.create({
-            data: {
-                type,
-                payload,
-                board: { connect: { id: boardId } },
-                user: { connect: { id: userId } },
-                card: cardId ? { connect: { id: cardId } } : undefined
-            }
-        });
+        if (!boardId) {
+            console.warn(`[CardsRoute] Cannot log activity: boardId is missing for type ${type}`);
+            return;
+        }
+        try {
+            await prisma.activity.create({
+                data: { boardId, userId, type, payload, cardId }
+            });
+            emitToBoard(boardId, 'activity:new', { boardId });
+        } catch (e) {
+            console.error('Failed to log activity', e);
+        }
     };
 
     // create card in list — members only
@@ -176,6 +179,10 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
             data: req.body,
             include: { labels: { select: { labelId: true } } },
         });
+
+        if (bId && has(req.body, 'description')) {
+            await logActivity(bId, user.id, 'update_description', {}, id);
+        }
 
         return shapeCard(updated);
     });
@@ -246,6 +253,83 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         return shapeCard(moved);
     });
 
+    // copy card — members only
+    app.post('/api/cards/:id/copy', async (req: FastifyRequest<{ Params: CardParams; Body: { toListId: string, title?: string } }>) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+        const { toListId, title } = req.body ?? {};
+
+        const srcBoardId = await boardIdByCard(prisma, id);
+        const dstBoardId = await boardIdByList(prisma, toListId);
+        await ensureBoardAccess(prisma, srcBoardId!, user.id);
+        await ensureBoardAccess(prisma, dstBoardId!, user.id);
+
+        if (srcBoardId !== dstBoardId) {
+            const err: any = new Error('Copying across boards is not allowed');
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const source = await prisma.card.findUnique({
+            where: { id },
+            include: {
+                labels: true,
+                checklists: { include: { items: true } }
+            }
+        });
+        if (!source) return { error: 'Source card not found' };
+
+        const prev = await prisma.card.findFirst({
+            where: { listId: toListId },
+            orderBy: { rank: 'desc' },
+            select: { rank: true },
+        });
+        const newRank = between(prev?.rank ?? null, null);
+
+        const created = await prisma.card.create({
+            data: {
+                title: title || source.title,
+                description: source.description,
+                listId: toListId,
+                rank: newRank,
+                priority: source.priority,
+                risk: source.risk,
+                estimate: source.estimate,
+                labels: {
+                    create: source.labels.map(l => ({ labelId: l.labelId }))
+                }
+            },
+            include: { labels: { select: { labelId: true } } }
+        });
+
+        for (const cl of source.checklists) {
+            const newCl = await prisma.checklist.create({
+                data: {
+                    title: cl.title,
+                    position: cl.position,
+                    cardId: created.id
+                }
+            });
+            for (const item of cl.items) {
+                await prisma.checklistItem.create({
+                    data: {
+                        text: item.text,
+                        position: item.position,
+                        done: item.done,
+                        checklistId: newCl.id
+                    }
+                });
+            }
+        }
+
+        if (dstBoardId) {
+            await logActivity(dstBoardId, user.id, 'create_card', { listName: 'copy' }, created.id); // Simple log
+            emitToBoard(dstBoardId, 'card:created', shapeCard(created));
+        }
+
+        return shapeCard(created);
+    });
+
     // delete — members only
     app.delete('/api/cards/:id', async (req: FastifyRequest<{ Params: CardParams }>) => {
         const user = ensureUser(req);
@@ -289,6 +373,9 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
         const updated = await prisma.card.update({ where: { id }, data });
 
+        if (bId && has(body, 'description')) {
+            await logActivity(bId, user.id, 'update_description', {}, id);
+        }
         if (bId && has(body, 'isDone')) {
             await logActivity(bId, user.id, 'card_completion', { cardTitle: updated.title, isDone: data.isDone }, id);
         }

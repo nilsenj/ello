@@ -51,6 +51,8 @@ export class KanbanBoardComponent implements OnInit {
 
     // popovers per card
     showLabels: Record<string, boolean> = {};
+    showLabelDropdown = false;
+    showMemberDropdown = false;
 
     readonly FilterIcon = FilterIcon;
     readonly SearchIcon = SearchIcon;
@@ -94,6 +96,17 @@ export class KanbanBoardComponent implements OnInit {
     closeFilterMenu() {
         this.showFilterMenu = false;
     }
+
+    activeLabelName = computed(() => {
+        if (!this.activeLabel) return 'All labels';
+        return this.store.labels().find(l => l.id === this.activeLabel)?.name || 'Label';
+    });
+
+    activeMemberName = computed(() => {
+        if (!this.activeMemberId) return 'All members';
+        const m = this.store.members().find(m => m.id === this.activeMemberId);
+        return m?.name || m?.email || 'Member';
+    });
 
 
     // ui state
@@ -355,15 +368,21 @@ export class KanbanBoardComponent implements OnInit {
         }
         // Unique by ID if any dupes exist (safeguard)
         const unique = Array.from(new Map(allCards.map(c => [c.id, c])).values());
-        return unique.filter(c => this.matchesFilter(c));
+        return unique.filter(c =>
+            !c.isArchived && this.matchesFilter(c)
+        );
     }
 
     // filtering logic
     cards = (listId: string) => {
-        const list = this.store.lists().find((x) => x.id === listId);
+        const list = this.store.lists().find(x => x.id === listId);
         if (!list || !list.cards) return [];
-        return list.cards.filter(c => this.matchesFilter(c));
+
+        return list.cards.filter(c =>
+            !c.isArchived && this.matchesFilter(c)
+        );
     };
+
 
     trackCard = (_: number, c: Card) => c.id;
 
@@ -516,5 +535,20 @@ export class KanbanBoardComponent implements OnInit {
             await this.cardsApi.addLabel(c.id, lid);
             (this.store.addLabelToCardLocally ?? this.store.addLabelToCard)?.(c.id, lid);
         }
+    }
+
+    toggleLabelDropdown() {
+        this.showLabelDropdown = !this.showLabelDropdown;
+        this.showMemberDropdown = false;
+    }
+
+    toggleMemberDropdown() {
+        this.showMemberDropdown = !this.showMemberDropdown;
+        this.showLabelDropdown = false;
+    }
+
+    closeAllDropdowns() {
+        this.showLabelDropdown = false;
+        this.showMemberDropdown = false;
     }
 }

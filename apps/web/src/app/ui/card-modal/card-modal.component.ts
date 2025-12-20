@@ -552,6 +552,7 @@ export class CardModalComponent {
             if (!created) return;
             this.data.set({ ...c, comments: [...this.comments(), created] } as any);
             this.commentDraft.set('');
+            await this.refreshActivities(); // Refresh activities after adding a comment
         } catch (err) {
             console.error('Failed to add comment', err);
         }
@@ -604,25 +605,31 @@ export class CardModalComponent {
     }
 
     // ------- Description editor -------
-    isEditingDesc = false;
+    isEditingDesc = signal(false);
 
     startDescEdit() {
-        this.isEditingDesc = true;
+        this.isEditingDesc.set(true);
     }
 
     cancelDescEdit() {
         const c = this.data();
         this.descDraft.set((c?.description ?? '') as string);
-        this.isEditingDesc = false;
+        this.isEditingDesc.set(false);
     }
 
     async saveDescription() {
         const c = this.data();
         if (!c) return;
         const next = (this.descDraft() ?? '').trim();
-        await this.cardsApi.patchCardExtended(c.id, { description: next || '' });
-        this.data.set({ ...c, description: next } as any);
-        this.isEditingDesc = false;
+        try {
+            await this.cardsApi.patchCardExtended(c.id, { description: next || '' });
+            this.data.set({ ...c, description: next } as any);
+        } catch (err) {
+            console.error('Failed to save description', err);
+        } finally {
+            this.isEditingDesc.set(false);
+            await this.refreshActivities(); // Refresh activities after updating description
+        }
     }
 
     descCharCount = computed(() => (this.descDraft() || '').length);
@@ -1006,6 +1013,7 @@ export class CardModalComponent {
         if (!confirm('Archive this card?')) return;
         try {
             await this.cardsApi.archiveCard(c.id);
+            this.store.upsertCardLocally(c.listId, { ...c, isArchived: true });
             this.close();
         } catch (err) {
             console.error('Failed to archive card', err);
@@ -1022,6 +1030,7 @@ export class CardModalComponent {
         this.isBusyAction.set(true);
         try {
             await this.cardsApi.deleteCard(c.id);
+            this.store.removeCardLocally(c.id);
             this.close();
         } catch (err) {
             console.error('Failed to delete card', err);
@@ -1034,6 +1043,11 @@ export class CardModalComponent {
 
     // ------- Move / Copy Actions -------
     async prepareMoveOrCopy(type: 'move' | 'copy') {
+        const c = this.data();
+        if (c) {
+            this.copyTitle.set(c.title);
+        }
+        this.openPanel(type);
         this.isBusyAction.set(true);
         try {
             // Load boards if not loaded
@@ -1042,13 +1056,9 @@ export class CardModalComponent {
                 this.availableBoards.set(this.store.boards());
             }
 
-            this.openPanel(type);
-            const c = this.data();
             const currentBoardId = this.store.currentBoardId();
 
-            // Default to current board/list
             this.targetBoardId.set(currentBoardId);
-            this.copyTitle.set(c?.title || '');
 
             if (currentBoardId) {
                 await this.loadTargetLists(currentBoardId);
@@ -1123,8 +1133,10 @@ export class CardModalComponent {
                 this.store.removeCardLocally(c.id);
             } else {
                 // Same board, close panel, update local data
-                // Store updates happen via socket or optimistic update in service
                 this.closePanel();
+                this.store.removeCardLocally(c.id);
+                this.store.upsertCardLocally(lid, { ...c, listId: lid });
+                await this.refreshActivities();
             }
         } catch (e) {
             console.error(e);
@@ -1133,7 +1145,7 @@ export class CardModalComponent {
         }
     }
 
-    async doCopy() {
+async doCopy() {
         const c = this.data();
         const bid = this.targetBoardId();
         const lid = this.targetListId();
@@ -1143,11 +1155,16 @@ export class CardModalComponent {
 
         this.isBusyAction.set(true);
         try {
-            await this.cardsApi.copyCard(c.id, lid, title);
+            const created = await this.cardsApi.copyCard(c.id, lid, title);
+            // Update local board store so the new card appears immediately
+            try {
+                this.store.upsertCardLocally?.(lid, { id: created?.id ?? '', title, listId: lid } as any);
+            } catch {
+                // ignore store errors but keep UI responsive
+            }
             // If copied to same board, we might want to see it? 
-            // Usually Copy keeps the modal open on the original card.
+            // Surface copy in UI for immediate feedback
             this.closePanel();
-            alert('Card copied!');
         } catch (e) {
             console.error(e);
         } finally {
@@ -1155,10 +1172,23 @@ export class CardModalComponent {
         }
     }
 
+    // --- activity format ---
+    async refreshActivities() {
+        const id = this.modal.cardId();
+        if (!id) return;
+        try {
+            const acts = await this.cardsApi.getCardActivity(id);
+            this.activities.set(acts);
+        } catch {
+            this.activities.set([]);
+        }
+    }
+
     // ------- Activity Helper -------
     formatActivity(act: any) {
         switch (act.type) {
             case 'create_card': return `added this card to ${act.payload?.listName || 'a list'}`;
+            case 'update_description': return `changed the description of this card`;
             case 'move_card': return `moved this card from ${act.payload?.fromList || '...'} to ${act.payload?.toList || '...'}`;
             case 'comment_card': return `commented on this card`;
             case 'archive_card': return `archived this card`;

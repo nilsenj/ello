@@ -26,7 +26,15 @@ import { LucideAngularModule, Archive, X } from 'lucide-angular';
     templateUrl: './list-column.component.html'
 })
 export class ListColumnComponent {
-    @Input({ required: true }) list!: ListDto;
+    private _list = signal<ListDto>({} as ListDto);
+    @Input({ required: true })
+    set list(val: ListDto) {
+        this._list.set(val);
+    }
+    get list(): ListDto {
+        return this._list();
+    }
+
     @Input() filtered: Card[] | null = null;
 
     store = inject(BoardStore);
@@ -42,13 +50,17 @@ export class ListColumnComponent {
     showArchiveModal = signal(false);
     disableCardClick = signal(false);
 
-    title = computed(() => this.list.title ?? this.list.name ?? '');
+    title = computed(() => {
+        const l = this._list();
+        return l.title ?? l.name ?? '';
+    });
     // Only show active cards in the column
     cards = computed<Card[]>(() => {
-        const all = Array.isArray(this.list.cards) ? this.list.cards! : [];
+        const l = this._list();
+        const all = Array.isArray(l.cards) ? l.cards! : [];
         return all.filter(c => !c.isArchived);
     });
-    dropListId = computed(() => 'list-' + this.list.id);
+    dropListId = computed(() => 'list-' + this._list().id);
     connectedTo = computed(() => this.store.lists().map(l => 'list-' + l.id));
 
     trackCard = (_: number, c: Card) => c.id;

@@ -1,7 +1,6 @@
 // apps/web/src/app/data/cards.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
 import { ApiBaseService } from './api-base.service';
 import type { Card, CommentDto } from '../types';
 import { ListsService } from './lists.service';
@@ -201,7 +200,6 @@ export class CardsService {
     }
 
     // ---------- Checklists ----------
-    // ---------- Checklists ----------
     async addChecklist(cardId: string, body: { title: string }) {
         return this.api.post(`/api/cards/${cardId}/checklists`, body);
     }
@@ -230,7 +228,6 @@ export class CardsService {
     }
 
     // ---------- Activity ----------
-    // ---------- Activity ----------
     getCardActivity(cardId: string, limit = 20, offset = 0) {
         return this.api.get<any[]>(`/api/cards/${cardId}/activity?limit=${limit}&offset=${offset}`);
     }
@@ -242,9 +239,10 @@ export class CardsService {
         await this.patchCardExtended(cardId, { isArchived: true });
     }
 
-
     async copyCard(cardId: string, toListId: string, title?: string) {
-        return this.api.post<Card>(`/api/cards/${cardId}/copy`, { toListId, title });
+        const created = await this.api.post<Card>(`/api/cards/${cardId}/copy`, { toListId, title });
+        this.store.upsertCardLocally(toListId, created);
+        return created;
     }
 
     // ---------- Relations (for diagram) ----------

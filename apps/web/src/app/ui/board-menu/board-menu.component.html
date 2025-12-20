@@ -141,7 +141,7 @@
                     <div class="text-sm font-medium text-slate-800 mb-1">{{ card.title }}</div>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
                         <span>List: {{ getListName(card.listId) }}</span>
-                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreCard(card)">Send to
+                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreCard(card)" aria-label="Send to board">Send to
                             board</button>
                     </div>
                 </div>
@@ -157,7 +157,7 @@
                     <div class="text-sm font-medium text-slate-800 mb-1">{{ list.name }}</div>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
                         <span>{{ (list.cards || []).length }} card(s)</span>
-                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreList(list)">Send to
+                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreList(list)" aria-label="Send to board">Send to
                             board</button>
                     </div>
                 </div>

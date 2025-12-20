@@ -7,52 +7,120 @@
             <div class="flex items-center gap-2 rounded-md bg-white/15 px-2 py-1">
                 <lucide-icon [img]="SearchIcon" class="w-4 h-4 opacity-80"></lucide-icon>
                 <input
-                    class="bg-transparent text-white/95 placeholder-white/70 outline-none border-none text-sm w-48 xl:w-64"
-                    type="search" placeholder="Filter cards…" [(ngModel)]="filter" />
+                        class="bg-transparent text-white/95 placeholder-white/70 outline-none border-none text-sm w-48 xl:w-64"
+                        type="search" placeholder="Filter cards…" [(ngModel)]="filter"/>
             </div>
 
             <!-- Label filter -->
             <div class="relative">
-                <select class="ui-select peer pr-8 pl-3 py-1.5 text-sm rounded-md
-                   bg-white/95 text-gray-800 shadow-sm border border-white/20
-                   hover:bg-white focus:bg-white focus:border-white
-                   focus:ring-2 focus:ring-white/40 outline-none transition" [(ngModel)]="activeLabel"
-                    (ngModelChange)="updateActiveLabel($event)">
-                    <option value="">All labels</option>
-                    <option *ngFor="let lb of store.labels()" [value]="lb.id">{{ lb.name }}</option>
-                </select>
-                <svg class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
-                    viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                        clip-rule="evenodd" />
-                </svg>
+                <button
+                        class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
+                        (click)="toggleLabelDropdown()"
+                >
+                    <lucide-icon [img]="TagIcon" class="w-4 h-4"></lucide-icon>
+
+                    <span>{{ activeLabelName() }}</span>
+
+                    <svg class="w-3 h-3 opacity-80" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                                fill-rule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                        />
+                    </svg>
+                </button>
+
+                <!-- backdrop -->
+                <div
+                        *ngIf="showLabelDropdown"
+                        class="fixed inset-0 z-20"
+                        (click)="closeAllDropdowns()"
+                ></div>
+
+                <!-- dropdown -->
+                <div
+                        *ngIf="showLabelDropdown"
+                        class="absolute top-full left-0 mt-2 w-56
+         bg-white text-gray-800
+         rounded-md shadow-lg z-30
+         border border-gray-200"
+                >
+                    <button
+                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50"
+                            (click)="updateActiveLabel(''); closeAllDropdowns()"
+                    >
+                        All labels
+                    </button>
+
+                    <button
+                            *ngFor="let lb of store.labels()"
+                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
+                            (click)="updateActiveLabel(lb.id); closeAllDropdowns()"
+                    >
+                      <span
+                              class="w-3 h-3 rounded-sm"
+                              [style.background]="lb.color"
+                      ></span>
+                        {{ lb.name }}
+                    </button>
+                </div>
             </div>
 
             <!-- Member filter -->
             <div class="relative">
-                <select class="ui-select peer pr-8 pl-3 py-1.5 text-sm rounded-md
-                   bg-white/95 text-gray-800 shadow-sm border border-white/20
-                   hover:bg-white focus:bg-white focus:border-white
-                   focus:ring-2 focus:ring-white/40 outline-none transition" [(ngModel)]="activeMemberId"
-                    (ngModelChange)="updateActiveMember($event)">
-                    <option value="">All members</option>
-                    <option *ngFor="let m of store.members()" [value]="m.id">{{ m.name || m.email }}</option>
-                </select>
-                <svg class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
-                    viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                        clip-rule="evenodd" />
-                </svg>
+                <button
+                        class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
+                        (click)="toggleMemberDropdown()"
+                >
+                    <lucide-icon [img]="UserIcon" class="w-4 h-4"></lucide-icon>
+
+                    <span>{{ activeMemberName() }}</span>
+
+                    <svg class="w-3 h-3 opacity-80" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                                fill-rule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                        />
+                    </svg>
+                </button>
+
+                <!-- backdrop -->
+                <div
+                        *ngIf="showMemberDropdown"
+                        class="fixed inset-0 z-20"
+                        (click)="closeAllDropdowns()"
+                ></div>
+
+                <!-- dropdown -->
+                <div
+                        *ngIf="showMemberDropdown"
+                        class="absolute top-full left-0 mt-2 w-56
+         bg-white text-gray-800
+         rounded-md shadow-lg z-30
+         border border-gray-200"
+                >
+                    <button
+                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50"
+                            (click)="updateActiveMember(''); closeAllDropdowns()"
+                    >
+                        All members
+                    </button>
+
+                    <button
+                            *ngFor="let m of store.members()"
+                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50"
+                            (click)="updateActiveMember(m.id); closeAllDropdowns()"
+                    >
+                        {{ m.name || m.email }}
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Filter Button (Mobile/Tablet) -->
         <div class="relative lg:hidden">
             <button
-                class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
-                (click)="toggleFilterMenu()">
+                    class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
+                    (click)="toggleFilterMenu()">
                 <lucide-icon [img]="FilterIcon" class="w-4 h-4"></lucide-icon>
                 <span class="hidden sm:inline">Filters</span>
                 <span *ngIf="filter || activeLabel || activeMemberId" class="w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -61,13 +129,13 @@
             <!-- Filter Setup Popup -->
             <div *ngIf="showFilterMenu" class="fixed inset-0 z-20 cursor-default" (click)="closeFilterMenu()"></div>
             <div *ngIf="showFilterMenu"
-                class="absolute top-full left-0 mt-2 w-[280px] bg-white rounded-lg shadow-xl py-4 px-4 z-30 border border-gray-200 text-gray-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                 class="absolute top-full left-0 mt-2 w-[280px] bg-white rounded-lg shadow-xl py-4 px-4 z-30 border border-gray-200 text-gray-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-sm font-bold text-gray-700 uppercase tracking-tight">Filters</h3>
                     <button (click)="closeFilterMenu()" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
+                                  d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -76,11 +144,11 @@
                 <div class="space-y-1">
                     <label class="text-[11px] font-bold text-gray-500 uppercase">Search Cards</label>
                     <div
-                        class="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1.5 border border-gray-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
+                            class="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1.5 border border-gray-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
                         <lucide-icon [img]="SearchIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
                         <input
-                            class="bg-transparent text-gray-800 placeholder-gray-400 outline-none border-none text-sm w-full"
-                            type="search" placeholder="Enter keyword..." [(ngModel)]="filter" />
+                                class="bg-transparent text-gray-800 placeholder-gray-400 outline-none border-none text-sm w-full"
+                                type="search" placeholder="Enter keyword..." [(ngModel)]="filter"/>
                     </div>
                 </div>
 
@@ -89,18 +157,18 @@
                     <label class="text-[11px] font-bold text-gray-500 uppercase">Label</label>
                     <div class="relative">
                         <lucide-icon [img]="TagIcon"
-                            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
+                                     class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
                         <select
-                            class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
-                            [(ngModel)]="activeLabel" (ngModelChange)="updateActiveLabel($event)">
+                                class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
+                                [(ngModel)]="activeLabel" (ngModelChange)="updateActiveLabel($event)">
                             <option value="">All labels</option>
                             <option *ngFor="let lb of store.labels()" [value]="lb.id">{{ lb.name }}</option>
                         </select>
                         <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-                            viewBox="0 0 20 20" fill="currentColor">
+                             viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                                clip-rule="evenodd" />
+                                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
+                                  clip-rule="evenodd"/>
                         </svg>
                     </div>
                 </div>
@@ -110,25 +178,25 @@
                     <label class="text-[11px] font-bold text-gray-500 uppercase">Member</label>
                     <div class="relative">
                         <lucide-icon [img]="UserIcon"
-                            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
+                                     class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
                         <select
-                            class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
-                            [(ngModel)]="activeMemberId" (ngModelChange)="updateActiveMember($event)">
+                                class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
+                                [(ngModel)]="activeMemberId" (ngModelChange)="updateActiveMember($event)">
                             <option value="">All members</option>
                             <option *ngFor="let m of store.members()" [value]="m.id">{{ m.name || m.email }}</option>
                         </select>
                         <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-                            viewBox="0 0 20 20" fill="currentColor">
+                             viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                                clip-rule="evenodd" />
+                                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
+                                  clip-rule="evenodd"/>
                         </svg>
                     </div>
                 </div>
 
                 <div class="pt-2 border-t border-gray-100">
                     <button (click)="filter=''; activeLabel=''; activeMemberId=''"
-                        class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                            class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
                         Clear all filters
                     </button>
                 </div>
@@ -140,18 +208,18 @@
         <!-- View Dropdown -->
         <div class="relative hidden sm:block">
             <button
-                class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
-                (click)="toggleViewMenu()">
+                    class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
+                    (click)="toggleViewMenu()">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16m-7 6h7" />
+                     stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16m-7 6h7"/>
                 </svg>
                 <span class="hidden md:inline">View</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 opacity-80" viewBox="0 0 20 20"
-                    fill="currentColor">
+                     fill="currentColor">
                     <path fill-rule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                        clip-rule="evenodd" />
+                          d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                          clip-rule="evenodd"/>
                 </svg>
             </button>
 
@@ -160,49 +228,49 @@
 
             <!-- Menu -->
             <div *ngIf="showViewMenu"
-                class="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30 border border-gray-200 text-gray-800">
+                 class="absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30 border border-gray-200 text-gray-800">
 
                 <!-- Board View Link -->
                 <a [routerLink]="[]" [queryParams]="{view: null}" queryParamsHandling="merge" (click)="closeViewMenu()"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
-                    [class.bg-blue-50]="currentView() === 'board'" [class.text-blue-700]="currentView() === 'board'">
+                   class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                   [class.bg-blue-50]="currentView() === 'board'" [class.text-blue-700]="currentView() === 'board'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                        [class.text-blue-700]="currentView() === 'board'"
-                        [class.text-slate-500]="currentView() !== 'board'" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
+                         [class.text-blue-700]="currentView() === 'board'"
+                         [class.text-slate-500]="currentView() !== 'board'" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                              d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
                     </svg>
                     Board View
                 </a>
 
                 <!-- Table View Link -->
                 <a [routerLink]="[]" [queryParams]="{view: 'table'}" queryParamsHandling="merge"
-                    (click)="closeViewMenu()"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
-                    [class.bg-blue-50]="currentView() === 'table'" [class.text-blue-700]="currentView() === 'table'">
+                   (click)="closeViewMenu()"
+                   class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                   [class.bg-blue-50]="currentView() === 'table'" [class.text-blue-700]="currentView() === 'table'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                        [class.text-blue-700]="currentView() === 'table'"
-                        [class.text-slate-500]="currentView() !== 'table'" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
+                         [class.text-blue-700]="currentView() === 'table'"
+                         [class.text-slate-500]="currentView() !== 'table'" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                     </svg>
                     Table View
                 </a>
 
                 <!-- Calendar View Link -->
                 <a [routerLink]="[]" [queryParams]="{view: 'calendar'}" queryParamsHandling="merge"
-                    (click)="closeViewMenu()"
-                    class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
-                    [class.bg-blue-50]="currentView() === 'calendar'"
-                    [class.text-blue-700]="currentView() === 'calendar'">
+                   (click)="closeViewMenu()"
+                   class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 text-gray-700"
+                   [class.bg-blue-50]="currentView() === 'calendar'"
+                   [class.text-blue-700]="currentView() === 'calendar'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                        [class.text-blue-700]="currentView() === 'calendar'"
-                        [class.text-slate-500]="currentView() !== 'calendar'" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
+                         [class.text-blue-700]="currentView() === 'calendar'"
+                         [class.text-slate-500]="currentView() !== 'calendar'" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     Calendar
                 </a>
@@ -211,8 +279,8 @@
 
         <!-- Board Menu Button -->
         <button
-            class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium"
-            (click)="menu.open()">
+                class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium"
+                (click)="menu.open()">
             <span class="hidden sm:inline">•••</span>
             <span class="sm:hidden">Menu</span>
             <span class="hidden sm:inline">Show menu</span>
@@ -227,7 +295,7 @@
 <div class="flex items-center gap-2 px-4 py-2 bg-white/5 md:hidden">
     <!-- Mobile Add List -->
     <button class="w-full text-sm bg-white/90 text-gray-800 px-3 py-1.5 rounded shadow-sm font-medium"
-        (click)="focusNewList()">
+            (click)="focusNewList()">
         + Add list
     </button>
 </div>
@@ -235,18 +303,18 @@
 
 <!-- Table View -->
 <board-table-view *ngIf="currentView() === 'table'" [cards]="getAllFilteredCards()"
-    class="flex-1 overflow-hidden bg-slate-50"></board-table-view>
+                  class="flex-1 overflow-hidden bg-slate-50"></board-table-view>
 
 <!-- Calendar View -->
 <board-calendar-view *ngIf="currentView() === 'calendar'" [cards]="getAllFilteredCards()"
-    class="flex-1 overflow-hidden bg-white"></board-calendar-view>
+                     class="flex-1 overflow-hidden bg-white"></board-calendar-view>
 
 <!-- Lists (Board View) -->
 <div *ngIf="currentView() === 'board'" class="p-4 overflow-x-auto min-h-screen transition-colors"
-    [ngClass]="boardBackground()" [style.backgroundImage]="boardBackgroundStyle()">
+     [ngClass]="boardBackground()" [style.backgroundImage]="boardBackgroundStyle()">
     <!-- Horizontal list reordering -->
     <div cdkDropList [cdkDropListData]="lists()" [cdkDropListOrientation]="'horizontal'"
-        (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">
+         (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">
         <!-- Each column is a draggable item -->
         <div *ngFor="let l of lists(); trackBy: trackList" cdkDrag cdkDragLockAxis="x" class="list-shell w-72 shrink-0">
             <!-- drag preview -->
@@ -271,25 +339,25 @@
 
         <!-- Add list -->
         <section class="w-72 shrink-0 rounded-xl p-3 transition-colors"
-            [ngClass]="isLightBoard() ? 'bg-black/5 hover:bg-black/10' : 'bg-white/30 text-white/95'">
+                 [ngClass]="isLightBoard() ? 'bg-black/5 hover:bg-black/10' : 'bg-white/30 text-white/95'">
             <div *ngIf="!newListTitle">
                 <button class="w-full rounded-md py-2 transition-colors text-left pl-2 font-medium"
-                    [ngClass]="isLightBoard() ? 'text-gray-600 hover:text-gray-800 hover:bg-black/5' : 'bg-white/30 hover:bg-white/40'"
-                    (click)="newListTitle = 'New list'">
+                        [ngClass]="isLightBoard() ? 'text-gray-600 hover:text-gray-800 hover:bg-black/5' : 'bg-white/30 hover:bg-white/40'"
+                        (click)="newListTitle = 'New list'">
                     + Add another list
                 </button>
             </div>
 
             <div *ngIf="newListTitle" class="space-y-2">
                 <input #newListInput
-                    class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
-                    [(ngModel)]="newListTitle" (keydown.enter)="addList()" placeholder="Enter list title…" />
+                       class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
+                       [(ngModel)]="newListTitle" (keydown.enter)="addList()" placeholder="Enter list title…"/>
                 <div class="flex gap-2">
                     <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-sm"
-                        [disabled]="!newListTitle.trim()" (click)="addList()">Add list
+                            [disabled]="!newListTitle.trim()" (click)="addList()">Add list
                     </button>
                     <button class="rounded-md bg-transparent px-3 py-1 text-sm hover:underline"
-                        [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">Cancel
+                            [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">Cancel
                     </button>
                 </div>
             </div>
