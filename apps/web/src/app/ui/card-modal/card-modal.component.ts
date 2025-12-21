@@ -50,9 +50,6 @@ import { MembersPanelComponent } from '../../components/members-panel/members-pa
 import { CardModalService, PanelName } from "./card-modal.service";
 import { FilterByPipe } from '../../shared/filter-by.pipe';
 
-
-
-
 @Component({
     standalone: true,
     selector: 'card-modal',
