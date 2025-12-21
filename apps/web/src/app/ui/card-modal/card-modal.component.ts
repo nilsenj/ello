@@ -12,7 +12,6 @@ import { BoardsService } from '../../data/boards.service';
 import { ListsService } from '../../data/lists.service';
 import { AuthService } from '../../auth/auth.service';
 import { AttachmentDto, AttachmentsService } from '../../data/attachments.service';
-import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
 import {
     ActivityIcon,
     ArchiveIcon,
@@ -46,14 +45,28 @@ import {
 } from 'lucide-angular';
 
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
 import { CardModalService, PanelName } from "./card-modal.service";
-import { FilterByPipe } from '../../shared/filter-by.pipe';
+import { CardModalDescriptionComponent } from './card-modal-description.component';
+import { CardModalCommentsComponent } from './card-modal-comments.component';
+import { CardModalActivityComponent } from './card-modal-activity.component';
+import { CardModalDetailsComponent } from './card-modal-details.component';
+import { CardModalAddToCardComponent } from './card-modal-add-to-card.component';
+import { CardModalActionsComponent } from './card-modal-actions.component';
 
 @Component({
     standalone: true,
     selector: 'card-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe, MembersPanelComponent, FilterByPipe],
+    imports: [
+        CommonModule,
+        FormsModule,
+        LucideAngularModule,
+        CardModalDescriptionComponent,
+        CardModalCommentsComponent,
+        CardModalActivityComponent,
+        CardModalDetailsComponent,
+        CardModalAddToCardComponent,
+        CardModalActionsComponent,
+    ],
     styleUrls: ['./card-modal.component.css'],
     templateUrl: './card-modal.component.html',
 })
@@ -175,28 +188,28 @@ export class CardModalComponent {
     isAudio = (a: AttachmentDto) => a.mime?.toLowerCase().startsWith('audio/') || this.isExt(a.url, this.reAud);
     isPdf = (a: AttachmentDto) => a.mime?.toLowerCase() === 'application/pdf' || this.isExt(a.url, this.rePdf);
 
-    isExternal(a: AttachmentDto): boolean {
+    isExternal = (a: AttachmentDto): boolean => {
         const raw = a.url || '';
         return /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) || raw.startsWith('blob:');
-    }
+    };
 
 
-    safeMediaUrl(u: string | null | undefined): SafeResourceUrl {
+    safeMediaUrl = (u: string | null | undefined): SafeResourceUrl => {
         const url = (u ?? '').trim();
         return this.sanitizer.bypassSecurityTrustResourceUrl(/^(https?:|blob:|\/)/i.test(url) ? url : 'about:blank');
-    }
+    };
 
 
-    openPanel(name: PanelName, focusQuery?: string) {
+    openPanel = (name: PanelName, focusQuery?: string) => {
         if (this.openPanelName() !== name) {
             this.openPanelName.set(name);
             if (focusQuery) queueMicrotask(() => document.querySelector<HTMLInputElement>(focusQuery)?.focus());
         }
-    }
+    };
 
-    closePanel() {
+    closePanel = () => {
         this.openPanelName.set(null);
-    }
+    };
 
     // derived values for chips
     get currentPriority() {
@@ -321,7 +334,7 @@ export class CardModalComponent {
     selectedLabelIds = computed(() => new Set(this.normalizeLabelIds(this.data())));
     hasLabel = (lid: string) => this.selectedLabelIds().has(lid);
 
-    async toggleLabel(lid: string) {
+    toggleLabel = async (lid: string) => {
         const c = this.data();
         if (!c) return;
         const has = this.selectedLabelIds().has(lid);
@@ -354,7 +367,7 @@ export class CardModalComponent {
         } catch (e) {
             console.error(e);
         }
-    }
+    };
 
     // --- Label Editor ---
     isEditingLabel = signal(false);
@@ -368,26 +381,26 @@ export class CardModalComponent {
         '#00c2e0', '#51e898', '#ff78cb', '#344563'  // sky, lime, pink, dark
     ];
 
-    startCreateLabel() {
+    startCreateLabel = () => {
         this.labelDraftId.set(null);
         this.labelNameDraft.set('');
         this.labelColorDraft.set(this.labelColors[0]);
         this.isEditingLabel.set(true);
-    }
+    };
 
-    startEditLabel(label: { id: string, name: string, color: string }) {
+    startEditLabel = (label: { id: string, name: string, color: string }) => {
         this.labelDraftId.set(label.id);
         this.labelNameDraft.set(label.name);
         this.labelColorDraft.set(label.color);
         this.isEditingLabel.set(true);
-    }
+    };
 
-    cancelLabelEdit() {
+    cancelLabelEdit = () => {
         this.isEditingLabel.set(false);
         this.labelDraftId.set(null);
-    }
+    };
 
-    async saveLabel() {
+    saveLabel = async () => {
         const boardId = this.store.currentBoardId();
         if (!boardId) return;
         const name = this.labelNameDraft().trim();
@@ -404,9 +417,9 @@ export class CardModalComponent {
         } catch (e) {
             console.error('Failed to save label', e);
         }
-    }
+    };
 
-    async deleteLabel() {
+    deleteLabel = async () => {
         const id = this.labelDraftId();
         if (!id) return;
         if (!confirm('Start deleting this label? There is no undo.')) return;
@@ -416,12 +429,12 @@ export class CardModalComponent {
         } catch (e) {
             console.error('Failed to delete label', e);
         }
-    }
+    };
 
     // ------- Save fields -------
     private _savingTitle = false;
 
-    async saveTitle() {
+    saveTitle = async () => {
         if (this._savingTitle) return;
         const c = this.data();
         if (!c) return;
@@ -435,10 +448,10 @@ export class CardModalComponent {
         } finally {
             this._savingTitle = false;
         }
-    }
+    };
 
     // ------- Dates -------
-    async setDates(kind: 'start' | 'due', val: string | null) {
+    setDates = async (kind: 'start' | 'due', val: string | null) => {
         const c = this.data();
         if (!c) return;
         const payload: any = {};
@@ -446,7 +459,7 @@ export class CardModalComponent {
         if (kind === 'due') payload.dueDate = val ? toUtcIso(val) : null;
         await this.cardsApi.patchCardExtended(c.id, payload);
         this.data.set({ ...c, ...payload });
-    }
+    };
 
     // ------- Members (only minimal helpers kept) -------
     currentMemberIds(): string[] {
@@ -457,40 +470,40 @@ export class CardModalComponent {
 
     hasAnyMembers = () => this.currentMemberIds().length > 0;
 
-    onAssigneesChange(list: CardAssignee[]) {
+    onAssigneesChange = (list: CardAssignee[]) => {
         this.data.update(c => (c ? ({ ...c, assignees: list } as ModalCard) : c));
-    }
+    };
 
     // ------- Checklists -------
     checklists() {
         return (this.data()?.checklists ?? []) as Checklist[];
     }
 
-    async addChecklist() {
+    addChecklist = async () => {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklist(c.id, { title: 'Checklist' });
         const checklistWithItems = { ...(created as object), items: [] };
         this.data.set({ ...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), checklistWithItems] } as any);
-    }
+    };
 
-    async renameChecklist(cid: string, title: string) {
+    renameChecklist = async (cid: string, title: string) => {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.updateChecklist(cid, { title });
         const next = this.checklists().map(cl => (cl.id === cid ? { ...cl, title } : cl));
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
-    async addChecklistItem(cid: string) {
+    addChecklistItem = async (cid: string) => {
         const c = this.data();
         if (!c) return;
         const created = await this.cardsApi.addChecklistItem(cid, { text: 'New item' });
         const next = this.checklists().map(cl => (cl.id === cid ? { ...cl, items: [...cl.items, created] } : cl));
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
-    async toggleChecklistItem(cid: string, itemId: string, done: boolean) {
+    toggleChecklistItem = async (cid: string, itemId: string, done: boolean) => {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.updateChecklistItem(itemId, { done });
@@ -498,9 +511,9 @@ export class CardModalComponent {
             cl.id === cid ? { ...cl, items: cl.items.map(it => (it.id === itemId ? { ...it, done } : it)) } : cl
         );
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
-    async updateChecklistItemText(cid: string, itemId: string, text: string) {
+    updateChecklistItemText = async (cid: string, itemId: string, text: string) => {
         const c = this.data();
         if (!c) return;
         // Optimistic update could be good here, but for now just wait
@@ -509,9 +522,9 @@ export class CardModalComponent {
             cl.id === cid ? { ...cl, items: cl.items.map(it => (it.id === itemId ? { ...it, text } : it)) } : cl
         );
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
-    async deleteChecklistItem(cid: string, itemId: string) {
+    deleteChecklistItem = async (cid: string, itemId: string) => {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.deleteChecklistItem(itemId);
@@ -519,27 +532,27 @@ export class CardModalComponent {
             cl.id === cid ? { ...cl, items: cl.items.filter(it => it.id !== itemId) } : cl
         );
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
-    async deleteChecklist(cid: string) {
+    deleteChecklist = async (cid: string) => {
         const c = this.data();
         if (!c) return;
         if (!confirm('Delete this checklist?')) return;
         await this.cardsApi.deleteChecklist(cid);
         const next = this.checklists().filter(cl => cl.id !== cid);
         this.data.set({ ...c, checklists: next } as any);
-    }
+    };
 
     // ------- Comments -------
     comments() {
         return (this.data()?.comments ?? []) as CommentDto[];
     }
 
-    isCommentBlank() {
+    isCommentBlank = () => {
         return !this.commentDraft().trim();
-    }
+    };
 
-    async addComment() {
+    addComment = async () => {
         const c = this.data();
         if (!c) return;
         const text = this.commentDraft().trim();
@@ -553,14 +566,14 @@ export class CardModalComponent {
         } catch (err) {
             console.error('Failed to add comment', err);
         }
-    }
+    };
 
-    async deleteComment(commentId: string) {
+    deleteComment = async (commentId: string) => {
         const c = this.data();
         if (!c) return;
         await this.cardsApi.deleteComment(commentId);
         this.data.set({ ...c, comments: this.comments().filter(x => x.id !== commentId) } as any);
-    }
+    };
 
     // ------- Close -------
     close() {
@@ -568,23 +581,23 @@ export class CardModalComponent {
     }
 
     // ------- Planning -------
-    async savePriority(val: '' | 'low' | 'medium' | 'high' | 'urgent') {
+    savePriority = async (val: '' | 'low' | 'medium' | 'high' | 'urgent') => {
         const c = this.data();
         if (!c) return;
         this.priorityDraft.set(val);
         await this.cardsApi.patchCardExtended(c.id, val ? { priority: val } : ({ priority: null } as any));
         this.data.set({ ...c, priority: val || null } as any);
-    }
+    };
 
-    async saveRisk(val: '' | 'low' | 'medium' | 'high') {
+    saveRisk = async (val: '' | 'low' | 'medium' | 'high') => {
         const c = this.data();
         if (!c) return;
         this.riskDraft.set(val);
         await this.cardsApi.patchCardExtended(c.id, val ? { risk: val } : ({ risk: null } as any));
         this.data.set({ ...c, risk: val || null } as any);
-    }
+    };
 
-    async saveEstimation(raw: unknown) {
+    saveEstimation = async (raw: unknown) => {
         const c = this.data();
         if (!c) return;
         const s = (raw ?? '').toString();
@@ -594,7 +607,7 @@ export class CardModalComponent {
         if (n !== null && (!Number.isFinite(n) || n < 0)) return;
         await this.cardsApi.patchCardExtended(c.id, n === null ? ({ estimate: null } as any) : { estimate: n });
         this.data.set({ ...c, estimate: n } as any);
-    }
+    };
 
     priorityClass() {
         const p = (this.data()?.priority ?? this.priorityDraft()) || '';
@@ -604,17 +617,17 @@ export class CardModalComponent {
     // ------- Description editor -------
     isEditingDesc = signal(false);
 
-    startDescEdit() {
+    startDescEdit = () => {
         this.isEditingDesc.set(true);
-    }
+    };
 
-    cancelDescEdit() {
+    cancelDescEdit = () => {
         const c = this.data();
         this.descDraft.set((c?.description ?? '') as string);
         this.isEditingDesc.set(false);
-    }
+    };
 
-    async saveDescription() {
+    saveDescription = async () => {
         const c = this.data();
         if (!c) return;
         const next = (this.descDraft() ?? '').trim();
@@ -627,7 +640,7 @@ export class CardModalComponent {
             this.isEditingDesc.set(false);
             await this.refreshActivities(); // Refresh activities after updating description
         }
-    }
+    };
 
     descCharCount = computed(() => (this.descDraft() || '').length);
 
@@ -635,7 +648,7 @@ export class CardModalComponent {
         return document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
     }
 
-    wrapSelection(el: HTMLTextAreaElement, left: string, right: string) {
+    wrapSelection = (el: HTMLTextAreaElement, left: string, right: string) => {
         if (!el) return;
         const start = el.selectionStart;
         const end = el.selectionEnd;
@@ -679,9 +692,9 @@ export class CardModalComponent {
             el.focus();
             el.setSelectionRange(newStart, newEnd);
         });
-    }
+    };
 
-    insertPrefix(el: HTMLTextAreaElement, prefix: string) {
+    insertPrefix = (el: HTMLTextAreaElement, prefix: string) => {
         if (!el) return;
         const start = el.selectionStart; // cursor
         const end = el.selectionEnd;
@@ -709,13 +722,13 @@ export class CardModalComponent {
                 el.setSelectionRange(start + prefix.length, end + prefix.length);
             });
         }
-    }
+    };
 
-    makeHeading(el: HTMLTextAreaElement) {
+    makeHeading = (el: HTMLTextAreaElement) => {
         this.insertPrefix(el, '# ');
-    }
+    };
 
-    insertLink(el: HTMLTextAreaElement) {
+    insertLink = (el: HTMLTextAreaElement) => {
         if (!el) return;
         const start = el.selectionStart;
         const end = el.selectionEnd;
@@ -732,7 +745,7 @@ export class CardModalComponent {
             const urlEnd = urlStart + 8; // https://
             el.setSelectionRange(urlStart, urlEnd);
         });
-    }
+    };
 
     // ------- Rich description (SSR-safe) -------
     private hasDom() {
@@ -837,12 +850,12 @@ export class CardModalComponent {
         return out.innerHTML;
     }
 
-    richDescription(src: string | null | undefined) {
+    richDescription = (src: string | null | undefined) => {
         const val = (src ?? '').trim();
         if (!val) return '';
         const html = this.looksLikeHtml(val) ? val : this.renderMarkdown(val);
         return this.sanitizeBasicHtml(html);
-    }
+    };
 
     // ------- Labels helpers / presence checks -------
     private normalizeLabelIds(src: any): string[] {
@@ -888,7 +901,7 @@ export class CardModalComponent {
     }
 
     // ------- Attachments -------
-    async addAttachmentByUrl() {
+    addAttachmentByUrl = async () => {
         const c = this.data();
         if (!c) return;
         const url = this.attachUrlDraft().trim();
@@ -899,19 +912,19 @@ export class CardModalComponent {
             this.attachUrlDraft.set('');
         } catch {
         }
-    }
+    };
 
-    startRename(a: AttachmentDto) {
+    startRename = (a: AttachmentDto) => {
         this.renameDraftId.set(a.id);
         this.renameDraftName.set(a.name ?? '');
-    }
+    };
 
-    cancelRename() {
+    cancelRename = () => {
         this.renameDraftId.set(null);
         this.renameDraftName.set('');
-    }
+    };
 
-    async saveRename() {
+    saveRename = async () => {
         const id = this.renameDraftId();
         if (!id) return;
         const name = this.renameDraftName().trim();
@@ -922,9 +935,9 @@ export class CardModalComponent {
             this.cancelRename();
         } catch {
         }
-    }
+    };
 
-    async setAsCover(id: string) {
+    setAsCover = async (id: string) => {
         try {
             await firstValueFrom(this.attachmentsApi.setCover(id));
             this.attachments.set(this.attachments().map(a => ({ ...a, isCover: a.id === id })));
@@ -936,9 +949,9 @@ export class CardModalComponent {
             }
         } catch {
         }
-    }
+    };
 
-    async removeCover(id: string) {
+    removeCover = async (id: string) => {
         try {
             // If there's an API for removing cover (e.g. setting it to null or unsetting), use it.
             // Assuming setCover(id) sets it, maybe we need an unset endpoint or just set another?
@@ -948,41 +961,41 @@ export class CardModalComponent {
             this.attachments.set(this.attachments().map(a => ({ ...a, isCover: false })));
         } catch {
         }
-    }
+    };
 
-    async removeAttachment(id: string) {
+    removeAttachment = async (id: string) => {
         try {
             await firstValueFrom(this.attachmentsApi.delete(id));
             this.attachments.set(this.attachments().filter(a => a.id !== id));
         } catch {
         }
-    }
+    };
 
     /** Returns short upper-cased file extension (max 6 chars). */
-    fileExt(a: Pick<AttachmentDto, 'name' | 'url'> | { name?: string | null; url?: string | null }): string {
+    fileExt = (a: Pick<AttachmentDto, 'name' | 'url'> | { name?: string | null; url?: string | null }): string => {
         const s = ((a?.name || a?.url) ?? '').split('?')[0];
         const ix = s.lastIndexOf('.');
         return ix < 0 ? 'FILE' : s.slice(ix + 1).toUpperCase().slice(0, 6);
-    }
+    };
 
     /** Opens the attachment URL in a new tab (used by template previews). */
-    previewAttachment(a: AttachmentDto): void {
+    previewAttachment = (a: AttachmentDto): void => {
         const url = this.attachmentApiFileUrl(a); // factory created earlier
         if (url) window.open(url, '_blank', 'noopener');
-    }
+    };
 
     // Drag & drop visual state
-    onDragOver(e: DragEvent) {
+    onDragOver = (e: DragEvent) => {
         e.preventDefault();
         this.dropActive.set(true);
-    }
+    };
 
-    onDragLeave(e: DragEvent) {
+    onDragLeave = (e: DragEvent) => {
         e.preventDefault();
         this.dropActive.set(false);
-    }
+    };
 
-    async onDropFiles(e: DragEvent) {
+    onDropFiles = async (e: DragEvent) => {
         e.preventDefault();
         this.dropActive.set(false);
 
@@ -1001,10 +1014,10 @@ export class CardModalComponent {
         } finally {
             this.isUploading.set(false);
         }
-    }
+    };
 
     // ------- Actions -------
-    async archiveCard() {
+    archiveCard = async () => {
         const c = this.data();
         if (!c) return;
         if (!confirm('Archive this card?')) return;
@@ -1015,13 +1028,13 @@ export class CardModalComponent {
         } catch (err) {
             console.error('Failed to archive card', err);
         }
-    }
+    };
 
-    deleteCard() {
+    deleteCard = () => {
         this.openPanel('delete');
-    }
+    };
 
-    async doDelete() {
+    doDelete = async () => {
         const c = this.data();
         if (!c) return;
         this.isBusyAction.set(true);
@@ -1034,12 +1047,12 @@ export class CardModalComponent {
         } finally {
             this.isBusyAction.set(false);
         }
-    }
+    };
 
 
 
     // ------- Move / Copy Actions -------
-    async prepareMoveOrCopy(type: 'move' | 'copy') {
+    prepareMoveOrCopy = async (type: 'move' | 'copy') => {
         const c = this.data();
         if (c) {
             this.copyTitle.set(c.title);
@@ -1070,9 +1083,9 @@ export class CardModalComponent {
         } finally {
             this.isBusyAction.set(false);
         }
-    }
+    };
 
-    async onTargetBoardChange(boardId: string) {
+    onTargetBoardChange = async (boardId: string) => {
         this.targetBoardId.set(boardId);
         this.isBusyAction.set(true);
         try {
@@ -1080,7 +1093,7 @@ export class CardModalComponent {
         } finally {
             this.isBusyAction.set(false);
         }
-    }
+    };
 
     async loadTargetLists(boardId: string) {
         // Use the new side-effect-free fetch
@@ -1093,7 +1106,7 @@ export class CardModalComponent {
         }
     }
 
-    async doMove() {
+    doMove = async () => {
         const c = this.data();
         const bid = this.targetBoardId();
         const lid = this.targetListId();
@@ -1140,9 +1153,9 @@ export class CardModalComponent {
         } finally {
             this.isBusyAction.set(false);
         }
-    }
+    };
 
-async doCopy() {
+    doCopy = async () => {
         const c = this.data();
         const bid = this.targetBoardId();
         const lid = this.targetListId();
@@ -1167,10 +1180,10 @@ async doCopy() {
         } finally {
             this.isBusyAction.set(false);
         }
-    }
+    };
 
     // --- activity format ---
-    async refreshActivities() {
+    refreshActivities = async () => {
         const id = this.modal.cardId();
         if (!id) return;
         try {
@@ -1179,10 +1192,10 @@ async doCopy() {
         } catch {
             this.activities.set([]);
         }
-    }
+    };
 
     // ------- Activity Helper -------
-    formatActivity(act: any) {
+    formatActivity = (act: any) => {
         switch (act.type) {
             case 'create_card': return `added this card to ${act.payload?.listName || 'a list'}`;
             case 'update_description': return `changed the description of this card`;
@@ -1193,10 +1206,10 @@ async doCopy() {
             case 'card_completion': return act.payload?.isDone ? `marked this card as complete` : `marked this card as incomplete`;
             default: return `performed ${act.type}`;
         }
-    }
+    };
 
     // File input handler
-    async addAttachmentFiles(input: HTMLInputElement) {
+    addAttachmentFiles = async (input: HTMLInputElement) => {
         const c = this.data();
         if (!c) return;
 
@@ -1213,9 +1226,9 @@ async doCopy() {
             this.isUploading.set(false);
             input.value = '';
         }
-    }
+    };
 
-    humanBytes(n?: number | null) {
+    humanBytes = (n?: number | null) => {
         if (!n || n < 0) return '—';
         const u = ['B', 'KB', 'MB', 'GB', 'TB'];
         let i = 0,
@@ -1225,7 +1238,7 @@ async doCopy() {
             i++;
         }
         return `${v.toFixed(v < 10 && i > 0 ? 1 : 0)} ${u[i]}`;
-    }
+    };
 
     private setBusy(id: string, busy: boolean) {
         const s = new Set(this.dlBusy());
@@ -1248,7 +1261,7 @@ async doCopy() {
         URL.revokeObjectURL(url);
     }
 
-    async downloadAttachment(a: AttachmentDto) {
+    downloadAttachment = async (a: AttachmentDto) => {
         const id = a.id;
         if (this.isDownloading(id)) return;
         this.setBusy(id, true);
@@ -1271,7 +1284,7 @@ async doCopy() {
                 sub.unsubscribe();
             },
         });
-    }
+    };
 
     // keyboard
     @HostListener('document:keydown.escape') onEsc() {
