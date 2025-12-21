@@ -1,0 +1,74 @@
+<section>
+    <div class="cm-section-title">Description</div>
+
+    <div *ngIf="!isEditingDesc() && !descDraft()?.trim()" class="cm-btn inline-flex items-center"
+        (click)="startDescEdit()">
+        <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
+        Add a more detailed description…
+    </div>
+
+    <div *ngIf="!isEditingDesc() && (descDraft()?.trim()?.length || 0) > 0" class="space-y-2">
+        <div class="prose prose-sm max-w-none cm-description" [innerHTML]="richDescription(descDraft()) | safeHtml">
+        </div>
+        <div>
+            <button class="cm-btn inline-flex items-center" (click)="startDescEdit()">
+                <lucide-icon [img]="PencilIcon" class="mr-1"></lucide-icon>
+                Edit
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="isEditingDesc()" class="space-y-3">
+        <div
+            class="border border-slate-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 shadow-sm transition-all duration-200">
+            <div class="bg-gray-50 border-b border-slate-200 px-2 py-1.5 flex gap-1 items-center">
+                <button type="button"
+                    class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                    (click)="wrapSelection(descInput, '**','**')" title="Bold">
+                    <lucide-icon [img]="BoldIcon" class="w-4 h-4"></lucide-icon>
+                </button>
+                <button type="button"
+                    class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                    (click)="wrapSelection(descInput, '_','_')" title="Italic">
+                    <lucide-icon [img]="ItalicIcon" class="w-4 h-4"></lucide-icon>
+                </button>
+                <div class="w-px h-4 bg-slate-300 mx-1"></div>
+                <button type="button"
+                    class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                    (click)="insertPrefix(descInput, '- ')" title="List">
+                    <lucide-icon [img]="ListIcon" class="w-4 h-4"></lucide-icon>
+                </button>
+                <button type="button"
+                    class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                    (click)="makeHeading(descInput)" title="Heading">
+                    <lucide-icon [img]="Heading1Icon" class="w-4 h-4"></lucide-icon>
+                </button>
+                <div class="w-px h-4 bg-slate-300 mx-1"></div>
+                <button type="button"
+                    class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+                    (click)="insertLink(descInput)" title="Link">
+                    <lucide-icon [img]="LinkIcon" class="w-4 h-4"></lucide-icon>
+                </button>
+            </div>
+
+            <textarea #descInput
+                class="w-full min-h-[160px] p-3 text-sm focus:outline-none bg-white resize-y cm-textarea" rows="8"
+                [ngModel]="descDraft()" (ngModelChange)="descDraft.set($event)"
+                placeholder="Add a more detailed description…"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <div class="flex gap-2">
+                <button class="cm-btn-primary inline-flex items-center" type="button" (click)="saveDescription()">
+                    Save
+                </button>
+                <button class="cm-btn inline-flex items-center" (click)="cancelDescEdit()">
+                    Cancel
+                </button>
+            </div>
+            <span class="text-xs text-slate-400">
+                {{ descCharCount() | number }} characters
+            </span>
+        </div>
+    </div>
+</section>
