@@ -5,7 +5,6 @@ import { ClickOutsideDirective } from '../click-outside.directive';
 import { Card } from '../../types';
 import { BoardStore } from '../../store/board-store.service';
 import { FormsModule } from '@angular/forms';
-import { LabelsService } from '../../data/labels.service';
 import { CardModalService } from '../card-modal/card-modal.service';
 import { AuthService } from '../../auth/auth.service';
 import { computed, inject } from '@angular/core';
@@ -21,7 +20,6 @@ export class TrelloCardComponent {
     @Input({ required: true }) listId!: string;
     @Input() disableClick = false;
 
-    showLabels = false;
     showMore = false;
     editing = false;
     titleDraft = '';
@@ -31,7 +29,6 @@ export class TrelloCardComponent {
     constructor(
         public store: BoardStore,
         public cardsApi: CardsService, // made public for use in template if needed
-        private labelsApi: LabelsService,
         private modal: CardModalService,
     ) { }
 
@@ -144,7 +141,6 @@ export class TrelloCardComponent {
         this.titleDraft = this.card.title ?? '';
         this.editing = true;
         this.showMore = false;
-        this.showLabels = false;
     }
     cancelEdit() { this.editing = false; }
     async saveEdit() {
@@ -175,18 +171,6 @@ export class TrelloCardComponent {
         if (Array.isArray(any.cardLabels)) return any.cardLabels.map((x: any) => x?.labelId).filter(Boolean);
         return [];
     }
-    has = (lid: string) => this.labelIds(this.card).includes(lid);
-
-    async toggleLabel(lid: string) {
-        if (this.has(lid)) {
-            await this.labelsApi.unassignFromCard(this.card.id, lid);
-            this.store.removeLabelFromCardLocally(this.card.id, lid);
-        } else {
-            await this.labelsApi.assignToCard(this.card.id, lid);
-            this.store.addLabelToCardLocally(this.card.id, lid);
-        }
-    }
-
     private getListCards() {
         const list = this.store.lists().find((l: { id: string }) => l.id === this.listId);
         return list ? (list.cards ?? []) : [];

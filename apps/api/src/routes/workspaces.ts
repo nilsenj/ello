@@ -7,10 +7,10 @@ import { EmailService } from '../services/email.js';
 import { NotificationService } from '../services/notification-service.js';
 
 const DEFAULT_LABELS = [
-    { name: 'green', color: '#61BD4F' },
-    { name: 'Priority', color: '#ff5252' },
-    { name: 'Bug', color: '#ff9800' },
-    { name: 'Feature', color: '#4caf50' },
+    { name: 'High Priority', color: '#EB5A46' },
+    { name: 'Blocked', color: '#C377E0' },
+    { name: 'Bug', color: '#F2D600' },
+    { name: 'Feature', color: '#61BD4F' },
 ];
 
 const DEFAULT_LISTS = ['To Do', 'In Progress', 'Done'];

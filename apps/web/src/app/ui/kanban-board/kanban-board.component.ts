@@ -97,16 +97,23 @@ export class KanbanBoardComponent implements OnInit {
         this.showFilterMenu = false;
     }
 
-    activeLabelName = computed(() => {
+    activeLabelName() {
         if (!this.activeLabel) return 'All labels';
         return this.store.labels().find(l => l.id === this.activeLabel)?.name || 'Label';
-    });
+    }
 
-    activeMemberName = computed(() => {
+    activeMemberName() {
         if (!this.activeMemberId) return 'All members';
         const m = this.store.members().find(m => m.id === this.activeMemberId);
         return m?.name || m?.email || 'Member';
-    });
+    }
+
+    activeMemberInitials() {
+        if (!this.activeMemberId) return '';
+        const m = this.store.members().find(m => m.id === this.activeMemberId);
+        const name = (m?.name || m?.email || 'M').trim();
+        return name.slice(0, 2).toUpperCase();
+    }
 
 
     // ui state

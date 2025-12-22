@@ -1,4 +1,4 @@
-<div class="relative isolate overflow-hidden bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
+<div class="relative isolate overflow-visible bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
     aria-label="Card" (click)="openModal($event)">
 
     <!-- Cover Image -->
@@ -87,11 +87,7 @@
         <span *ngIf="card.description" class="inline-flex items-center gap-1" title="Has description">• desc</span>
 
         <!-- Right controls -->
-        <div class="ml-auto flex items-center gap-1">
-            <button class="px-2 py-1 rounded hover:bg-white/60"
-                (click)="showLabels = !showLabels; $event.stopPropagation()" data-stop-open>
-                Labels
-            </button>
+        <div class="ml-auto">
             <button class="px-2 py-1 rounded hover:bg-white/60" (click)="showMore = !showMore; $event.stopPropagation()"
                 data-stop-open>
                 •••
@@ -99,24 +95,9 @@
         </div>
     </div>
 
-    <!-- Quick assign labels -->
-    <div *ngIf="showLabels" class="mt-2 bg-white rounded p-2 shadow border relative" clickOutside
-        (clickOutside)="showLabels = false" (click)="$event.stopPropagation()" data-stop-open>
-        <button type="button" class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
-            (click)="showLabels = false">×</button>
-
-        <button *ngFor="let lb of store.labels()"
-            class="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-            (click)="toggleLabel(lb.id)">
-            <span class="inline-block h-3 w-3 rounded" [style.backgroundColor]="lb.color"></span>
-            <span class="text-sm">{{ lb.name }}</span>
-            <span class="ml-auto text-[11px]" *ngIf="has(lb.id)">✓</span>
-        </button>
-    </div>
-
     <!-- More menu: edit / move / delete -->
-    <div *ngIf="showMore" class="mt-2 bg-white rounded p-2 shadow border relative" clickOutside
-        (clickOutside)="showMore = false" (click)="$event.stopPropagation()" data-stop-open>
+    <div *ngIf="showMore" class="absolute right-2 top-12 bg-white rounded p-2 shadow border z-20"
+        clickOutside (clickOutside)="showMore = false" (click)="$event.stopPropagation()" data-stop-open>
         <button type="button" class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
             (click)="showMore = false">×</button>
 
