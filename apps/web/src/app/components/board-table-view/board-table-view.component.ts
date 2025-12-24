@@ -20,6 +20,8 @@ export class BoardTableViewComponent {
     cardsApi = inject(CardsService);
     listsApi = inject(ListsService);
 
+    @Input() canEdit = true;
+
     private _cards: Card[] = [];
     @Input() set cards(val: Card[]) {
         this._cards = val;
@@ -132,11 +134,25 @@ export class BoardTableViewComponent {
 
     // Updates
     async updateCardTitle(card: Card, event: Event) {
+        if (!this.canEdit) return;
         const input = event.target as HTMLInputElement;
         const newTitle = input.value.trim();
         if (newTitle && newTitle !== card.title) {
             await this.cardsApi.updateCard(card.id, { title: newTitle });
         }
+    }
+
+    async updateCardList(card: Card, event: Event) {
+        if (!this.canEdit) return;
+        const select = event.target as HTMLSelectElement;
+        const newListId = select.value;
+        if (!newListId || newListId === card.listId) return;
+        await this.cardsApi.moveCard(card.id, newListId, null, null);
+    }
+
+    async updateDueDate(card: Card, dateStr: string | null) {
+        if (!this.canEdit) return;
+        await this.cardsApi.patchCardExtended(card.id, { dueDate: dateStr || null });
     }
 
     async updateCardList(card: Card, event: Event) {

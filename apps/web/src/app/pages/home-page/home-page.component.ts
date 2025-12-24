@@ -4,7 +4,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { BoardStore } from '../../store/board-store.service';
 import { WorkspaceLite, WorkspacesService } from '../../data/workspaces.service';
 import { BoardsService } from '../../data/boards.service';
-import { ArchiveIcon, ClockIcon, LucideAngularModule, Plus, Settings, StarIcon, Users, XIcon } from 'lucide-angular';
+import { ArchiveIcon, ClockIcon, LucideAngularModule, Plus, Settings, StarIcon, Users, XIcon, Upload } from 'lucide-angular';
 import { BoardCreateModalComponent } from '../../components/board-create-modal/board-create-modal.component';
 import { BoardCreateModalService } from '../../components/board-create-modal/board-create-modal.service';
 import { WorkspaceCreateModalComponent } from '../../components/workspace-create-modal/workspace-create-modal.component';
@@ -41,6 +41,7 @@ export class HomePageComponent implements OnInit {
     readonly ClockIcon = ClockIcon;
     readonly StarIcon = StarIcon;
     readonly PlusIcon = Plus;
+    readonly UploadIcon = Upload;
 
     // Services
     private router = inject(Router);
@@ -253,6 +254,29 @@ export class HomePageComponent implements OnInit {
         event.stopPropagation();
         this.boardToArchive.set(board.id);
         this.boardToArchiveName.set(board.name);
+    }
+
+    openBoard(boardId: string, event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (target.closest('button,[data-stop-open]')) return;
+        this.router.navigate(['/b', boardId]);
+    }
+
+    async importBoardToWorkspace(event: Event, workspaceId: string) {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const payload = JSON.parse(text);
+            const board = await this.boardsApi.importBoard(workspaceId, payload);
+            this.router.navigate(['/b', board.id]);
+        } catch (err) {
+            console.error('Failed to import board', err);
+            alert('Failed to import board');
+        } finally {
+            input.value = '';
+        }
     }
 
     closeArchiveModal() {

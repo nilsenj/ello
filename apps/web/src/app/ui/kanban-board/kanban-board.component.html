@@ -331,6 +331,13 @@
     </div>
 </div>
 
+<div *ngIf="showWorkspaceViewerBanner()" class="board-banner" role="status" aria-live="polite">
+    <span class="board-banner-dot" aria-hidden="true"></span>
+    <span class="board-banner-text">
+        You have view-only access to this board. Ask a board admin to add you as a member to edit.
+    </span>
+</div>
+
 
 <board-menu #menu></board-menu>
 
@@ -345,11 +352,11 @@
 
 
 <!-- Table View -->
-<board-table-view *ngIf="currentView() === 'table'" [cards]="getAllFilteredCards()"
+<board-table-view *ngIf="currentView() === 'table'" [cards]="getAllFilteredCards()" [canEdit]="canEditBoard()"
                   class="flex-1 overflow-hidden bg-slate-50"></board-table-view>
 
 <!-- Calendar View -->
-<board-calendar-view *ngIf="currentView() === 'calendar'" [cards]="getAllFilteredCards()"
+<board-calendar-view *ngIf="currentView() === 'calendar'" [cards]="getAllFilteredCards()" [canEdit]="canEditBoard()"
                      class="flex-1 overflow-hidden bg-white"></board-calendar-view>
 
 <!-- Lists (Board View) -->
@@ -357,9 +364,11 @@
      [ngClass]="boardBackground()" [style.backgroundImage]="boardBackgroundStyle()">
     <!-- Horizontal list reordering -->
     <div cdkDropList [cdkDropListData]="lists()" [cdkDropListOrientation]="'horizontal'"
+         [cdkDropListDisabled]="!canEditBoard()"
          (cdkDropListDropped)="onListDropped($event)" class="flex gap-4 min-h-[70vh]">
         <!-- Each column is a draggable item -->
-        <div *ngFor="let l of lists(); trackBy: trackList" cdkDrag cdkDragLockAxis="x" class="list-shell w-72 shrink-0">
+        <div *ngFor="let l of lists(); trackBy: trackList" cdkDrag cdkDragLockAxis="x"
+             [cdkDragDisabled]="!canEditBoard()" class="list-shell w-72 shrink-0">
             <!-- drag preview -->
             <ng-template cdkDragPreview>
                 <div class="list-preview w-72 rounded-xl">
@@ -376,12 +385,12 @@
             </ng-template>
 
             <!-- Your actual column (cards DnD remains inside) -->
-            <list-column [list]="l" [filtered]="cards(l.id)">
+            <list-column [list]="l" [filtered]="cards(l.id)" [canEdit]="canEditBoard()">
             </list-column>
         </div>
 
         <!-- Add list -->
-        <section class="w-72 shrink-0 rounded-xl p-3 transition-colors"
+        <section *ngIf="canEditBoard()" class="w-72 shrink-0 rounded-xl p-3 transition-colors"
                  [ngClass]="isLightBoard() ? 'bg-black/5 hover:bg-black/10' : 'bg-white/30 text-white/95'">
             <div *ngIf="!newListTitle">
                 <button class="w-full rounded-md py-2 transition-colors text-left pl-2 font-medium"

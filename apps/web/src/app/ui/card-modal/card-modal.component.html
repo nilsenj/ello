@@ -9,6 +9,8 @@
 
         <input class="cm-title" [ngModel]="titleDraft()" (ngModelChange)="titleDraft.set($event)" (blur)="saveTitle()"
                (keydown.enter)="saveTitle()"
+               [readonly]="!canEdit()"
+               [class.cursor-not-allowed]="!canEdit()"
                [attr.aria-label]="'Card title. Priority: ' + ((data()?.priority || priorityDraft()) || 'none')"/>
 
         <button class="cm-close" (click)="close()" aria-label="Close">
@@ -26,13 +28,15 @@
                                     [insertPrefix]="insertPrefix" [makeHeading]="makeHeading"
                                     [insertLink]="insertLink" [richDescription]="richDescription" [PlusIcon]="PlusIcon"
                                     [PencilIcon]="PencilIcon" [BoldIcon]="BoldIcon" [ItalicIcon]="ItalicIcon"
-                                    [ListIcon]="ListIcon" [Heading1Icon]="Heading1Icon" [LinkIcon]="LinkIcon"/>
+                                    [ListIcon]="ListIcon" [Heading1Icon]="Heading1Icon" [LinkIcon]="LinkIcon"
+                                    [canEdit]="canEdit()"/>
 
             <card-modal-comments class="cm-block cm-block-comments" [commentDraft]="commentDraft"
                                  [comments]="comments()"
                                  [isCommentBlank]="isCommentBlank" [addComment]="addComment"
                                  [deleteComment]="deleteComment"
-                                 [SendIcon]="SendIcon" [Trash2Icon]="Trash2Icon"/>
+                                 [SendIcon]="SendIcon" [Trash2Icon]="Trash2Icon"
+                                 [canEdit]="canEdit()"/>
 
             <card-modal-activity class="cm-block cm-block-activity" [activities]="activities()"
                                  [formatActivity]="formatActivity" [ActivityIcon]="ActivityIcon"/>
@@ -99,9 +103,13 @@
                                         [ChevronLeftIcon]="ChevronLeftIcon" [XIcon]="XIcon" [Trash2Icon]="Trash2Icon"
                                         [FileTextIcon]="FileTextIcon" [ExternalLinkIcon]="ExternalLinkIcon"
                                         [DownloadIcon]="DownloadIcon"
-                                        [SaveIcon]="SaveIcon" [XCircleIcon]="XCircleIcon"/>
+                                        [SaveIcon]="SaveIcon" [XCircleIcon]="XCircleIcon"
+                                        [canEdit]="canEdit()"/>
 
-                <card-modal-actions class="cm-block cm-block-actions" [canEdit]="canEdit()"
+                <card-modal-actions class="cm-block cm-block-actions"
+                                    [canArchive]="canEdit()"
+                                    [canMoveCopy]="canEdit()"
+                                    [canDelete]="canAdmin()"
                                     [isPanelOpen]="isPanelOpen" [closePanel]="closePanel"
                                     [archiveCard]="archiveCard" [prepareMoveOrCopy]="prepareMoveOrCopy"
                                     [deleteCard]="deleteCard"

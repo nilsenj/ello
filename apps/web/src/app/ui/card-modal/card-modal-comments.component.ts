@@ -13,6 +13,7 @@ import type { CommentDto } from '../../types';
     styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalCommentsComponent {
+    @Input({ required: true }) canEdit!: boolean;
     @Input({ required: true }) commentDraft!: WritableSignal<string>;
     @Input({ required: true }) comments!: CommentDto[];
     @Input({ required: true }) isCommentBlank!: () => boolean;

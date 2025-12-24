@@ -29,6 +29,14 @@ export type CreateBoardBody = {
     description?: string;
     background?: string;
     lists?: string[];
+    labels?: { name: string; color: string }[];
+    cards?: {
+        title: string;
+        description?: string | null;
+        list: string;
+        checklists?: { title: string; items: string[] }[];
+        labelNames?: string[];
+    }[];
 };
 
 export type CreatedBoard = {

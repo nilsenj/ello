@@ -36,7 +36,9 @@
         <div class="contents">
             <div *ngFor="let day of calendarDays()"
                 class="border-b border-r last:border-r-0 p-1 min-h-[100px] flex flex-col relative transition group calendar-day"
-                [id]="day.isoDate" cdkDropList [cdkDropListData]="day.cards" (cdkDropListDropped)="drop($event)"
+                [id]="day.isoDate" cdkDropList [cdkDropListData]="day.cards"
+                [cdkDropListDisabled]="!canEdit"
+                (cdkDropListDropped)="drop($event)"
                 [ngClass]="{
                     'bg-white': day.isCurrentMonth,
                     'bg-gray-50 text-gray-400': !day.isCurrentMonth,
@@ -48,6 +50,8 @@
                     <!-- Add Button -->
                     <button (click)="addCard(day.date, $event)"
                         class="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-200 rounded text-gray-500 transition-opacity"
+                        [disabled]="!canEdit"
+                        [class.opacity-30]="!canEdit"
                         title="Add card">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
@@ -65,6 +69,7 @@
                 <!-- Cards -->
                 <div class="flex-1 space-y-1 custom-scrollbar min-h-[2rem]">
                     <div *ngFor="let card of day.cards" cdkDrag [cdkDragData]="card" (click)="openCard(card, $event)"
+                        [cdkDragDisabled]="!canEdit"
                         class="cursor-pointer bg-white p-2 rounded shadow-sm border border-gray-200 hover:shadow-md transition text-xs relative group/card">
 
                         <!-- Drag Preview -->

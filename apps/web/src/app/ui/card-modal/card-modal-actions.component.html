@@ -1,19 +1,19 @@
-<section>
+<section *ngIf="canArchive || canMoveCopy || canDelete">
     <div class="cm-section-title">Actions</div>
     <div class="grid grid-cols-2 gap-2">
-        <button *ngIf="canEdit" class="cm-add inline-flex items-center" (click)="archiveCard()">
+        <button *ngIf="canArchive" class="cm-add inline-flex items-center" (click)="archiveCard()">
             <lucide-icon [img]="ArchiveIcon" class="mr-1"></lucide-icon>
             Archive
         </button>
-        <button *ngIf="canEdit" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('move')">
+        <button *ngIf="canMoveCopy" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('move')">
             <lucide-icon [img]="MoveIcon" class="mr-1"></lucide-icon>
             Move
         </button>
-        <button *ngIf="canEdit" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('copy')">
+        <button *ngIf="canMoveCopy" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('copy')">
             <lucide-icon [img]="CopyIcon" class="mr-1"></lucide-icon>
             Copy
         </button>
-        <button *ngIf="canEdit" class="cm-add inline-flex items-center text-red-600 hover:bg-red-50"
+        <button *ngIf="canDelete" class="cm-add inline-flex items-center text-red-600 hover:bg-red-50"
             (click)="deleteCard()">
             <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
             Delete

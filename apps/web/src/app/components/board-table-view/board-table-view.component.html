@@ -34,6 +34,8 @@
                 </div>
                 <input type="text" [value]="card.title" (blur)="updateCardTitle(card, $event)"
                     (keydown.enter)="$any($event.target).blur()"
+                    [readonly]="!canEdit"
+                    [class.cursor-not-allowed]="!canEdit"
                     class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-gray-900 group-hover:bg-white/50 rounded px-1">
                 <button (click)="openCard(card.id)"
                     class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-600">
@@ -48,6 +50,7 @@
             <!-- List -->
             <div class="w-40 px-2 py-2 border-r">
                 <select (change)="updateCardList(card, $event)"
+                    [disabled]="!canEdit"
                     class="w-full text-xs border-gray-200 rounded bg-white py-1 pl-2 pr-6 focus:ring-blue-500 focus:border-blue-500">
                     <option *ngFor="let l of lists()" [value]="l.id" [selected]="l.id === card.listId">{{ l.title ||
                         l.name }}</option>
@@ -60,7 +63,10 @@
                     <!-- Add label button -->
                     <button
                         class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-colors"
-                        title="Add/Manage Labels" (click)="openCard(card.id, 'labels')">
+                        title="Add/Manage Labels" (click)="openCard(card.id, 'labels')"
+                        [disabled]="!canEdit"
+                        [class.opacity-60]="!canEdit"
+                        [class.cursor-not-allowed]="!canEdit">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -83,7 +89,10 @@
                     <!-- Add member button -->
                     <button
                         class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 ring-2 ring-white flex items-center justify-center transition-colors z-10"
-                        title="Manage Members" (click)="openCard(card.id, 'members')">
+                        title="Manage Members" (click)="openCard(card.id, 'members')"
+                        [disabled]="!canEdit"
+                        [class.opacity-60]="!canEdit"
+                        [class.cursor-not-allowed]="!canEdit">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -96,12 +105,13 @@
             <div class="w-32 px-2 py-2">
                 <input type="date" [ngModel]="card.dueDate | date:'yyyy-MM-dd':'UTC'"
                     (ngModelChange)="updateDueDate(card, $event)"
+                    [disabled]="!canEdit"
                     class="w-full text-xs border-none bg-transparent p-0 focus:ring-0 text-gray-500">
             </div>
         </div>
 
         <!-- Create Row -->
-        <div class="flex items-center border-b bg-gray-50/50 p-1">
+        <div class="flex items-center border-b bg-gray-50/50 p-1" *ngIf="canEdit; else viewOnlyRow">
             <div class="flex-1 px-4 py-2 flex items-center gap-2" *ngIf="showNewCardRow; else addBtn">
                 <input #newCardInput type="text" [(ngModel)]="newCardTitle"
                     class="flex-1 border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
@@ -122,6 +132,11 @@
                 </button>
             </ng-template>
         </div>
+        <ng-template #viewOnlyRow>
+            <div class="flex-1 px-4 py-2 text-xs text-gray-500">
+                View-only access. Ask an admin to add you as a board member to edit.
+            </div>
+        </ng-template>
 
         <!-- Empty State -->
         <div *ngIf="getAllCards().length === 0" class="p-8 text-center text-gray-500">

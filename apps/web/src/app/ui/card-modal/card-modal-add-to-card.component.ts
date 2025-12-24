@@ -19,6 +19,7 @@ import { FilterByPipe } from '../../shared/filter-by.pipe';
     styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalAddToCardComponent {
+    @Input({ required: true }) canEdit!: boolean;
     @Input({ required: true }) openPanel!: (name: PanelName) => void;
     @Input({ required: true }) closePanel!: () => void;
     @Input({ required: true }) isPanelOpen!: (name: PanelName) => boolean;

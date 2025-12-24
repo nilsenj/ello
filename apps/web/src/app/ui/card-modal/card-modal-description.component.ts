@@ -13,6 +13,7 @@ import { SafeHtmlPipe } from '../../shared/safe-html.pipe';
     styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalDescriptionComponent {
+    @Input({ required: true }) canEdit!: boolean;
     @Input({ required: true }) descDraft!: WritableSignal<string>;
     @Input({ required: true }) isEditingDesc!: Signal<boolean>;
     @Input({ required: true }) descCharCount!: Signal<number>;

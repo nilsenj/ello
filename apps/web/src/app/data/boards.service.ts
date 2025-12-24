@@ -149,4 +149,12 @@ export class BoardsService {
     async updateBoard(boardId: string, data: Partial<{ name: string; description?: string; visibility?: 'private' | 'workspace' | 'public'; isArchived?: boolean }>): Promise<Board> {
         return this.api.patch<Board>(`/api/boards/${boardId}`, data);
     }
+
+    async exportBoard(boardId: string): Promise<any> {
+        return this.api.get(`/api/boards/${boardId}/export`);
+    }
+
+    async importBoard(workspaceId: string, payload: any): Promise<Board> {
+        return this.api.post<Board>(`/api/boards/import`, { workspaceId, ...payload });
+    }
 }

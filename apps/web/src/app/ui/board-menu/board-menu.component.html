@@ -13,7 +13,8 @@
         <h3 class="font-semibold text-gray-700 flex-1 text-center">
             {{ view() === 'main' ? 'Menu' : view() === 'background' ? 'Background' : view() === 'visibility' ?
             'Visibility' : view() === 'activity' ? 'Activity'
-            : view() === 'members' ? 'Members' : view() === 'archived' ? 'Archived Items' : 'Menu' }}
+            : view() === 'members' ? 'Members' : view() === 'archived' ? 'Archived Items'
+            : view() === 'importExport' ? 'Import / Export' : 'Menu' }}
         </h3>
         <button (click)="close()" class="text-gray-500 hover:text-gray-800">
             <lucide-icon [img]="XIcon" [size]="18"></lucide-icon>
@@ -49,6 +50,13 @@
                 Members
             </button>
             <hr class="my-2 border-slate-200">
+            <button
+                *ngIf="canExportBoard() || canImportWorkspace()"
+                class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
+                (click)="openImportExport()">
+                <lucide-icon [img]="DownloadIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                Import / Export
+            </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showArchived()">
@@ -281,6 +289,51 @@
                 <div *ngIf="members().length === 0" class="text-center py-8 text-sm text-slate-500">
                     No members found
                 </div>
+            </div>
+        </div>
+
+        <!-- Import / Export View -->
+        <div *ngIf="view() === 'importExport'" class="p-3 space-y-5">
+            <div>
+                <h3 class="font-semibold text-sm mb-2">Export Board</h3>
+                <p class="text-xs text-slate-500 mb-3">Download the current board as a JSON file.</p>
+                <button
+                    class="w-full text-left px-3 py-2 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-sm font-medium text-slate-700 flex items-center gap-2"
+                    (click)="exportBoard()"
+                    [disabled]="!canExportBoard()"
+                    [class.opacity-60]="!canExportBoard()"
+                    [class.cursor-not-allowed]="!canExportBoard()">
+                    <lucide-icon [img]="DownloadIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                    Export JSON
+                </button>
+                <p *ngIf="!canExportBoard()" class="text-xs text-amber-700 mt-2">
+                    Only board owners or admins can export this board.
+                </p>
+            </div>
+
+            <div class="border-t border-slate-200 pt-4">
+                <h3 class="font-semibold text-sm mb-2">Import Board</h3>
+                <p class="text-xs text-slate-500 mb-3">Import a JSON board file into a workspace.</p>
+
+                <label class="block text-xs font-medium text-slate-600 mb-2">Workspace</label>
+                <select [value]="importWorkspaceId()" (change)="selectImportWorkspace($event)"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white mb-3"
+                    [disabled]="!canImportWorkspace()"
+                    [class.opacity-60]="!canImportWorkspace()"
+                    [class.cursor-not-allowed]="!canImportWorkspace()">
+                    <option *ngFor="let ws of myWorkspaces()" [value]="ws.id">{{ ws.name }}</option>
+                </select>
+
+                <label
+                    class="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-dashed border-slate-300 bg-white text-sm text-slate-600 hover:bg-slate-50 cursor-pointer">
+                    <lucide-icon [img]="UploadIcon" [size]="18" class="text-slate-500"></lucide-icon>
+                    <span>{{ importing() ? 'Importing…' : 'Choose JSON file to import' }}</span>
+                    <input type="file" accept="application/json" class="hidden" (change)="importBoardFromFile($event)" [disabled]="!canImportWorkspace()">
+                </label>
+                <p *ngIf="!canImportWorkspace()" class="text-xs text-amber-700 mt-2">
+                    Only workspace admins or owners can import into this workspace.
+                </p>
+                <p *ngIf="importError()" class="text-xs text-red-600 mt-2">{{ importError() }}</p>
             </div>
         </div>
     </div>

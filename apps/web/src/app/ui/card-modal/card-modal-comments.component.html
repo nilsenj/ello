@@ -1,7 +1,7 @@
 <section>
     <div class="cm-section-title">Comments</div>
 
-    <div class="cm-comment-editor">
+    <div class="cm-comment-editor" *ngIf="canEdit; else commentReadOnly">
         <textarea rows="3" class="cm-textarea" [ngModel]="commentDraft()"
             (ngModelChange)="commentDraft.set($event)" placeholder="Write a comment…"></textarea>
         <div class="mt-2">
@@ -12,6 +12,9 @@
             </button>
         </div>
     </div>
+    <ng-template #commentReadOnly>
+        <div class="cm-muted text-sm">Comments are read-only for viewers.</div>
+    </ng-template>
 
     <div class="cm-comments">
         <div *ngFor="let c of comments" class="cm-comment">
@@ -19,7 +22,7 @@
                 <span class="cm-author">{{ c.author?.name || 'User' }}</span>
                 <span class="cm-dot">•</span>
                 <span class="cm-date">{{ c.createdAt | date: 'medium' }}</span>
-                <button class="cm-link inline-flex items-center ml-auto" (click)="deleteComment(c.id)">
+                <button *ngIf="canEdit" class="cm-link inline-flex items-center ml-auto" (click)="deleteComment(c.id)">
                     <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
                     Delete
                 </button>

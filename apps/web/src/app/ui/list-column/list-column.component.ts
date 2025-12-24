@@ -36,6 +36,7 @@ export class ListColumnComponent {
     }
 
     @Input() filtered: Card[] | null = null;
+    @Input() canEdit = true;
 
     store = inject(BoardStore);
     cardsApi = inject(CardsService);
@@ -66,10 +67,12 @@ export class ListColumnComponent {
     trackCard = (_: number, c: Card) => c.id;
 
     onDragStart() {
+        if (!this.canEdit) return;
         this.disableCardClick.set(true);
     }
 
     onDragEnd() {
+        if (!this.canEdit) return;
         // Small delay to ensure click event is ignored
         setTimeout(() => {
             this.disableCardClick.set(false);
@@ -77,6 +80,7 @@ export class ListColumnComponent {
     }
 
     async createCard() {
+        if (!this.canEdit) return;
         const t = this.newTitle.trim();
         if (!t) return;
         await this.cardsApi.createCard(this.list.id, t);
@@ -103,6 +107,7 @@ export class ListColumnComponent {
     }
 
     async onDrop(event: CdkDragDrop<Card[]>) {
+        if (!this.canEdit) return;
         const src = event.previousContainer.data;
         const dst = event.container.data;
 

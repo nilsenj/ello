@@ -3,12 +3,16 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { NotificationsService } from './notifications.service';
 import { SocketService } from './socket.service';
 import { AppNotification } from './notification.model';
+import { BoardsService } from './boards.service';
+import { BoardStore } from '../store/board-store.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationsStore {
     private socketService = inject(SocketService);
+    private boardsApi = inject(BoardsService);
+    private boardStore = inject(BoardStore);
 
     // State
     private notifications = signal<AppNotification[]>([]);
@@ -41,9 +45,29 @@ export class NotificationsStore {
             } else {
                 console.log('[NotificationsStore] Duplicate notification ignored');
             }
+            void this.handleRealtimeSideEffects(notification);
         });
 
         console.log('[NotificationsStore] Event listener registered for notification:new');
+    }
+
+    private async handleRealtimeSideEffects(notification: AppNotification): Promise<void> {
+        if (notification.type !== 'ADDED_TO_BOARD' || !notification.boardId) return;
+
+        try {
+            await this.boardsApi.loadBoards({ autoSelect: false });
+        } catch (error) {
+            console.error('Failed to refresh boards after board invite', error);
+        }
+
+        if (this.boardStore.currentBoardId() === notification.boardId) {
+            try {
+                const members = await this.boardsApi.searchMembers(notification.boardId);
+                this.boardStore.setMembers(members);
+            } catch (error) {
+                console.error('Failed to refresh board members after board invite', error);
+            }
+        }
     }
 
     async loadNotifications(): Promise<void> {

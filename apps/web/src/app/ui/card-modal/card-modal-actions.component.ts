@@ -14,7 +14,9 @@ import type { PanelName } from './card-modal.service';
     styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalActionsComponent {
-    @Input({ required: true }) canEdit!: boolean;
+    @Input({ required: true }) canArchive!: boolean;
+    @Input({ required: true }) canMoveCopy!: boolean;
+    @Input({ required: true }) canDelete!: boolean;
     @Input({ required: true }) isPanelOpen!: (name: PanelName) => boolean;
     @Input({ required: true }) closePanel!: () => void;
 

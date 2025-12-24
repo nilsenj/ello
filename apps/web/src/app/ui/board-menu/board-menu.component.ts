@@ -4,8 +4,10 @@ import {
     ActivityIcon,
     ArchiveIcon,
     ChevronLeftIcon,
+    DownloadIcon,
     LucideAngularModule,
     PaletteIcon,
+    UploadIcon,
     UsersIcon,
     XIcon
 } from 'lucide-angular';
@@ -18,6 +20,7 @@ import { ActivityService } from '../../data/activity.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { WorkspacesService, WorkspaceMember } from '../../data/workspaces.service';
+import { Router } from '@angular/router';
 
 @Component({
     standalone: true,
@@ -41,8 +44,11 @@ export class BoardMenuComponent {
     readonly UsersIcon = UsersIcon;
     readonly XIcon = XIcon;
     readonly PaletteIcon = PaletteIcon;
+    readonly DownloadIcon = DownloadIcon;
+    readonly UploadIcon = UploadIcon;
 
     workspacesApi = inject(WorkspacesService); // Inject WorkspacesService
+    router = inject(Router);
 
     members = signal<BoardMemberLite[]>([]);
     inviteEmail = signal('');
@@ -53,6 +59,9 @@ export class BoardMenuComponent {
     // Workspace member search for invitation
     workspaceMembers = signal<WorkspaceMember[]>([]);
     showInviteDropdown = signal(false);
+    importWorkspaceId = signal('');
+    importError = signal('');
+    importing = signal(false);
 
     // Check if current user can edit board (owner or admin)
     currentUserRole = computed(() => {
@@ -88,6 +97,19 @@ export class BoardMenuComponent {
         const board = this.store.boards().find(b => b.id === boardId);
         if (!board?.workspaceId) return false;
 
+        const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
+        return ws?.role === 'owner' || ws?.role === 'admin';
+    });
+
+    canExportBoard = computed(() => {
+        const role = this.currentUserRole();
+        return role === 'owner' || role === 'admin';
+    });
+
+    canImportWorkspace = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
         const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
         return ws?.role === 'owner' || ws?.role === 'admin';
     });
@@ -132,7 +154,7 @@ export class BoardMenuComponent {
     }
 
     isOpen = signal(false);
-    view = signal<'main' | 'background' | 'visibility' | 'archived' | 'activity' | 'members'>('main');
+    view = signal<'main' | 'background' | 'visibility' | 'archived' | 'activity' | 'members' | 'importExport'>('main');
     archivedView = signal<'cards' | 'lists'>('cards'); // Tab selection for archived view
 
     archivedCards = signal<Card[]>([]);
@@ -187,10 +209,74 @@ export class BoardMenuComponent {
     open() {
         this.isOpen.set(true);
         this.view.set('main');
+        this.syncImportWorkspace();
     }
 
     close() {
         this.isOpen.set(false);
+    }
+
+    openImportExport() {
+        if (!this.canExportBoard() && !this.canImportWorkspace()) return;
+        this.view.set('importExport');
+        this.syncImportWorkspace();
+    }
+
+    syncImportWorkspace() {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (board?.workspaceId) {
+            this.importWorkspaceId.set(board.workspaceId);
+        } else if (this.myWorkspaces().length) {
+            this.importWorkspaceId.set(this.myWorkspaces()[0].id);
+        }
+    }
+
+    selectImportWorkspace(event: Event) {
+        const target = event.target as HTMLSelectElement;
+        this.importWorkspaceId.set(target.value);
+    }
+
+    async exportBoard() {
+        const boardId = this.store.currentBoardId();
+        if (!boardId || !this.canExportBoard()) return;
+        try {
+            const data = await this.boardsApi.exportBoard(boardId);
+            const board = this.store.boards().find(b => b.id === boardId);
+            const fileNameBase = (board?.name || 'board').replace(/[^a-zA-Z0-9_-]+/g, '-');
+            const stamp = new Date().toISOString().slice(0, 10);
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${fileNameBase}-${stamp}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Failed to export board', err);
+        }
+    }
+
+    async importBoardFromFile(event: Event) {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file || !this.canImportWorkspace()) return;
+        this.importError.set('');
+        this.importing.set(true);
+        try {
+            const text = await file.text();
+            const payload = JSON.parse(text);
+            const workspaceId = this.importWorkspaceId();
+            if (!workspaceId) throw new Error('Choose a workspace for import');
+            const board = await this.boardsApi.importBoard(workspaceId, payload);
+            this.close();
+            this.router.navigate(['/b', board.id]);
+        } catch (err: any) {
+            this.importError.set(err?.message || 'Failed to import board');
+        } finally {
+            this.importing.set(false);
+            input.value = '';
+        }
     }
 
     async showArchived() {

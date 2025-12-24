@@ -153,16 +153,22 @@ export class CardModalComponent {
     copyTitle = signal('');
     isBusyAction = signal(false);
 
-    canEdit = computed(() => {
+    private currentMemberRole = computed(() => {
         const uid = this.auth.user()?.id;
-        if (!uid) return false;
+        if (!uid) return null;
         const members = this.store.members();
-        const me = members.find(m => m.id === uid);
-        // If not found, assuming no access or viewer? 
-        // Typically if you can see the board you are at least a viewer or it's public.
-        // If public board and not logged in / not member -> viewer.
-        // Safe default: must be explicit member with role != viewer
-        return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
+        const me = members.find(m => m.id === uid || m.userId === uid);
+        return me?.role ?? null;
+    });
+
+    canEdit = computed(() => {
+        const role = this.currentMemberRole();
+        return role === 'owner' || role === 'admin' || role === 'member';
+    });
+
+    canAdmin = computed(() => {
+        const role = this.currentMemberRole();
+        return role === 'owner' || role === 'admin';
     });
 
     // side-panels

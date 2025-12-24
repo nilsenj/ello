@@ -1,7 +1,7 @@
 <div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card group/list relative">
     <div class="px-2 py-1 font-semibold text-ink-base flex justify-between items-start" cdkDragHandle>
         <span>{{ title() }}</span>
-        <button class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
+        <button *ngIf="canEdit" class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
             (click)="requestArchive()" title="Archive list">
             <lucide-icon [img]="ArchiveIcon" class="h-4 w-4"></lucide-icon>
         </button>
@@ -10,6 +10,7 @@
     <!-- Always-catch drop zone, even when empty -->
     <div cdkDropList [cdkDropListData]="cards()" [id]="dropListId()" [cdkDropListConnectedTo]="connectedTo()"
         cdkDropListOrientation="vertical" class="dropzone space-y-2" [class.empty]="cards().length === 0"
+        [cdkDropListDisabled]="!canEdit"
         (cdkDropListDropped)="onDrop($event)">
 
         <!-- Visible target when there are no cards -->
@@ -18,13 +19,14 @@
         </div>
 
         <!-- Render filtered if provided, otherwise full -->
-        <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c" [card]="c"
+        <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c"
+            [cdkDragDisabled]="!canEdit" [card]="c"
             [listId]="list.id" (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
             [disableClick]="disableCardClick()">
         </trello-card>
     </div>
 
-    <div class="mt-2">
+    <div class="mt-2" *ngIf="canEdit">
         <ng-container *ngIf="!adding(); else editor">
             <button class="w-full text-left text-sm text-ink-sub hover:text-ink-base px-2 py-1 rounded hover:bg-white"
                 (click)="adding.set(true)">+ Add a card</button>

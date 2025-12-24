@@ -2,15 +2,15 @@
     <div class="cm-section-title">Description</div>
 
     <div *ngIf="!isEditingDesc() && !descDraft()?.trim()" class="cm-btn inline-flex items-center"
-        (click)="startDescEdit()">
+        (click)="startDescEdit()" [class.cursor-not-allowed]="!canEdit" [class.opacity-60]="!canEdit">
         <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
-        Add a more detailed description…
+        {{ canEdit ? 'Add a more detailed description…' : 'No description yet.' }}
     </div>
 
     <div *ngIf="!isEditingDesc() && (descDraft()?.trim()?.length || 0) > 0" class="space-y-2">
         <div class="prose prose-sm max-w-none cm-description" [innerHTML]="richDescription(descDraft()) | safeHtml">
         </div>
-        <div>
+        <div *ngIf="canEdit">
             <button class="cm-btn inline-flex items-center" (click)="startDescEdit()">
                 <lucide-icon [img]="PencilIcon" class="mr-1"></lucide-icon>
                 Edit
@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <div *ngIf="isEditingDesc()" class="space-y-3">
+    <div *ngIf="isEditingDesc() && canEdit" class="space-y-3">
         <div
             class="border border-slate-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 shadow-sm transition-all duration-200">
             <div class="bg-gray-50 border-b border-slate-200 px-2 py-1.5 flex gap-1 items-center">
