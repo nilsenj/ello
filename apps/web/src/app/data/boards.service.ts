@@ -147,7 +147,10 @@ export class BoardsService {
     }
 
     async updateBoard(boardId: string, data: Partial<{ name: string; description?: string; visibility?: 'private' | 'workspace' | 'public'; isArchived?: boolean }>): Promise<Board> {
-        return this.api.patch<Board>(`/api/boards/${boardId}`, data);
+        const updated = await this.api.patch<Board>(`/api/boards/${boardId}`, data);
+        const boards = this.store.boards();
+        this.store.setBoards(boards.map(b => b.id === boardId ? { ...b, ...updated } : b));
+        return updated;
     }
 
     async exportBoard(boardId: string): Promise<any> {

@@ -143,6 +143,7 @@ export class KanbanBoardComponent implements OnInit {
         return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
     });
 
+
     showWorkspaceViewerBanner = computed(() => {
         const boardId = this.store.currentBoardId();
         if (!boardId) return false;

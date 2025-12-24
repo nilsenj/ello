@@ -9,7 +9,9 @@ import {
     PaletteIcon,
     UploadIcon,
     UsersIcon,
-    XIcon
+    XIcon,
+    PencilIcon,
+    CheckIcon
 } from 'lucide-angular';
 import { BoardStore } from '../../store/board-store.service';
 import { ListsService } from '../../data/lists.service';
@@ -46,6 +48,8 @@ export class BoardMenuComponent {
     readonly PaletteIcon = PaletteIcon;
     readonly DownloadIcon = DownloadIcon;
     readonly UploadIcon = UploadIcon;
+    readonly PencilIcon = PencilIcon;
+    readonly CheckIcon = CheckIcon;
 
     workspacesApi = inject(WorkspacesService); // Inject WorkspacesService
     router = inject(Router);
@@ -62,6 +66,9 @@ export class BoardMenuComponent {
     importWorkspaceId = signal('');
     importError = signal('');
     importing = signal(false);
+    renaming = signal(false);
+    renameDraft = signal('');
+    renameSaving = signal(false);
 
     // Check if current user can edit board (owner or admin)
     currentUserRole = computed(() => {
@@ -97,6 +104,16 @@ export class BoardMenuComponent {
         const board = this.store.boards().find(b => b.id === boardId);
         if (!board?.workspaceId) return false;
 
+        const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
+        return ws?.role === 'owner' || ws?.role === 'admin';
+    });
+
+    canRenameBoard = computed(() => {
+        const role = this.currentUserRole();
+        if (role === 'owner' || role === 'admin') return true;
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
         const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
         return ws?.role === 'owner' || ws?.role === 'admin';
     });
@@ -210,10 +227,59 @@ export class BoardMenuComponent {
         this.isOpen.set(true);
         this.view.set('main');
         this.syncImportWorkspace();
+        this.syncRenameDraft();
     }
 
     close() {
         this.isOpen.set(false);
+    }
+
+    syncRenameDraft() {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        this.renameDraft.set(board?.name ?? '');
+        this.renaming.set(false);
+    }
+
+    startRenameBoard() {
+        if (!this.canRenameBoard()) return;
+        this.syncRenameDraft();
+        this.renaming.set(true);
+    }
+
+    cancelRenameBoard() {
+        this.syncRenameDraft();
+    }
+
+    async saveRenameBoard() {
+        if (this.renameSaving()) return;
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board) return;
+        const next = this.renameDraft().trim();
+        if (!next || next === board.name) {
+            this.renaming.set(false);
+            return;
+        }
+        this.renameSaving.set(true);
+        try {
+            await this.boardsApi.updateBoard(board.id, { name: next });
+        } catch (err) {
+            console.error('Failed to rename board', err);
+        } finally {
+            this.renameSaving.set(false);
+            this.renaming.set(false);
+        }
+    }
+
+    onRenameKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.saveRenameBoard();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            this.cancelRenameBoard();
+        }
     }
 
     openImportExport() {

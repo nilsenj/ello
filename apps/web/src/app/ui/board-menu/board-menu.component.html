@@ -25,6 +25,46 @@
     <div class="flex-1 overflow-y-auto">
         <!-- Menu Items -->
         <div class="p-3 space-y-1" *ngIf="view() === 'main'">
+            <div *ngIf="canRenameBoard()" class="px-3 py-2">
+                <div class="text-xs font-semibold text-slate-500 mb-2">Rename board</div>
+                <div *ngIf="!renaming(); else renameFormTpl" class="flex items-center gap-2">
+                    <div class="text-sm font-medium text-slate-800 truncate flex-1">{{ renameDraft() }}</div>
+                    <button
+                        class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
+                        (click)="startRenameBoard()"
+                    >
+                        <lucide-icon [img]="PencilIcon" [size]="14"></lucide-icon>
+                        Edit
+                    </button>
+                </div>
+                <ng-template #renameFormTpl>
+                    <div class="flex items-center gap-2">
+                        <input
+                            class="flex-1 px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500"
+                            [ngModel]="renameDraft()"
+                            (ngModelChange)="renameDraft.set($event)"
+                            (keydown)="onRenameKeydown($event)"
+                            [disabled]="renameSaving()"
+                            autofocus
+                        />
+                        <button
+                            class="p-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                            (click)="saveRenameBoard()"
+                            [disabled]="renameSaving()"
+                            title="Save"
+                        >
+                            <lucide-icon [img]="CheckIcon" [size]="14"></lucide-icon>
+                        </button>
+                        <button
+                            class="p-1.5 rounded bg-slate-100 text-slate-700 hover:bg-slate-200"
+                            (click)="cancelRenameBoard()"
+                            title="Cancel"
+                        >
+                            <lucide-icon [img]="XIcon" [size]="14"></lucide-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </div>
             <button *ngIf="canEditBoard()"
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="view.set('background')">

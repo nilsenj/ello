@@ -249,6 +249,7 @@ export class HomePageComponent implements OnInit {
         return ws.role === 'owner' || ws.role === 'admin';
     }
 
+
     requestArchiveBoard(event: Event, board: any) {
         event.preventDefault();
         event.stopPropagation();
