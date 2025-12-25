@@ -36,6 +36,8 @@ reports/
 # Playwright artifacts
 apps/web-e2e/test-results/
 apps/web-e2e/playwright-report/
+apps/web-e2e/apps/playwright-report/
+apps/web-e2e/apps/test-results/
 
 # Angular caches (apps/web)
 .angular/
@@ -113,3 +115,4 @@ Icon?
 # ─────────────────────────────────────────────────────────────
 docker-data/
 *.pid
+apps/api/uploads/*
