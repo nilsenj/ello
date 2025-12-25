@@ -60,7 +60,7 @@ import {
 
             <div class="leading-tight">
               <div class="text-2xl font-black tracking-tighter text-slate-900">ello</div>
-              <div class="hidden sm:block text-[10px] uppercase tracking-wider font-bold text-slate-400">
+              <div class="hidden sm:block text-[10px] uppercase tracking-wider font-bold text-slate-400" i18n="@@landing.brandTagline">
                 Personal Kanban
               </div>
             </div>
@@ -70,12 +70,14 @@ import {
             <a
               routerLink="/login"
               class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+              i18n="@@landing.signIn"
             >
               Sign in
             </a>
             <a
               routerLink="/register"
               class="px-5 py-2.5 text-sm font-bold rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+              i18n="@@landing.getStarted"
             >
               Get Started
             </a>
@@ -92,15 +94,15 @@ import {
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60"></span>
                   <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-600"></span>
                 </span>
-                Now in Alpha
+                <span i18n="@@landing.alphaBadge">Now in Alpha</span>
               </div>
               <h1 class="hero-title text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 leading-[1.05]">
-                A lightweight kanban
-                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+                <span i18n="@@landing.heroTitleLine1">A lightweight kanban</span>
+                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500" i18n="@@landing.heroTitleLine2">
                   for personal flow.
                 </span>
               </h1>
-              <p class="mt-8 text-xl text-slate-600 leading-relaxed max-w-xl">
+              <p class="mt-8 text-xl text-slate-600 leading-relaxed max-w-xl" i18n="@@landing.heroBody">
                 Ello is a fast, focused alternative for individuals who want clarity without the weight of big tools.
                 Simple lists, clean cards, and zero noise.
               </p>
@@ -108,15 +110,15 @@ import {
               <div class="mt-8 flex flex-wrap gap-3">
                 <div class="pill">
                   <lucide-icon [img]="ColumnsIcon" class="w-4 h-4"></lucide-icon>
-                  Simple lanes
+                  <span i18n="@@landing.pill.lanes">Simple lanes</span>
                 </div>
                 <div class="pill">
                   <lucide-icon [img]="ListPlusIcon" class="w-4 h-4"></lucide-icon>
-                  Quick capture
+                  <span i18n="@@landing.pill.capture">Quick capture</span>
                 </div>
                 <div class="pill">
                   <lucide-icon [img]="UsersIcon" class="w-4 h-4"></lucide-icon>
-                  Built for solo focus
+                  <span i18n="@@landing.pill.solo">Built for solo focus</span>
                 </div>
               </div>
 
@@ -126,13 +128,14 @@ import {
                   class="group relative inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-bold text-lg overflow-hidden shadow-[0_18px_40px_-20px_rgba(99,102,241,0.6)] transition-all hover:from-indigo-500 hover:to-sky-500"
                 >
                   <span class="relative z-10 flex items-center gap-2">
-                    Start building for free
+                    <span i18n="@@landing.cta.startFree">Start building for free</span>
                     <lucide-icon [img]="ZapIcon" class="w-5 h-5 group-hover:animate-pulse"></lucide-icon>
                   </span>
                 </a>
                 <a
                   routerLink="/login"
                   class="inline-flex items-center justify-center px-8 py-4 rounded-2xl border-2 border-slate-300 text-slate-700 font-bold text-lg bg-white/70 hover:bg-white hover:border-slate-400 transition-all"
+                  i18n="@@landing.cta.viewDemo"
                 >
                   View Live Demo
                 </a>
@@ -155,33 +158,33 @@ import {
                     <div class="w-3 h-3 rounded-full bg-sky-400"></div>
                     <div class="w-3 h-3 rounded-full bg-indigo-400"></div>
                   </div>
-                  <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Personal Flow</div>
-                  <div class="px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">Alpha</div>
+                  <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]" i18n="@@landing.preview.title">Personal Flow</div>
+                  <div class="px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700" i18n="@@landing.preview.alpha">Alpha</div>
                 </div>
 
                 <div class="p-8 space-y-6">
                   <div class="grid grid-cols-3 gap-4">
                     <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Backlog</div>
+                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.backlog">Backlog</div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-8 rounded-xl bg-indigo-600/90 text-white text-xs font-semibold flex items-center px-3">
-                        Refine landing
+                        <span i18n="@@landing.preview.refineLanding">Refine landing</span>
                       </div>
                     </div>
                     <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">In Progress</div>
+                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.inProgress">In Progress</div>
                       <div class="h-8 rounded-xl bg-slate-900 text-white text-xs font-semibold flex items-center px-3">
-                        Launch copy
+                        <span i18n="@@landing.preview.launchCopy">Launch copy</span>
                       </div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                     </div>
                     <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Done</div>
+                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.done">Done</div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-8 rounded-xl bg-blue-500 text-white text-xs font-semibold flex items-center px-3">
-                        Weekly plan
+                        <span i18n="@@landing.preview.weeklyPlan">Weekly plan</span>
                       </div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                     </div>
@@ -190,7 +193,7 @@ import {
                   <div class="grid grid-cols-2 gap-4">
                     <div class="rounded-2xl bg-slate-900 p-5 text-white relative overflow-hidden">
                       <div class="absolute -top-10 -right-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl"></div>
-                      <div class="text-[11px] uppercase tracking-widest text-indigo-200">Momentum</div>
+                      <div class="text-[11px] uppercase tracking-widest text-indigo-200" i18n="@@landing.preview.momentum">Momentum</div>
                       <div class="mt-3 flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
                           <lucide-icon [img]="ZapIcon" class="w-5 h-5 text-indigo-200"></lucide-icon>
@@ -199,8 +202,8 @@ import {
                       </div>
                     </div>
                     <div class="rounded-2xl bg-white/90 border border-slate-200/60 p-5">
-                      <div class="text-[11px] uppercase tracking-widest text-slate-400">Focus</div>
-                      <div class="mt-3 text-sm text-slate-600 leading-relaxed">
+                      <div class="text-[11px] uppercase tracking-widest text-slate-400" i18n="@@landing.preview.focus">Focus</div>
+                      <div class="mt-3 text-sm text-slate-600 leading-relaxed" i18n="@@landing.preview.focusBody">
                         Smart limits keep WIP balanced and blockers visible.
                       </div>
                       <div class="mt-4 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
@@ -211,10 +214,10 @@ import {
                 </div>
               </div>
 
-              <div class="absolute -right-6 top-24 rounded-2xl bg-white/80 border border-slate-200/70 px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg animate-[float_10s_ease-in-out_infinite]">
+              <div class="absolute -right-6 top-24 rounded-2xl bg-white/80 border border-slate-200/70 px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg animate-[float_10s_ease-in-out_infinite]" i18n="@@landing.preview.loved">
                 Loved by solo makers
               </div>
-              <div class="absolute -left-6 bottom-10 rounded-2xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold shadow-xl animate-[float_12s_ease-in-out_infinite]">
+              <div class="absolute -left-6 bottom-10 rounded-2xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold shadow-xl animate-[float_12s_ease-in-out_infinite]" i18n="@@landing.preview.zeroSetup">
                 Zero setup
               </div>
             </div>
@@ -223,11 +226,11 @@ import {
 
         <section class="py-24 border-t border-indigo-100/70">
           <div class="text-center mb-16 max-w-3xl mx-auto">
-            <div class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Why Ello</div>
-            <h2 class="hero-title text-3xl font-semibold text-slate-900 sm:text-4xl mt-4">
+            <div class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold" i18n="@@landing.why.kicker">Why Ello</div>
+            <h2 class="hero-title text-3xl font-semibold text-slate-900 sm:text-4xl mt-4" i18n="@@landing.why.title">
               A calmer way to plan your day.
             </h2>
-            <p class="mt-4 text-slate-500 text-lg">
+            <p class="mt-4 text-slate-500 text-lg" i18n="@@landing.why.body">
               Every surface is designed to keep your personal work visible and stress-free.
             </p>
           </div>
@@ -246,15 +249,15 @@ import {
         <section class="py-20 border-t border-indigo-100/70">
           <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10 mb-12">
             <div class="max-w-2xl">
-              <div class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold">Use Cases</div>
-              <h2 class="hero-title text-3xl font-semibold text-slate-900 sm:text-4xl mt-4">
+              <div class="text-xs uppercase tracking-[0.3em] text-slate-400 font-bold" i18n="@@landing.useCases.kicker">Use Cases</div>
+              <h2 class="hero-title text-3xl font-semibold text-slate-900 sm:text-4xl mt-4" i18n="@@landing.useCases.title">
                 Built for small business ops.
               </h2>
-              <p class="mt-4 text-slate-500 text-lg">
+              <p class="mt-4 text-slate-500 text-lg" i18n="@@landing.useCases.body">
                 Keep work moving across sales, fulfillment, and daily operations without a heavy toolchain.
               </p>
             </div>
-            <div class="text-sm font-semibold text-slate-500">
+            <div class="text-sm font-semibold text-slate-500" i18n="@@landing.useCases.note">
               One board per team, all the essentials.
             </div>
           </div>
@@ -274,11 +277,11 @@ import {
             <div class="absolute top-0 right-0 w-72 h-72 bg-indigo-500/20 rounded-full blur-[120px]"></div>
             <div class="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
               <div class="max-w-xl">
-                <div class="text-xs uppercase tracking-[0.3em] text-indigo-200 font-bold">Alpha release</div>
-                <h3 class="hero-title text-3xl sm:text-4xl font-semibold mt-4">
+                <div class="text-xs uppercase tracking-[0.3em] text-indigo-200 font-bold" i18n="@@landing.cta.kicker">Alpha release</div>
+                <h3 class="hero-title text-3xl sm:text-4xl font-semibold mt-4" i18n="@@landing.cta.title">
                   Make your next board feel effortless.
                 </h3>
-                <p class="mt-4 text-slate-300 text-lg">
+                <p class="mt-4 text-slate-300 text-lg" i18n="@@landing.cta.body">
                   Spin up a personal board in seconds and keep your focus where it belongs.
                 </p>
               </div>
@@ -286,12 +289,14 @@ import {
                 <a
                   routerLink="/register"
                   class="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold text-lg shadow-[0_16px_30px_-20px_rgba(255,255,255,0.6)] hover:bg-indigo-100 transition-all"
+                  i18n="@@landing.cta.start"
                 >
                   Start your free board
                 </a>
                 <a
                   routerLink="/login"
                   class="inline-flex items-center justify-center px-8 py-4 rounded-2xl border border-white/40 text-white font-semibold text-lg hover:bg-white/10 transition-all"
+                  i18n="@@landing.cta.roadmap"
                 >
                   See the roadmap
                 </a>
@@ -314,13 +319,13 @@ import {
             </div>
 
             <div class="flex gap-8 text-sm font-semibold text-slate-500">
-              <a routerLink="/login" class="hover:text-slate-900 transition-colors">Documentation</a>
-              <a routerLink="/login" class="hover:text-slate-900 transition-colors">Changelog</a>
-              <a routerLink="/login" class="hover:text-slate-900 transition-colors">Privacy</a>
+              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.doc">Documentation</a>
+              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.changelog">Changelog</a>
+              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.privacy">Privacy</a>
             </div>
 
             <div class="text-sm font-medium text-slate-400">
-              © {{ currentYear }} Ello Kanban. Built with ❤️ for developers.
+              {{ footerCopyright }}
             </div>
           </div>
         </footer>
@@ -419,55 +424,56 @@ export default class LandingPage {
   readonly ShieldCheckIcon = ShieldCheckIcon;
 
   currentYear = new Date().getFullYear();
+  footerCopyright = $localize`:@@landing.footer.copyright:© ${this.currentYear}:year: Ello Kanban. Built with ❤️ for developers.`;
 
   stats = [
-    { value: '2 min', label: 'Clean setup' },
-    { value: 'Zero', label: 'Setup friction' },
-    { value: 'Light', label: 'Daily focus' }
+    { value: $localize`:@@landing.stats.twoMin:2 min`, label: $localize`:@@landing.stats.cleanSetup:Clean setup` },
+    { value: $localize`:@@landing.stats.zeroValue:Zero`, label: $localize`:@@landing.stats.zeroFriction:Setup friction` },
+    { value: $localize`:@@landing.stats.lightValue:Light`, label: $localize`:@@landing.stats.dailyFocus:Daily focus` }
   ];
 
   features = [
     {
-      title: 'Quick Capture',
-      description: 'Add ideas fast and keep your backlog tidy without extra steps.',
+      title: $localize`:@@landing.features.quickCapture.title:Quick Capture`,
+      description: $localize`:@@landing.features.quickCapture.desc:Add ideas fast and keep your backlog tidy without extra steps.`,
       icon: ZapIcon
     },
     {
-      title: 'Lightweight Views',
-      description: 'Just the essentials for seeing what is next and what is done.',
+      title: $localize`:@@landing.features.lightViews.title:Lightweight Views`,
+      description: $localize`:@@landing.features.lightViews.desc:Just the essentials for seeing what is next and what is done.`,
       icon: LayoutDashboardIcon
     },
     {
-      title: 'Private by Default',
-      description: 'Your board stays yours. No complexity, just control.',
+      title: $localize`:@@landing.features.private.title:Private by Default`,
+      description: $localize`:@@landing.features.private.desc:Your board stays yours. No complexity, just control.`,
       icon: ShieldCheckIcon
     }
   ];
 
   useCases = [
     {
-      kicker: 'Sales',
-      title: 'Lead pipeline',
-      description: 'Track inbound inquiries, quotes, and follow-ups from one view.',
-      note: 'Never miss a callback.'
+      kicker: $localize`:@@landing.useCases.sales.kicker:Sales`,
+      title: $localize`:@@landing.useCases.sales.title:Lead pipeline`,
+      description: $localize`:@@landing.useCases.sales.desc:Track inbound inquiries, quotes, and follow-ups from one view.`,
+      note: $localize`:@@landing.useCases.sales.note:Never miss a callback.`
     },
     {
-      kicker: 'Fulfillment',
-      title: 'Order progress',
-      description: 'Move orders from prep to packing to delivery with clear handoffs.',
-      note: 'Make delays visible fast.'
+      kicker: $localize`:@@landing.useCases.fulfillment.kicker:Fulfillment`,
+      title: $localize`:@@landing.useCases.fulfillment.title:Order progress`,
+      description: $localize`:@@landing.useCases.fulfillment.desc:Move orders from prep to packing to delivery with clear handoffs.`,
+      note: $localize`:@@landing.useCases.fulfillment.note:Make delays visible fast.`
     },
     {
-      kicker: 'Operations',
-      title: 'Daily checklists',
-      description: 'Open/close routines, inventory checks, and recurring tasks.',
-      note: 'Keep the day on rails.'
+      kicker: $localize`:@@landing.useCases.operations.kicker:Operations`,
+      title: $localize`:@@landing.useCases.operations.title:Daily checklists`,
+      description: $localize`:@@landing.useCases.operations.desc:Open/close routines, inventory checks, and recurring tasks.`,
+      note: $localize`:@@landing.useCases.operations.note:Keep the day on rails.`
     },
     {
-      kicker: 'Support',
-      title: 'Customer issues',
-      description: 'Log tickets, triage fixes, and keep customers in the loop.',
-      note: 'Resolve without chaos.'
+      kicker: $localize`:@@landing.useCases.support.kicker:Support`,
+      title: $localize`:@@landing.useCases.support.title:Customer issues`,
+      description: $localize`:@@landing.useCases.support.desc:Log tickets, triage fixes, and keep customers in the loop.`,
+      note: $localize`:@@landing.useCases.support.note:Resolve without chaos.`
     }
   ];
 }

@@ -2,8 +2,8 @@
     <div class="cm-section-title">Comments</div>
 
     <div class="cm-comment-editor" *ngIf="canEdit; else commentReadOnly">
-        <textarea rows="3" class="cm-textarea" [ngModel]="commentDraft()"
-            (ngModelChange)="commentDraft.set($event)" placeholder="Write a comment…"></textarea>
+        <textarea rows="3" class="cm-textarea" [ngModel]="commentDraft"
+            (ngModelChange)="commentDraft = $event" placeholder="Write a comment…"></textarea>
         <div class="mt-2">
             <button class="cm-btn-primary inline-flex items-center" type="button" [disabled]="isCommentBlank()"
                 (click)="addComment()">
@@ -17,7 +17,7 @@
     </ng-template>
 
     <div class="cm-comments">
-        <div *ngFor="let c of comments" class="cm-comment">
+        <div *ngFor="let c of localComments" class="cm-comment">
             <div class="cm-comment-meta">
                 <span class="cm-author">{{ c.author?.name || 'User' }}</span>
                 <span class="cm-dot">•</span>

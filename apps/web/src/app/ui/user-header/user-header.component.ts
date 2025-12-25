@@ -103,7 +103,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                         <div class="relative">
                             <input
                                 class="w-full rounded-md px-3 py-1.5 pl-9 text-sm text-[#172b4d] bg-white/90 focus:bg-white transition-colors border-none outline-none ring-2 ring-transparent focus:ring-blue-300/50"
-                                placeholder="Jump to board..."
+                                [placeholder]="tSearchPlaceholder"
                                 [ngModel]="query()"
                                 (ngModelChange)="query.set($event); onSearch()"
                                 (keydown.enter)="onEnter()"
@@ -119,7 +119,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                              class="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-xl border border-gray-200 overflow-hidden z-20 max-h-[80vh] overflow-y-auto">
                              
                             <div *ngIf="filteredBoards().length === 0" class="p-3 text-sm text-gray-500 text-center">
-                                No boards found
+                                {{ tNoBoardsFound }}
                             </div>
 
                             <div *ngFor="let group of filteredBoards()">
@@ -198,6 +198,9 @@ export class UserHeaderComponent {
 
     user = computed(() => this.auth.user());
     initials = () => (this.user()?.name || this.user()?.email || 'U').trim().slice(0, 2).toUpperCase();
+    readonly tSearchPlaceholder = $localize`:@@header.searchPlaceholder:Jump to board...`;
+    readonly tNoBoardsFound = $localize`:@@header.noBoardsFound:No boards found`;
+    readonly tOtherWorkspace = $localize`:@@header.otherWorkspace:Other`;
 
     // Notification signals
     notifications = this.notificationsStore.allNotifications;
@@ -205,8 +208,9 @@ export class UserHeaderComponent {
 
     currentBoardName = computed(() => {
         const id = this.store.currentBoardId();
-        if (!id) return 'Select Board';
-        return this.store.boards().find(b => b.id === id)?.name || 'Select Board';
+        const fallback = $localize`:@@header.selectBoard:Select Board`;
+        if (!id) return fallback;
+        return this.store.boards().find(b => b.id === id)?.name || fallback;
     });
 
     // Group boards by workspace
@@ -225,7 +229,7 @@ export class UserHeaderComponent {
         if (otherBoards.length > 0) {
             groups.push({
                 workspaceId: 'other',
-                workspaceName: 'Other',
+                workspaceName: this.tOtherWorkspace,
                 boards: otherBoards
             });
         }

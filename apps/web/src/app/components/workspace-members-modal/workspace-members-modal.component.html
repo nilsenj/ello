@@ -13,7 +13,7 @@
 
         <!-- Header -->
         <header class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 class="text-lg font-semibold text-gray-800">Workspace Members</h2>
+            <h2 class="text-lg font-semibold text-gray-800">{{ tTitle }}</h2>
             <button class="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors" (click)="close()">
                 <lucide-icon [img]="XIcon" class="w-5 h-5"></lucide-icon>
             </button>
@@ -28,7 +28,7 @@
                     [class.focus:ring-blue-500]="isValidEmail() || !inviteEmail()"
                     [class.focus:ring-red-500]="!isValidEmail() && inviteEmail()"
                     [class.border-red-300]="!isValidEmail() && inviteEmail()"
-                    placeholder="Enter email address to invite..." />
+                    [placeholder]="tInvitePlaceholder" />
 
                 <select [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)"
                     class="pl-3 pr-8 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]"
@@ -39,16 +39,16 @@
                 <button (click)="invite()" [disabled]="!isValidEmail() || inviting()"
                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
                     <lucide-icon [img]="UserPlusIcon" class="w-4 h-4"></lucide-icon>
-                    {{ inviting() ? 'Inviting...' : 'Invite' }}
+                    {{ inviting() ? tInviting : tInvite }}
                 </button>
             </div>
 
             <!-- Member List -->
             <div>
-                <h3 class="text-sm font-medium text-gray-700 mb-3">Members ({{ members().length }})</h3>
+                <h3 class="text-sm font-medium text-gray-700 mb-3">{{ getMembersTitle() }}</h3>
 
                 <div *ngIf="loading()" class="text-center py-4 text-gray-500">
-                    Loading members...
+                    {{ tLoading }}
                 </div>
 
                 <div *ngIf="!loading()" class="space-y-3">
@@ -64,7 +64,7 @@
                                 <div class="text-sm font-medium text-gray-900 flex items-center gap-2">
                                     {{ member.name }}
                                     <span *ngIf="member.status === 'pending'"
-                                        class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase tracking-wide">Pending</span>
+                                        class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase tracking-wide">{{ tPending }}</span>
                                 </div>
                                 <div class="text-xs text-gray-500">{{ member.role }} <span
                                         *ngIf="member.email && member.status === 'pending'">({{ member.email }})</span>
@@ -74,7 +74,7 @@
                         <!-- Actions -->
                         <button *ngIf="canRemoveMember(member)" (click)="remove(member)"
                             class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                            title="Remove member">
+                            [title]="tRemoveTitle">
                             <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
                         </button>
                     </div>

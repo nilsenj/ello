@@ -18,6 +18,22 @@ export class WorkspaceMembersModalComponent {
     readonly XIcon = XIcon;
     readonly UserPlusIcon = UserPlusIcon;
     readonly Trash2Icon = Trash2Icon;
+    readonly tTitle = $localize`:@@workspaceMembers.title:Workspace Members`;
+    readonly tInvitePlaceholder = $localize`:@@workspaceMembers.invitePlaceholder:Enter email address to invite...`;
+    readonly tInvite = $localize`:@@workspaceMembers.invite:Invite`;
+    readonly tInviting = $localize`:@@workspaceMembers.inviting:Inviting...`;
+    readonly tLoading = $localize`:@@workspaceMembers.loading:Loading members...`;
+    readonly tPending = $localize`:@@workspaceMembers.pending:Pending`;
+    readonly tRemoveTitle = $localize`:@@workspaceMembers.removeTitle:Remove member`;
+    readonly tInviteSent = $localize`:@@workspaceMembers.toastInviteSent:Invitation sent successfully`;
+    readonly tMemberAdded = $localize`:@@workspaceMembers.toastMemberAdded:Member added successfully`;
+    readonly tInviteFailed = $localize`:@@workspaceMembers.toastInviteFailed:Failed to invite member`;
+    readonly tMemberRemoved = $localize`:@@workspaceMembers.toastMemberRemoved:Member removed successfully`;
+    readonly tRemoveFailed = $localize`:@@workspaceMembers.toastRemoveFailed:Failed to remove member`;
+    readonly tRoleOwner = $localize`:@@workspaceMembers.role.owner:Owner`;
+    readonly tRoleAdmin = $localize`:@@workspaceMembers.role.admin:Admin`;
+    readonly tRoleMember = $localize`:@@workspaceMembers.role.member:Member`;
+    readonly tRoleViewer = $localize`:@@workspaceMembers.role.viewer:Viewer`;
 
     modal = inject(WorkspaceMembersModalService);
     workspacesApi = inject(WorkspacesService);
@@ -47,10 +63,10 @@ export class WorkspaceMembersModalComponent {
 
     // Valid roles to display in UI
     roleLabels: Record<string, string> = {
-        owner: 'Owner',
-        admin: 'Admin',
-        member: 'Member',
-        viewer: 'Viewer'
+        owner: this.tRoleOwner,
+        admin: this.tRoleAdmin,
+        member: this.tRoleMember,
+        viewer: this.tRoleViewer
     };
 
     // UI State
@@ -137,13 +153,13 @@ export class WorkspaceMembersModalComponent {
             await this.loadMembers(ws.id); // Reload list
 
             if (res.status === 'pending') {
-                this.showToast('Invitation sent successfully', 'success');
+                this.showToast(this.tInviteSent, 'success');
             } else {
-                this.showToast('Member added successfully', 'success');
+                this.showToast(this.tMemberAdded, 'success');
             }
         } catch (err: any) {
             console.error('Failed to invite member', err);
-            this.showToast(err.error?.error || 'Failed to invite member', 'error');
+            this.showToast(err.error?.error || this.tInviteFailed, 'error');
         } finally {
             this.inviting.set(false);
         }
@@ -153,16 +169,23 @@ export class WorkspaceMembersModalComponent {
         const ws = this.modal.workspace();
         if (!ws) return;
 
-        if (!confirm(`Are you sure you want to remove ${member.name || member.email}?`)) return;
+        const label = member.name || member.email || '';
+        const confirmMessage = $localize`:@@workspaceMembers.removeConfirm:Are you sure you want to remove ${label}?`;
+        if (!confirm(confirmMessage)) return;
 
         try {
             await this.workspacesApi.removeMember(ws.id, member.id);
-            this.showToast('Member removed successfully', 'success');
+            this.showToast(this.tMemberRemoved, 'success');
             await this.loadMembers(ws.id);
         } catch (err: any) {
             console.error('Failed to remove member', err);
-            this.showToast(err.error?.error || 'Failed to remove member', 'error');
+            this.showToast(err.error?.error || this.tRemoveFailed, 'error');
         }
+    }
+
+    getMembersTitle(): string {
+        const count = this.members().length;
+        return $localize`:@@workspaceMembers.membersTitle:Members (${count})`;
     }
 
     showToast(message: string, type: 'success' | 'error') {

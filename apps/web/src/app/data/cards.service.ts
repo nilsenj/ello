@@ -74,9 +74,18 @@ export class CardsService {
             const fresh = this.store.lists();
             const i2 = fresh.findIndex(l => l.id === listId);
             if (i2 !== -1) {
-                const withReal = (fresh[i2].cards ?? []).map(c =>
-                    c.id === optimistic.id ? created : c
-                );
+                const cleaned = (fresh[i2].cards ?? []).filter(c => c.id !== created.id);
+                let replaced = false;
+                const withReal = cleaned.map(c => {
+                    if (c.id === optimistic.id) {
+                        replaced = true;
+                        return created;
+                    }
+                    return c;
+                });
+                if (!replaced) {
+                    withReal.push(created);
+                }
                 const next = [...fresh];
                 next[i2] = { ...fresh[i2], cards: withReal };
                 this.store.setLists(next);

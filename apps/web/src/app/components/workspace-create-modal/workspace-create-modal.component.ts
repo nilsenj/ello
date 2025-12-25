@@ -13,6 +13,15 @@ import { WorkspacesService } from '../../data/workspaces.service';
 })
 export class WorkspaceCreateModalComponent {
     readonly XIcon = XIcon;
+    readonly tTitle = $localize`:@@workspaceCreate.title:Create Workspace`;
+    readonly tNameLabel = $localize`:@@workspaceCreate.nameLabel:Workspace Name`;
+    readonly tNamePlaceholder = $localize`:@@workspaceCreate.namePlaceholder:e.g. Engineering, Marketing, Personal`;
+    readonly tDescriptionLabel = $localize`:@@workspaceCreate.descriptionLabel:Description`;
+    readonly tDescriptionOptional = $localize`:@@workspaceCreate.descriptionOptional:(Optional)`;
+    readonly tDescriptionPlaceholder = $localize`:@@workspaceCreate.descriptionPlaceholder:What is this workspace for?`;
+    readonly tCancel = $localize`:@@workspaceCreate.cancel:Cancel`;
+    readonly tCreate = $localize`:@@workspaceCreate.create:Create Workspace`;
+    readonly tCreating = $localize`:@@workspaceCreate.creating:Creating...`;
 
     modal = inject(WorkspaceCreateModalService);
     workspacesApi = inject(WorkspacesService);

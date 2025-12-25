@@ -33,6 +33,14 @@ export class TemplatesModalComponent {
     readonly XIcon = XIcon;
     readonly LayoutTemplateIcon = LayoutTemplateIcon;
     readonly ChevronDownIcon = ChevronDownIcon;
+    readonly tTitle = $localize`:@@templatesModal.title:Start with a Template`;
+    readonly tChooseWorkspace = $localize`:@@templatesModal.chooseWorkspace:Choose Workspace`;
+    readonly tCoreTemplates = $localize`:@@templatesModal.coreTemplates:Core Templates`;
+    readonly tBusinessTemplates = $localize`:@@templatesModal.businessTemplates:Business Templates`;
+    readonly tNameThisBoard = $localize`:@@templatesModal.nameThisBoard:Name this board`;
+    readonly tCreateBoard = $localize`:@@templatesModal.createBoard:Create board`;
+    readonly tBusinessBadge = $localize`:@@templatesModal.businessBadge:Business`;
+    readonly tBusinessHint = $localize`:@@templatesModal.businessHint:Sales, operations, and support flows`;
 
     modal = inject(TemplatesModalService);
     workspacesApi = inject(WorkspacesService);

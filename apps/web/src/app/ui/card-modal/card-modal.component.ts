@@ -127,10 +127,8 @@ export class CardModalComponent {
 
     // local form states
     titleDraft = signal('');
-    descDraft = signal('');
     startDraft = signal<string | null>(null);
     dueDraft = signal<string | null>(null);
-    commentDraft = signal('');
     priorityDraft = signal<'' | 'low' | 'medium' | 'high' | 'urgent'>('');
     riskDraft = signal<'' | 'low' | 'medium' | 'high'>('');
     estimationDraft = signal<string>('');
@@ -247,10 +245,8 @@ export class CardModalComponent {
                 this.loading.set(false);
                 this.data.set(null);
                 this.titleDraft.set('');
-                this.descDraft.set('');
                 this.startDraft.set(null);
                 this.dueDraft.set(null);
-                this.commentDraft.set('');
                 this.priorityDraft.set('');
                 this.riskDraft.set('');
                 this.estimationDraft.set('');
@@ -269,7 +265,6 @@ export class CardModalComponent {
                     this.data.set({ ...card, labelIds } as any);
 
                     this.titleDraft.set(card?.title ?? '');
-                    this.descDraft.set(card?.description ?? '');
                     this.startDraft.set(card?.startDate ? toLocalInput(card.startDate) : null);
                     this.dueDraft.set(card?.dueDate ? toLocalInput(card.dueDate) : null);
 
@@ -554,31 +549,14 @@ export class CardModalComponent {
         return (this.data()?.comments ?? []) as CommentDto[];
     }
 
-    isCommentBlank = () => {
-        return !this.commentDraft().trim();
+    onCommentsUpdated = (next: CommentDto[]) => {
+        this.data.update(c => (c ? ({ ...c, comments: next } as ModalCard) : c));
+        void this.refreshActivities();
     };
 
-    addComment = async () => {
-        const c = this.data();
-        if (!c) return;
-        const text = this.commentDraft().trim();
-        if (!text) return;
-        try {
-            const created = await this.cardsApi.addComment(c.id, { text });
-            if (!created) return;
-            this.data.set({ ...c, comments: [...this.comments(), created] } as any);
-            this.commentDraft.set('');
-            await this.refreshActivities(); // Refresh activities after adding a comment
-        } catch (err) {
-            console.error('Failed to add comment', err);
-        }
-    };
-
-    deleteComment = async (commentId: string) => {
-        const c = this.data();
-        if (!c) return;
-        await this.cardsApi.deleteComment(commentId);
-        this.data.set({ ...c, comments: this.comments().filter(x => x.id !== commentId) } as any);
+    onDescriptionSaved = (next: string) => {
+        this.data.update(c => (c ? ({ ...c, description: next } as ModalCard) : c));
+        void this.refreshActivities();
     };
 
     // ------- Close -------
@@ -619,249 +597,6 @@ export class CardModalComponent {
         const p = (this.data()?.priority ?? this.priorityDraft()) || '';
         return p ? `pri-${p}` : '';
     }
-
-    // ------- Description editor -------
-    isEditingDesc = signal(false);
-
-    startDescEdit = () => {
-        this.isEditingDesc.set(true);
-    };
-
-    cancelDescEdit = () => {
-        const c = this.data();
-        this.descDraft.set((c?.description ?? '') as string);
-        this.isEditingDesc.set(false);
-    };
-
-    saveDescription = async () => {
-        const c = this.data();
-        if (!c) return;
-        const next = (this.descDraft() ?? '').trim();
-        try {
-            await this.cardsApi.patchCardExtended(c.id, { description: next || '' });
-            this.data.set({ ...c, description: next } as any);
-        } catch (err) {
-            console.error('Failed to save description', err);
-        } finally {
-            this.isEditingDesc.set(false);
-            await this.refreshActivities(); // Refresh activities after updating description
-        }
-    };
-
-    descCharCount = computed(() => (this.descDraft() || '').length);
-
-    private textarea() {
-        return document.querySelector<HTMLTextAreaElement>('textarea.cm-textarea');
-    }
-
-    wrapSelection = (el: HTMLTextAreaElement, left: string, right: string) => {
-        if (!el) return;
-        const start = el.selectionStart;
-        const end = el.selectionEnd;
-        const val = this.descDraft() || '';
-        const selected = val.slice(start, end);
-
-        // Check inner consistency first (if selected text itself contains the wrapper at edges)
-        // e.g. selected "**foo**"
-        const isInnerWrapped = selected.startsWith(left) && selected.endsWith(right) && selected.length >= left.length + right.length;
-
-        // Check outer consistency (if text *surrounding* selection is the wrapper)
-        // e.g. text is "**foo**", selected "foo"
-        const isOuterWrapped =
-            val.substring(start - left.length, start) === left &&
-            val.substring(end, end + right.length) === right;
-
-        let next: string;
-        let newStart: number;
-        let newEnd: number;
-
-        if (isInnerWrapped) {
-            // Unwrap inner
-            const inner = selected.substring(left.length, selected.length - right.length);
-            next = val.substring(0, start) + inner + val.substring(end);
-            newStart = start;
-            newEnd = start + inner.length;
-        } else if (isOuterWrapped) {
-            // Unwrap outer
-            next = val.substring(0, start - left.length) + selected + val.substring(end + right.length);
-            newStart = start - left.length;
-            newEnd = end - left.length; // Adjusted end position
-        } else {
-            // Wrap
-            next = val.substring(0, start) + left + selected + right + val.substring(end);
-            newStart = start + left.length;
-            newEnd = end + left.length;
-        }
-
-        this.descDraft.set(next);
-        queueMicrotask(() => {
-            el.focus();
-            el.setSelectionRange(newStart, newEnd);
-        });
-    };
-
-    insertPrefix = (el: HTMLTextAreaElement, prefix: string) => {
-        if (!el) return;
-        const start = el.selectionStart; // cursor
-        const end = el.selectionEnd;
-        const val = this.descDraft() || '';
-
-        // Find the start of the current line
-        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-
-        // Check if line already starts with prefix
-        const currentLineResult = val.substring(lineStart);
-        if (currentLineResult.startsWith(prefix)) {
-            // Remove prefix (toggle off)
-            const next = val.substring(0, lineStart) + val.substring(lineStart + prefix.length);
-            this.descDraft.set(next);
-            queueMicrotask(() => {
-                el.focus();
-                el.setSelectionRange(Math.max(lineStart, start - prefix.length), Math.max(lineStart, end - prefix.length));
-            });
-        } else {
-            // Insert prefix
-            const next = val.slice(0, lineStart) + prefix + val.slice(lineStart);
-            this.descDraft.set(next);
-            queueMicrotask(() => {
-                el.focus();
-                el.setSelectionRange(start + prefix.length, end + prefix.length);
-            });
-        }
-    };
-
-    makeHeading = (el: HTMLTextAreaElement) => {
-        this.insertPrefix(el, '# ');
-    };
-
-    insertLink = (el: HTMLTextAreaElement) => {
-        if (!el) return;
-        const start = el.selectionStart;
-        const end = el.selectionEnd;
-        const val = this.descDraft() || '';
-        const selected = val.slice(start, end) || 'link text';
-        const ins = `[${selected}](https://)`;
-        const next = val.slice(0, start) + ins + val.slice(end);
-
-        this.descDraft.set(next);
-        queueMicrotask(() => {
-            el.focus();
-            // Highlight the URL part: [text](|highlight|)
-            const urlStart = start + 1 + selected.length + 2; // [ + text + ](
-            const urlEnd = urlStart + 8; // https://
-            el.setSelectionRange(urlStart, urlEnd);
-        });
-    };
-
-    // ------- Rich description (SSR-safe) -------
-    private hasDom() {
-        return typeof window !== 'undefined' && typeof document !== 'undefined';
-    }
-
-    private fallbackSanitize(html: string) {
-        let out = html.replace(/<(script|style|iframe|object|embed)[\s\S]*?>[\s\S]*?<\/\1>/gi, '');
-        return out
-            .replace(/\son\w+="[^"]*"/gi, '')
-            .replace(/\son\w+='[^']*'/gi, '')
-            .replace(/\shref="javascript:[^"]*"/gi, ' href="#"')
-            .replace(/\shref='javascript:[^']*'/gi, " href='#'");
-    }
-
-    renderMarkdown(src: string | null | undefined) {
-        let s = (src ?? '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]!));
-        s = s.replace(/^\s*#{1,6}\s+(.*)$/gmi, '<h4>$1</h4>');
-        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        s = s.replace(/_(.+?)_/g, '<em>$1</em>');
-        s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        s = s.replace(/(?:^|\n)(-\s+.*(?:\n-\s+.*)*)/g, block =>
-            '<ul>' + block.trim().split('\n').map(line => line.replace(/^\-\s+(.+)$/, '<li>$1</li>')).join('') + '</ul>'
-        );
-        return s
-            .split(/\n{2,}/)
-            .map(p => (/^<(h4|ul)>/i.test(p) ? p : `<p>${p.replace(/\n/g, '<br/>')}</p>`))
-            .join('\n');
-    }
-
-    private looksLikeHtml(s: string) {
-        return /<([a-z][\w:-]*)(\s[^>]*)?>[\s\S]*<\/\1>|<([a-z][\w:-]*)(\s[^>]*)?\/>/i.test(s);
-    }
-
-    private sanitizeBasicHtml(input: string) {
-        if (!this.hasDom()) return this.fallbackSanitize(input);
-        const allowedTags = new Set([
-            'p',
-            'br',
-            'pre',
-            'code',
-            'blockquote',
-            'hr',
-            'ul',
-            'ol',
-            'li',
-            'h1',
-            'h2',
-            'h3',
-            'h4',
-            'h5',
-            'h6',
-            'strong',
-            'b',
-            'em',
-            'i',
-            'u',
-            's',
-            'a',
-            'span',
-            'div',
-        ]);
-        const allowedAttrs: Record<string, Set<string>> = {
-            a: new Set(['href', 'title', 'target', 'rel']),
-            span: new Set([]),
-            div: new Set([]),
-        };
-        const template = document.createElement('template');
-        template.innerHTML = input;
-        const out = document.createElement('div');
-        const cloneNode = (node: Node, parent: HTMLElement) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-                parent.appendChild(document.createTextNode(node.textContent ?? ''));
-                return;
-            }
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                const el = node as HTMLElement;
-                const tag = el.tagName.toLowerCase();
-                if (!allowedTags.has(tag)) {
-                    for (const child of Array.from(el.childNodes)) cloneNode(child, parent);
-                    return;
-                }
-                const outEl = document.createElement(tag);
-                const allowed = allowedAttrs[tag] ?? new Set<string>();
-                for (const { name, value } of Array.from(el.attributes)) {
-                    const n = name.toLowerCase();
-                    if (!allowed.has(n)) continue;
-                    if (tag === 'a' && n === 'href') {
-                        if (!/^(https?:|mailto:)/i.test(value)) continue;
-                        outEl.setAttribute('href', value);
-                        outEl.setAttribute('target', '_blank');
-                        outEl.setAttribute('rel', 'noopener noreferrer');
-                        continue;
-                    }
-                    outEl.setAttribute(n, value);
-                }
-                for (const child of Array.from(el.childNodes)) cloneNode(child, outEl);
-                parent.appendChild(outEl);
-            }
-        };
-        for (const child of Array.from(template.content.childNodes)) cloneNode(child, out);
-        return out.innerHTML;
-    }
-
-    richDescription = (src: string | null | undefined) => {
-        const val = (src ?? '').trim();
-        if (!val) return '';
-        const html = this.looksLikeHtml(val) ? val : this.renderMarkdown(val);
-        return this.sanitizeBasicHtml(html);
-    };
 
     // ------- Labels helpers / presence checks -------
     private normalizeLabelIds(src: any): string[] {

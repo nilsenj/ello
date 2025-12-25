@@ -90,6 +90,18 @@ export class HomePageComponent implements OnInit {
     // Archive Modal State
     boardToArchive = signal<string | null>(null);
     boardToArchiveName = signal<string>('');
+    archivePrompt = computed(() => $localize`:@@home.archivePrompt:Archive ${this.boardToArchiveName()}:boardName:?`);
+
+    readonly tStarredBoards = $localize`:@@home.starredBoards:Starred boards`;
+    readonly tMembers = $localize`:@@home.members:Members`;
+    readonly tSettings = $localize`:@@home.settings:Settings`;
+    readonly tImportJson = $localize`:@@home.importJson:Import JSON`;
+    readonly tCreateBoard = $localize`:@@home.createBoard:Create board`;
+    readonly tWorkspaces = $localize`:@@home.workspacesButton:Workspaces`;
+    readonly tArchiveTitle = $localize`:@@home.archiveTitle:Archive board`;
+    readonly tArchiveHint = $localize`:@@home.archiveHint:You can restore it later from the archive view.`;
+    readonly tCancel = $localize`:@@home.cancel:Cancel`;
+    readonly tArchiveConfirm = $localize`:@@home.archiveConfirm:Archive`;
 
     async ngOnInit() {
         this.loadRecentIds();

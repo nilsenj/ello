@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LucideAngularModule, ClockIcon, CalendarIcon, FileTextIcon } from 'lucide-angular';
 import { CardsService } from '../../data/cards.service';
 import { ClickOutsideDirective } from '../click-outside.directive';
 import { Card } from '../../types';
@@ -12,7 +13,7 @@ import { computed, inject } from '@angular/core';
 @Component({
     standalone: true,
     selector: 'trello-card',
-    imports: [CommonModule, ClickOutsideDirective, FormsModule],
+    imports: [CommonModule, ClickOutsideDirective, FormsModule, LucideAngularModule],
     templateUrl: './trello-card.component.html',
 })
 export class TrelloCardComponent {
@@ -23,6 +24,10 @@ export class TrelloCardComponent {
     showMore = false;
     editing = false;
     titleDraft = '';
+
+    readonly ClockIcon = ClockIcon;
+    readonly CalendarIcon = CalendarIcon;
+    readonly FileTextIcon = FileTextIcon;
 
     auth = inject(AuthService);
 
@@ -92,9 +97,7 @@ export class TrelloCardComponent {
         // server may send `estimation` alias; fallback to `estimate`
         const val = (this.card as any)?.estimation ?? (this.card as any)?.estimate;
         if (val === null || val === undefined) return null;
-        // You can switch to “pt” if you use story points
-        return `${val}h`;
-        // return `${val}pt`;
+        return `${val}pt`;
     }
 
     dueInfo() {

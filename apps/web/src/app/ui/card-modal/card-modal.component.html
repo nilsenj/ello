@@ -21,22 +21,21 @@
     <div class="cm-body" *ngIf="!loading(); else loadingTpl">
         <!-- Left column -->
         <div class="cm-col cm-col-main">
-            <card-modal-description class="cm-block cm-block-description" [descDraft]="descDraft"
-                                    [isEditingDesc]="isEditingDesc" [descCharCount]="descCharCount"
-                                    [startDescEdit]="startDescEdit" [saveDescription]="saveDescription"
-                                    [cancelDescEdit]="cancelDescEdit" [wrapSelection]="wrapSelection"
-                                    [insertPrefix]="insertPrefix" [makeHeading]="makeHeading"
-                                    [insertLink]="insertLink" [richDescription]="richDescription" [PlusIcon]="PlusIcon"
+            <card-modal-description class="cm-block cm-block-description"
+                                    [cardId]="data()?.id"
+                                    [description]="data()?.description"
+                                    [canEdit]="canEdit()"
+                                    (descriptionSaved)="onDescriptionSaved($event)"
+                                    [PlusIcon]="PlusIcon"
                                     [PencilIcon]="PencilIcon" [BoldIcon]="BoldIcon" [ItalicIcon]="ItalicIcon"
-                                    [ListIcon]="ListIcon" [Heading1Icon]="Heading1Icon" [LinkIcon]="LinkIcon"
-                                    [canEdit]="canEdit()"/>
+                                    [ListIcon]="ListIcon" [Heading1Icon]="Heading1Icon" [LinkIcon]="LinkIcon"/>
 
-            <card-modal-comments class="cm-block cm-block-comments" [commentDraft]="commentDraft"
+            <card-modal-comments class="cm-block cm-block-comments"
+                                 [cardId]="data()?.id"
                                  [comments]="comments()"
-                                 [isCommentBlank]="isCommentBlank" [addComment]="addComment"
-                                 [deleteComment]="deleteComment"
                                  [SendIcon]="SendIcon" [Trash2Icon]="Trash2Icon"
-                                 [canEdit]="canEdit()"/>
+                                 [canEdit]="canEdit()"
+                                 (commentsUpdated)="onCommentsUpdated($event)"/>
 
             <card-modal-activity class="cm-block cm-block-activity" [activities]="activities()"
                                  [formatActivity]="formatActivity" [ActivityIcon]="ActivityIcon"/>

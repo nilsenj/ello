@@ -57,6 +57,10 @@ export class HeaderUserMenuComponent {
     goProfile = output<void>();
 
     isOpen = signal(false);
+    readonly tAccount = $localize`:@@header.userMenu.account:Account`;
+    readonly tProfileSettings = $localize`:@@header.userMenu.profileSettings:Profile & Settings`;
+    readonly tLogout = $localize`:@@header.userMenu.logout:Log out`;
+    readonly tUserFallback = $localize`:@@header.userMenu.user:User`;
 
     toggle() {
         this.isOpen.update(v => !v);

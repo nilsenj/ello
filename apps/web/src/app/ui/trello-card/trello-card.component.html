@@ -73,18 +73,23 @@
         </span>
 
         <!-- Estimation -->
-        <span *ngIf="estimation() !== null" [attr.title]="'Estimation'">
-            ⏱ {{ estimation() }}
+        <span *ngIf="estimation() !== null" class="inline-flex items-center gap-1" [attr.title]="'Estimation'">
+            <lucide-icon [img]="ClockIcon" class="w-3 h-3"></lucide-icon>
+            {{ estimation() }}
         </span>
 
         <!-- Dates -->
         <span *ngIf="dueInfo() as d" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
             [ngClass]="d.class" [attr.title]="d.title">
-            🗓 {{ d.text }}
+            <lucide-icon [img]="CalendarIcon" class="w-3 h-3"></lucide-icon>
+            {{ d.text }}
         </span>
 
         <!-- Has description -->
-        <span *ngIf="card.description" class="inline-flex items-center gap-1" title="Has description">• desc</span>
+        <span *ngIf="card.description" class="inline-flex items-center gap-1" title="Has description">
+            <lucide-icon [img]="FileTextIcon" class="w-3 h-3"></lucide-icon>
+            desc
+        </span>
 
         <!-- Right controls -->
         <div class="ml-auto">

@@ -10,16 +10,17 @@
 
     <div class="menu-content mt-1" *ngIf="isOpen()">
         <div class="px-4 py-3 border-b border-gray-100">
-            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Account
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ tAccount }}
             </div>
-            <div class="text-sm font-medium text-gray-900">{{ user()?.name || 'User' }}</div>
+            <div class="text-sm font-medium text-gray-900">{{ user()?.name || tUserFallback }}</div>
             <div class="text-xs text-gray-500 truncate">{{ user()?.email }}</div>
         </div>
         <div class="p-2">
-            <button type="button" class="menu-item w-full text-left" (click)="goProfile.emit(); close()">Profile &
-                Settings</button>
+            <button type="button" class="menu-item w-full text-left" (click)="goProfile.emit(); close()">
+                {{ tProfileSettings }}
+            </button>
             <button type="button" class="menu-item w-full text-left text-red-600 hover:bg-red-50"
-                (click)="logout.emit(); close()">Log out</button>
+                (click)="logout.emit(); close()">{{ tLogout }}</button>
         </div>
     </div>
 </div>
