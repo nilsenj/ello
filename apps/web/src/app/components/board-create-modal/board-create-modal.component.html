@@ -28,7 +28,7 @@
              flex items-center justify-between shrink-0"
         >
             <div class="font-semibold text-base sm:text-lg text-slate-800">
-                Create Board
+                {{ tTitle }}
             </div>
 
             <button
@@ -105,9 +105,31 @@
                         {{ error() }}
                     </div>
 
+                    <!-- Workspace -->
+                    <label class="block space-y-1.5">
+                        <span class="text-sm font-medium text-slate-700">{{ tWorkspaceLabel }}</span>
+                        <select
+                                class="
+                w-full h-10 px-3 pr-10
+                rounded-lg border border-slate-300
+                bg-white text-sm text-slate-900
+                appearance-none
+                focus:ring-2 focus:ring-blue-500/20
+                focus:border-blue-500
+              "
+                                [ngModel]="selectedWorkspaceId()"
+                                (ngModelChange)="selectedWorkspaceId.set($event)"
+                        >
+                            <option [ngValue]="null" disabled>{{ tWorkspacePlaceholder }}</option>
+                            <option *ngFor="let ws of workspaces()" [value]="ws.id">
+                                {{ ws.name }}
+                            </option>
+                        </select>
+                    </label>
+
                     <!-- Board title -->
                     <label class="block space-y-1.5">
-                        <span class="text-sm font-medium text-slate-700">Board Title</span>
+                        <span class="text-sm font-medium text-slate-700">{{ tBoardTitle }}</span>
                         <input
                                 class="
                 w-full h-10 px-3
@@ -117,7 +139,7 @@
                 focus:border-blue-500
               "
                                 autofocus
-                                placeholder="e.g., Q4 Roadmap"
+                                [placeholder]="tBoardTitlePlaceholder"
                                 [ngModel]="name()"
                                 (ngModelChange)="name.set($event)"
                         />
@@ -126,7 +148,7 @@
                     <!-- Background -->
                     <div class="space-y-3">
             <span class="text-sm font-medium text-slate-700 block">
-              Background
+              {{ tBackground }}
             </span>
 
                         <div class="grid grid-cols-5 gap-2">
@@ -168,7 +190,7 @@
 
                     <!-- Visibility -->
                     <label class="block space-y-1.5">
-                        <span class="text-sm font-medium text-slate-700">Visibility</span>
+                        <span class="text-sm font-medium text-slate-700">{{ tVisibility }}</span>
                         <div class="relative">
                             <select
                                     class="
@@ -182,9 +204,9 @@
                                     [ngModel]="visibility()"
                                     (ngModelChange)="visibility.set($event)"
                             >
-                                <option value="private">Private</option>
-                                <option value="workspace">Workspace</option>
-                                <option value="public">Public</option>
+                                <option value="private">{{ tVisibilityPrivate }}</option>
+                                <option value="workspace">{{ tVisibilityWorkspace }}</option>
+                                <option value="public">{{ tVisibilityPublic }}</option>
                             </select>
 
                             <lucide-icon
@@ -197,13 +219,7 @@
                         </div>
 
                         <p class="text-xs text-slate-500">
-                            {{
-                                visibility() === 'private'
-                                    ? 'Only board members can view and edit.'
-                                    : visibility() === 'workspace'
-                                        ? 'All workspace members can see this board.'
-                                        : 'Anyone on the internet can see this board.'
-                            }}
+                            {{ getVisibilityHint() }}
                         </p>
                     </label>
                 </div>
@@ -230,7 +246,7 @@
         "
                     (click)="close()"
             >
-                Cancel
+                {{ tCancel }}
             </button>
 
             <button
@@ -244,7 +260,7 @@
                     [disabled]="!canSubmit() || creating()"
                     (click)="createBoard()"
             >
-                {{ creating() ? 'Creating...' : 'Create Board' }}
+                {{ creating() ? tCreating : tCreate }}
             </button>
         </footer>
     </div>

@@ -14,6 +14,10 @@ export class WorkspaceSidebarComponent {
     // Icons
     readonly LayoutIcon = Layout;
     readonly PlusIcon = Plus;
+    readonly tBoards = $localize`:@@sidebar.boards:Boards`;
+    readonly tTemplates = $localize`:@@sidebar.templates:Templates`;
+    readonly tWorkspaces = $localize`:@@sidebar.workspaces:Workspaces`;
+    readonly tCreateWorkspace = $localize`:@@sidebar.createWorkspace:Create workspace`;
 
     // Inputs
     workspaces = input<WorkspaceLite[]>([]);

@@ -46,7 +46,7 @@
                 <section *ngIf="starredBoards().length" class="mb-8">
                     <div class="flex items-center gap-2 mb-4 text-slate-700">
                         <lucide-icon [img]="StarIcon" class="w-5 h-5 text-yellow-500"></lucide-icon>
-                        <h2 class="text-sm sm:text-base font-semibold">Starred boards</h2>
+                        <h2 class="text-sm sm:text-base font-semibold">{{ tStarredBoards }}</h2>
                         <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100">
               {{ starredBoards().length }}
             </span>
@@ -69,6 +69,7 @@
                             >
                                 <lucide-icon [img]="StarIcon" class="w-4 h-4 text-yellow-300 fill-yellow-300"></lucide-icon>
                             </button>
+
                         </a>
                     </div>
                 </section>
@@ -99,7 +100,7 @@
         transition"
                             >
                                 <lucide-icon [img]="UsersIcon" class="w-3.5 h-3.5"></lucide-icon>
-                                Members
+                                <span>{{ tMembers }}</span>
                             </button>
 
                             <button
@@ -115,17 +116,35 @@
         transition"
                             >
                                 <lucide-icon [img]="SettingsIcon" class="w-3.5 h-3.5"></lucide-icon>
-                                Settings
+                                <span>{{ tSettings }}</span>
                             </button>
+
+                            <label
+                                    *ngIf="canEditWorkspace(ws)"
+                                    class="px-3 py-1.5
+        text-xs sm:text-sm
+        inline-flex items-center gap-1.5
+        rounded-md
+        bg-slate-100
+        hover:bg-slate-200
+        text-slate-700
+        transition
+        cursor-pointer"
+                            >
+                                <lucide-icon [img]="UploadIcon" class="w-3.5 h-3.5"></lucide-icon>
+                                <span>{{ tImportJson }}</span>
+                                <input type="file" accept="application/json" class="hidden"
+                                       (change)="importBoardToWorkspace($event, ws.id)">
+                            </label>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                        <a
+                        <div
                                 *ngFor="let board of getBoardsForWorkspace(ws.id)"
-                                [routerLink]="['/b', board.id]"
-                                class="relative group rounded-lg p-3 border border-slate-200 overflow-hidden hover:shadow-md"
+                                class="relative group rounded-lg p-3 border border-slate-200 overflow-hidden hover:shadow-md cursor-pointer"
                                 [ngClass]="getBoardBackground(board)"
+                                (click)="openBoard(board.id, $event)"
                         >
                             <div class="font-semibold text-sm sm:text-base relative z-10" [ngClass]="getBoardTextColor(board)">
                                 {{ board.name }}
@@ -133,12 +152,15 @@
 
                             <button
                                     *ngIf="canArchiveBoard(ws)"
+                                    type="button"
+                                    data-stop-open
                                     (click)="requestArchiveBoard($event, board)"
                                     class="absolute top-2 right-2 p-1.5 rounded-md bg-black/30 text-white opacity-0 group-hover:opacity-100"
                             >
                                 <lucide-icon [img]="ArchiveIcon" class="w-4 h-4"></lucide-icon>
                             </button>
-                        </a>
+
+                        </div>
 
                         <button
                                 *ngIf="canCreateBoard(ws)"
@@ -146,7 +168,7 @@
                                 class="rounded-lg border border-dashed border-slate-300 bg-white flex flex-col items-center justify-center text-slate-500 hover:bg-slate-50 p-4"
                         >
                             <lucide-icon [img]="PlusIcon" class="w-5 h-5 mb-1"></lucide-icon>
-                            <span class="text-sm font-medium">Create board</span>
+                            <span class="text-sm font-medium">{{ tCreateBoard }}</span>
                         </button>
                     </div>
                 </section>
@@ -199,7 +221,7 @@
 
             <!-- Label -->
             <span class="text-sm font-medium whitespace-nowrap">
-        Workspaces
+        <span>{{ tWorkspaces }}</span>
     </span>
         </button>
 
@@ -213,3 +235,37 @@
 <workspace-settings-advanced-modal></workspace-settings-advanced-modal>
 <workspace-members-modal></workspace-members-modal>
 <templates-modal></templates-modal>
+
+<!-- Archive confirmation modal -->
+<section *ngIf="boardToArchive()"
+         class="fixed inset-0 z-[1000] grid place-items-center bg-black/50 backdrop-blur-sm"
+         (mousedown)="closeArchiveModal()" role="dialog" aria-modal="true">
+    <div class="w-[min(90vw,420px)] bg-white rounded-xl shadow-2xl flex flex-col"
+         (mousedown)="$event.stopPropagation()">
+        <header class="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span class="font-semibold text-[15px] text-slate-800">{{ tArchiveTitle }}</span>
+            <button class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
+                    (click)="closeArchiveModal()" aria-label="Close">
+                <lucide-icon [img]="XIcon" class="h-4 w-4 text-slate-600"></lucide-icon>
+            </button>
+        </header>
+
+        <div class="p-5 text-sm text-slate-600">
+            <p>{{ archivePrompt() }}</p>
+            <p class="mt-2">{{ tArchiveHint }}</p>
+        </div>
+
+        <footer class="border-t border-slate-200 bg-white px-4 py-3 flex justify-end gap-2 rounded-b-xl">
+            <button
+                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                    (click)="closeArchiveModal()">
+                <span>{{ tCancel }}</span>
+            </button>
+            <button
+                    class="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
+                    (click)="confirmArchive()">
+                <span>{{ tArchiveConfirm }}</span>
+            </button>
+        </footer>
+    </div>
+</section>

@@ -5,7 +5,7 @@
         <!-- header -->
         <header class="relative px-5 py-3 border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center gap-2 text-slate-800">
-                <span class="font-semibold text-[15px]">Create card</span>
+                <span class="font-semibold text-[15px]">{{ tTitle }}</span>
             </div>
             <button class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
                 (click)="close()" aria-label="Close">
@@ -17,22 +17,46 @@
         <div class="p-5">
             <div class="grid gap-4">
                 <label class="grid gap-1">
-                    <span class="text-sm font-medium text-slate-700">Card title</span>
+                    <span class="text-sm font-medium text-slate-700">{{ tWorkspaceLabel }}</span>
+                    <select
+                        class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
+                        [ngModel]="selectedWorkspaceId()"
+                        (ngModelChange)="onWorkspaceChange($event)"
+                    >
+                        <option [ngValue]="null" disabled>{{ tWorkspacePlaceholder }}</option>
+                        <option *ngFor="let ws of workspaces()" [value]="ws.id">{{ ws.name }}</option>
+                    </select>
+                </label>
+
+                <label class="grid gap-1">
+                    <span class="text-sm font-medium text-slate-700">{{ tBoardLabel }}</span>
+                    <select
+                        class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
+                        [ngModel]="selectedBoardId()"
+                        (ngModelChange)="onBoardChange($event)"
+                    >
+                        <option [ngValue]="null" disabled>{{ tBoardPlaceholder }}</option>
+                        <option *ngFor="let b of availableBoards()" [value]="b.id">{{ b.name }}</option>
+                    </select>
+                </label>
+
+                <label class="grid gap-1">
+                    <span class="text-sm font-medium text-slate-700">{{ tCardTitle }}</span>
                     <input
                         class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
-                        autofocus placeholder="e.g., Write launch plan" [ngModel]="title()"
+                        autofocus [placeholder]="tCardTitlePlaceholder" [ngModel]="title()"
                         (ngModelChange)="title.set($event)" />
                 </label>
 
                 <label class="grid gap-1">
                     <span class="text-sm font-medium text-slate-700 inline-flex items-center gap-1">
                         <lucide-icon [img]="ColumnsIcon" class="h-4 w-4 text-slate-500"></lucide-icon>
-                        List
+                        {{ tListLabel }}
                     </span>
                     <select
                         class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
                         [ngModel]="listId()" (ngModelChange)="listId.set($event)">
-                        <option [ngValue]="null" disabled>Select a list…</option>
+                        <option [ngValue]="null" disabled>{{ tListPlaceholder }}</option>
                         <option *ngFor="let l of lists()" [value]="l.id">{{ l.name }}</option>
                     </select>
                 </label>
@@ -44,13 +68,13 @@
             <button
                 class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
                 (click)="close()">
-                Cancel
+                {{ tCancel }}
             </button>
             <button
                 class="inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-sm text-white disabled:opacity-50 hover:bg-slate-900"
                 [disabled]="!canSubmit() || adding()" (click)="create()">
-                <span *ngIf="!adding()">Create card</span>
-                <span *ngIf="adding()">Creating…</span>
+                <span *ngIf="!adding()">{{ tCreate }}</span>
+                <span *ngIf="adding()">{{ tCreating }}</span>
             </button>
         </footer>
     </div>

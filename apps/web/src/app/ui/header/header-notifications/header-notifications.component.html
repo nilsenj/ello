@@ -1,5 +1,5 @@
 <div class="relative" (focusout)="onBlur($event)">
-    <button class="pill p-2 hover:bg-white/30 transition-colors relative" title="Notifications" (click)="toggle()">
+    <button class="pill p-2 hover:bg-white/30 transition-colors relative" [attr.title]="tNotifications" (click)="toggle()">
         <lucide-icon [img]="BellIcon" [size]="20" [strokeWidth]="2" class="text-white"></lucide-icon>
         <span *ngIf="unreadCount() > 0"
             class="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border border-white text-[10px] font-bold flex items-center justify-center px-1">
@@ -9,10 +9,10 @@
 
     <div class="menu-content mt-1 w-80 origin-top-right max-h-[500px] overflow-y-auto" *ngIf="isOpen()">
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-            <div class="text-sm font-semibold text-gray-700">Notifications</div>
+            <div class="text-sm font-semibold text-gray-700">{{ tNotifications }}</div>
             <button *ngIf="unreadCount() > 0" class="text-xs text-blue-600 hover:underline"
                 (click)="markAllAsRead.emit()">
-                Mark all as read
+                {{ tMarkAllRead }}
             </button>
         </div>
 
@@ -20,7 +20,7 @@
             <div class="mb-2 mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                 <lucide-icon [img]="BellIcon" [size]="24" class="text-gray-400"></lucide-icon>
             </div>
-            No new notifications
+            {{ tNoNotifications }}
         </div>
 
         <div *ngIf="notifications().length > 0" class="divide-y divide-gray-100">
@@ -37,11 +37,11 @@
                     <div class="flex items-center gap-1">
                         <button *ngIf="!notification.isRead"
                             (click)="$event.stopPropagation(); markAsRead.emit(notification.id)"
-                            class="p-1 hover:bg-gray-200 rounded transition-colors" title="Mark as read">
+                            class="p-1 hover:bg-gray-200 rounded transition-colors" [attr.title]="tMarkRead">
                             <lucide-icon [img]="CheckIcon" [size]="14" class="text-gray-600"></lucide-icon>
                         </button>
                         <button (click)="$event.stopPropagation(); deleteNotification.emit(notification.id)"
-                            class="p-1 hover:bg-red-100 rounded transition-colors" title="Delete">
+                            class="p-1 hover:bg-red-100 rounded transition-colors" [attr.title]="tDelete">
                             <lucide-icon [img]="Trash2Icon" [size]="14"
                                 class="text-gray-600 hover:text-red-600"></lucide-icon>
                         </button>

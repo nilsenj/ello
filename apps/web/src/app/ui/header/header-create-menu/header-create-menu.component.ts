@@ -33,6 +33,11 @@ export class HeaderCreateMenuComponent {
     createCard = output<void>();
 
     isOpen = signal(false);
+    readonly tCreate = $localize`:@@header.create.title:Create`;
+    readonly tCreateBoard = $localize`:@@header.create.board:Create board`;
+    readonly tCreateBoardDesc = $localize`:@@header.create.boardDesc:A board is made up of cards ordered on lists.`;
+    readonly tCreateCard = $localize`:@@header.create.card:Create card`;
+    readonly tCreateCardDesc = $localize`:@@header.create.cardDesc:Create a card to track a task.`;
 
     toggle() {
         this.isOpen.update(v => !v);

@@ -1,11 +1,11 @@
 /* wrapper spacing */
 .mp-wrap {
-    padding: 4px 2px;
+    padding: 6px 4px;
 }
 
 /* accordions */
 .cm-accordion {
-    border: 1px solid #eaecef;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     background: #fff;
     overflow: hidden;
@@ -21,11 +21,11 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 12px 14px;
     font-size: 13px;
     color: #0f172a;
-    background: #fafafa;
-    border-bottom: 1px solid #eef1f4;
+    background: #f8fafc;
+    border-bottom: 1px solid #eef2f7;
 }
 .cm-accordion[open] .cm-accordion-summary {
     background: #f7fafc;
@@ -35,28 +35,30 @@
 }
 
 .cm-accordion-body {
-    padding: 0;
+    padding: 12px 14px;
 }
 
 /* badge */
 .cm-badge {
-    display: inline-block;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 7px;
     border-radius: 999px;
     font-size: 11px;
     line-height: 18px;
     text-align: center;
-    color: #0b3aa5;
-    background: color-mix(in oklab, #2563eb, #fff 85%);
-    border: 1px solid color-mix(in oklab, #2563eb, #fff 60%);
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
 }
 
 /* search row layout */
 .cm-search-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
     margin-top: 6px;
@@ -100,38 +102,37 @@
 /* members list spacing & visuals */
 .cm-members {
     display: grid;
-    gap: 10px;
+    gap: 0;
 }
 
 .cm-member {
     display: grid;
-    grid-template-columns: 32px 1fr auto;
+    grid-template-columns: 34px 1fr auto;
     align-items: center;
     gap: 10px;
-    border: 1px solid #eee;
-    padding: 8px 12px;
-    background: #fafafa;
-    transition: background .15s ease, box-shadow .15s ease, transform .06s ease;
+    padding: 10px 12px;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+    transition: background .15s ease;
 }
 .cm-member:hover {
-    background: #f3f4f6;
-    box-shadow: 0 1px 6px rgba(0,0,0,.06);
+    background: #f8fafc;
 }
 .cm-member.is-selected {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+    background: #eef2ff;
 }
 
 .cm-avatar {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 999px;
     object-fit: cover;
 }
 .cm-avatar-fallback {
     display: inline-grid;
     place-items: center;
-    background: #e5e7eb;
+    background: #e2e8f0;
+    color: #334155;
     font-weight: 600;
 }
 
@@ -152,14 +153,10 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 6px;
+    margin-top: 8px;
 }
 
 /* small checkmark at the end */
-.cm-check {
-    font-weight: 700;
-    color: #16a34a;
-}
 
 /* inputs/fields */
 .cm-field {
@@ -171,54 +168,20 @@
     color: #64748b;
 }
 
-/* tighten input padding slightly for compact rows */
-.cm-input {
-}
-
-/* remove any legacy .cm-member-assign styles if present */
-.cm-member-assign,
-.cm-member-assign--remove {
-    display: none !important;
-}
-
-/* Make member rows full-width and borderless */
-.cm-member {
-    width: 100%;
-    border: 0;
-    box-shadow: none;
-    background: #fff;            /* keep clean white row */
-    padding: 10px 12px;          /* small comfort bump */
-    border-bottom: 2px solid lightgray!important;
-}
-
-.cm-member:last-child {
-    border-bottom: 0!important;
-}
-
-.cm-member:hover {
-    background: #f7fafc;         /* subtle hover without shadow */
-    box-shadow: none;
-}
-
-.cm-member.is-selected {
-    /* no border or ring; just a gentle tint to indicate selection */
-    background: #eef2ff;
-    box-shadow: none;
-}
-
 /* If button variant is used for search results, ensure it stretches */
 button.cm-member {
     width: 100%;
 }
 
-/* Optional: tighten the list to look good without borders */
-.cm-members {
-    gap: 0px;                    /* slightly tighter spacing between rows */
-}
-
 /* Unify select look with inputs + custom chevron */
 .cm-select {
-    @apply w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 8px 10px;
+    font-size: 13px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23677' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -228,15 +191,33 @@ button.cm-member {
 }
 
 .cm-select:hover {
-    @apply border-gray-300;
+    border-color: #cbd5f5;
 }
 
 .cm-select:focus {
-    @apply outline-none ring-2 ring-blue-500/20 border-blue-400;
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .cm-select:disabled {
-    @apply bg-gray-50 text-gray-400 cursor-not-allowed;
+    background: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .cm-search-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .cm-segment {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .cm-search {
+        max-width: 100%;
+    }
 }
 
 /* Optional: compact size variant if you need it somewhere */

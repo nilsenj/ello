@@ -25,6 +25,8 @@ import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
 import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
 import { LucideAngularModule, FilterIcon, SearchIcon, UserIcon, TagIcon } from 'lucide-angular';
+import { WorkspacesService } from '../../data/workspaces.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
     selector: 'kanban-board',
@@ -42,6 +44,8 @@ export class KanbanBoardComponent implements OnInit {
     cardsApi = inject(CardsService);
     socket = inject(SocketService);
     modal = inject(CardModalService);
+    workspacesApi = inject(WorkspacesService);
+    authService = inject(AuthService);
     route = inject(ActivatedRoute);
     router = inject(Router);
 
@@ -97,16 +101,23 @@ export class KanbanBoardComponent implements OnInit {
         this.showFilterMenu = false;
     }
 
-    activeLabelName = computed(() => {
+    activeLabelName() {
         if (!this.activeLabel) return 'All labels';
         return this.store.labels().find(l => l.id === this.activeLabel)?.name || 'Label';
-    });
+    }
 
-    activeMemberName = computed(() => {
+    activeMemberName() {
         if (!this.activeMemberId) return 'All members';
         const m = this.store.members().find(m => m.id === this.activeMemberId);
         return m?.name || m?.email || 'Member';
-    });
+    }
+
+    activeMemberInitials() {
+        if (!this.activeMemberId) return '';
+        const m = this.store.members().find(m => m.id === this.activeMemberId);
+        const name = (m?.name || m?.email || 'M').trim();
+        return name.slice(0, 2).toUpperCase();
+    }
 
 
     // ui state
@@ -122,6 +133,29 @@ export class KanbanBoardComponent implements OnInit {
     editingCard: Record<string, boolean> = {};
     cardTitles: Record<string, string> = {};
     trackList = (_: number, l: ListDto) => l.id;
+
+    workspaces = signal<any[]>([]);
+
+    canEditBoard = computed(() => {
+        const uid = this.authService.user()?.id;
+        if (!uid) return false;
+        const me = this.store.members().find(m => m.id === uid || m.userId === uid);
+        return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
+    });
+
+
+    showWorkspaceViewerBanner = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
+        const uid = this.authService.user()?.id;
+        if (!uid) return false;
+        const ws = this.workspaces().find(w => w.id === board.workspaceId);
+        if (!ws) return false;
+        const isBoardMember = this.store.members().some(m => (m.id === uid || m.userId === uid));
+        return Boolean(ws && !isBoardMember);
+    });
 
     constructor() {
         this.boardsApi.loadBoards();
@@ -306,6 +340,7 @@ export class KanbanBoardComponent implements OnInit {
 
     // whenever modal opens/closes, sync query param
     ngOnInit() {
+        this.workspacesApi.list().then(list => this.workspaces.set(list)).catch(() => this.workspaces.set([]));
     }
 
     // projections

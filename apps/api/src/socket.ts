@@ -34,11 +34,15 @@ export async function setupSocketIO(app: FastifyInstance, prisma: PrismaClient) 
             }
 
             // Verify JWT token (reuse your existing JWT verification logic)
-            const decoded = app.jwt.verify(token) as { id: string; email: string };
-            console.log(`[Socket] User authenticated: ${decoded.email} (${decoded.id})`);
+            const decoded = app.jwt.verify(token) as { sub?: string; id?: string; email: string };
+            const userId = decoded.id ?? decoded.sub;
+            if (!userId) {
+                return next(new Error('Invalid token payload'));
+            }
+            console.log(`[Socket] User authenticated: ${decoded.email} (${userId})`);
 
-            // Attach user to socket
-            socket.data.user = decoded;
+            // Attach normalized user to socket
+            socket.data.user = { id: userId, email: decoded.email };
             next();
         } catch (err) {
             console.error('[Socket] Authentication failed:', err);

@@ -40,6 +40,7 @@ export class BoardCalendarViewComponent {
     // Signals
     currentDate = signal(new Date());
     _cards = signal<Card[]>([]);
+    @Input() canEdit = true;
 
     currentMonthName = computed(() => this.currentDate().toLocaleString('default', { month: 'long' }));
     currentYear = computed(() => this.currentDate().getFullYear());
@@ -147,6 +148,7 @@ export class BoardCalendarViewComponent {
 
     addCard(date: Date, event?: Event) {
         if (event) event.stopPropagation();
+        if (!this.canEdit) return;
         // date is Local Midnight. We want to save it as UTC Midnight.
         // Convert to UTC-aligned date
         const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -157,6 +159,7 @@ export class BoardCalendarViewComponent {
     }
 
     async drop(event: CdkDragDrop<any>) {
+        if (!this.canEdit) return;
         if (event.previousContainer === event.container) {
             // Reordering within same day (no-op for calendar usually, as it's sorted by something or arbitrary)
             // But we could implement time sorting later. For now, do nothing.

@@ -1,4 +1,4 @@
-import { Component, computed, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlobeIcon, ImageIcon, LockIcon, LucideAngularModule, PaletteIcon, XIcon } from 'lucide-angular';
@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { BoardCreateModalService } from './board-create-modal.service';
 import { BoardsService } from '../../data/boards.service';
 import { BoardStore } from '../../store/board-store.service';
+import { WorkspacesService, WorkspaceLite } from '../../data/workspaces.service';
 
 type Visibility = 'private' | 'workspace' | 'public';
 
@@ -24,11 +25,28 @@ export class BoardCreateModalComponent {
     readonly PaletteIcon = PaletteIcon;
     readonly GlobeIcon = GlobeIcon;
     readonly LockIcon = LockIcon;
+    readonly tTitle = $localize`:@@boardCreate.title:Create Board`;
+    readonly tBoardTitle = $localize`:@@boardCreate.boardTitle:Board Title`;
+    readonly tBoardTitlePlaceholder = $localize`:@@boardCreate.boardTitlePlaceholder:e.g., Q4 Roadmap`;
+    readonly tBackground = $localize`:@@boardCreate.background:Background`;
+    readonly tWorkspaceLabel = $localize`:@@boardCreate.workspaceLabel:Workspace`;
+    readonly tWorkspacePlaceholder = $localize`:@@boardCreate.workspacePlaceholder:Select a workspace`;
+    readonly tVisibility = $localize`:@@boardCreate.visibility:Visibility`;
+    readonly tVisibilityPrivate = $localize`:@@boardCreate.visibilityPrivate:Private`;
+    readonly tVisibilityWorkspace = $localize`:@@boardCreate.visibilityWorkspace:Workspace`;
+    readonly tVisibilityPublic = $localize`:@@boardCreate.visibilityPublic:Public`;
+    readonly tVisibilityHintPrivate = $localize`:@@boardCreate.visibilityHintPrivate:Only board members can view and edit.`;
+    readonly tVisibilityHintWorkspace = $localize`:@@boardCreate.visibilityHintWorkspace:All workspace members can see this board.`;
+    readonly tVisibilityHintPublic = $localize`:@@boardCreate.visibilityHintPublic:Anyone on the internet can see this board.`;
+    readonly tCancel = $localize`:@@boardCreate.cancel:Cancel`;
+    readonly tCreate = $localize`:@@boardCreate.create:Create Board`;
+    readonly tCreating = $localize`:@@boardCreate.creating:Creating...`;
 
     // deps
     modal = inject(BoardCreateModalService);
     boardsApi = inject(BoardsService);
     store = inject(BoardStore);
+    workspacesApi = inject(WorkspacesService);
     router = inject(Router);
 
     // form state
@@ -65,6 +83,25 @@ export class BoardCreateModalComponent {
     creating = signal(false);
     error = signal<string | null>(null);
     canSubmit = computed(() => this.name().trim().length > 1);
+    workspaces = signal<WorkspaceLite[]>([]);
+    selectedWorkspaceId = signal<string | null>(null);
+
+    constructor() {
+        effect(() => {
+            if (this.modal.isOpen()) {
+                void this.loadWorkspaces();
+                const explicitId = this.modal.workspaceId();
+                if (explicitId) {
+                    this.selectedWorkspaceId.set(explicitId);
+                } else if (!this.selectedWorkspaceId()) {
+                    const fallback = this.getCurrentWorkspaceId();
+                    if (fallback) this.selectedWorkspaceId.set(fallback);
+                }
+            } else {
+                this.selectedWorkspaceId.set(null);
+            }
+        }, { allowSignalWrites: true });
+    }
 
     close() {
         this.modal.close();
@@ -99,7 +136,7 @@ export class BoardCreateModalComponent {
         this.error.set(null);
         try {
             // If no workspace found from current board, pass null to let service infer it
-            const wsId = this.getCurrentWorkspaceId();
+            const wsId = this.selectedWorkspaceId() || this.getCurrentWorkspaceId();
 
             console.log('Creating board in workspace', wsId);
             console.log((this.name()).trim(),
@@ -131,6 +168,18 @@ export class BoardCreateModalComponent {
         }
     }
 
+    async loadWorkspaces() {
+        try {
+            const list = await this.workspacesApi.list();
+            this.workspaces.set(list);
+            if (!this.selectedWorkspaceId() && list.length) {
+                this.selectedWorkspaceId.set(list[0].id);
+            }
+        } catch (err) {
+            console.error('Failed to load workspaces', err);
+        }
+    }
+
     pickColor(id: string) {
         this.bgType.set('color');
         this.bgValue.set(id);
@@ -147,6 +196,13 @@ export class BoardCreateModalComponent {
     pickImage(url: string) {
         this.bgType.set('image');
         this.bgValue.set(url);
+    }
+
+    getVisibilityHint(): string {
+        const visibility = this.visibility();
+        if (visibility === 'private') return this.tVisibilityHintPrivate;
+        if (visibility === 'workspace') return this.tVisibilityHintWorkspace;
+        return this.tVisibilityHintPublic;
     }
 
     private reset() {

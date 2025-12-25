@@ -7,10 +7,10 @@ import { EmailService } from '../services/email.js';
 import { NotificationService } from '../services/notification-service.js';
 
 const DEFAULT_LABELS = [
-    { name: 'green', color: '#61BD4F' },
-    { name: 'Priority', color: '#ff5252' },
-    { name: 'Bug', color: '#ff9800' },
-    { name: 'Feature', color: '#4caf50' },
+    { name: 'High Priority', color: '#EB5A46' },
+    { name: 'Blocked', color: '#C377E0' },
+    { name: 'Bug', color: '#F2D600' },
+    { name: 'Feature', color: '#61BD4F' },
 ];
 
 const DEFAULT_LISTS = ['To Do', 'In Progress', 'Done'];
@@ -306,6 +306,14 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 description?: string | null;
                 background?: string | null;
                 lists?: string[];
+                labels?: { name: string; color: string }[];
+                cards?: {
+                    title: string;
+                    description?: string | null;
+                    list: string;
+                    checklists?: { title: string; items: string[] }[];
+                    labelNames?: string[];
+                }[];
                 visibility?: 'private' | 'workspace' | 'public';
             }
         }>,
@@ -313,7 +321,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
     ) => {
         const user = ensureUser(req);
         const { workspaceId } = req.params;
-        const { name, description, background, lists, visibility } = req.body ?? ({} as any);
+        const { name, description, background, lists, labels, cards, visibility } = req.body ?? ({} as any);
         if (!name?.trim()) return reply.code(400).send({ error: 'name required' });
 
         // Check if user can create boards in this workspace
@@ -359,11 +367,79 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         });
         await prisma.list.createMany({ data: listData });
 
-        // 4) seed default labels so the Labels panel isn't empty
+        // 4) seed labels so the Labels panel isn't empty
+        const labelSeeds = labels && labels.length > 0 ? labels : DEFAULT_LABELS;
         await prisma.label.createMany({
-            data: DEFAULT_LABELS.map(l => ({ boardId: board.id, name: l.name, color: l.color })),
+            data: labelSeeds.map(l => ({ boardId: board.id, name: l.name, color: l.color })),
             skipDuplicates: true,
         });
+        const createdLabels = await prisma.label.findMany({
+            where: { boardId: board.id },
+            select: { id: true, name: true },
+        });
+        const labelIdByName = new Map(createdLabels.map(l => [l.name, l.id]));
+
+        // 5) seed template cards + checklists (optional)
+        if (cards && cards.length > 0) {
+            const createdLists = await prisma.list.findMany({
+                where: { boardId: board.id },
+                select: { id: true, name: true },
+            });
+            const listIdByName = new Map(createdLists.map(l => [l.name, l.id]));
+            const lastRankByList: Record<string, string | null> = {};
+
+            for (const card of cards) {
+                const listId = listIdByName.get(card.list);
+                if (!listId) continue;
+
+                const prevRank = lastRankByList[listId] ?? null;
+                const rank = mid(prevRank);
+                lastRankByList[listId] = rank;
+
+                const createdCard = await prisma.card.create({
+                    data: {
+                        listId,
+                        title: card.title,
+                        description: card.description ?? null,
+                        rank,
+                    },
+                });
+
+                if (card.labelNames?.length) {
+                    const labelIds = card.labelNames
+                        .map(name => labelIdByName.get(name))
+                        .filter((id): id is string => Boolean(id));
+                    if (labelIds.length) {
+                        await prisma.cardLabel.createMany({
+                            data: labelIds.map(labelId => ({ cardId: createdCard.id, labelId })),
+                            skipDuplicates: true,
+                        });
+                    }
+                }
+
+                if (card.checklists?.length) {
+                    for (let i = 0; i < card.checklists.length; i++) {
+                        const checklist = card.checklists[i];
+                        const createdChecklist = await prisma.checklist.create({
+                            data: {
+                                cardId: createdCard.id,
+                                title: checklist.title,
+                                position: i,
+                            },
+                        });
+                        for (let j = 0; j < checklist.items.length; j++) {
+                            await prisma.checklistItem.create({
+                                data: {
+                                    checklistId: createdChecklist.id,
+                                    text: checklist.items[j],
+                                    position: j,
+                                },
+                            });
+                        }
+                    }
+                }
+            }
+        }
 
         return board;
     });
@@ -436,6 +512,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         const members = rows.map(r => ({
             id: r.user.id,
             name: r.user.name ?? '',
+            email: r.user.email ?? '',
             avatar: r.user.avatar ?? '',
             role: r.role,
             status: 'active'
@@ -551,7 +628,6 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             where: { userId_workspaceId: { userId: memberId, workspaceId } }
         });
 
-        // Send email notification if removed by someone else
         // Send email notification if removed by someone else
         if (!isSelf) {
             // Fire-and-forget

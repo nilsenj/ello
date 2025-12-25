@@ -41,6 +41,11 @@ export class HeaderNotificationsComponent {
     readonly BellIcon = BellIcon;
     readonly CheckIcon = CheckIcon;
     readonly Trash2Icon = Trash2Icon;
+    readonly tNotifications = $localize`:@@header.notifications.title:Notifications`;
+    readonly tMarkAllRead = $localize`:@@header.notifications.markAll:Mark all as read`;
+    readonly tNoNotifications = $localize`:@@header.notifications.none:No new notifications`;
+    readonly tMarkRead = $localize`:@@header.notifications.markRead:Mark as read`;
+    readonly tDelete = $localize`:@@header.notifications.delete:Delete`;
 
     toggle() {
         this.isOpen.update(v => !v);

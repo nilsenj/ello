@@ -34,6 +34,7 @@ export class HeaderBoardSwitcherComponent {
     switchBoard = output<string>();
 
     isOpen = signal(false);
+    readonly tYourBoards = $localize`:@@header.switcher.yourBoards:Your Boards`;
 
     toggle() {
         this.isOpen.update(v => !v);

@@ -179,7 +179,7 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
             <div class="modal" (click)="$event.stopPropagation()">
                 <div class="modal-header">
                     <h2 style="margin: 0; font-size: 20px; font-weight: 600; color: #111827;">
-                        Workspace Settings
+                        {{ tTitle }}
                     </h2>
                     <button class="close-btn" (click)="close()" type="button">×</button>
                 </div>
@@ -190,17 +190,17 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
                     </div>
 
                     <div *ngIf="success()" class="success-message">
-                        Settings saved successfully!
+                        {{ tSaved }}
                     </div>
 
                     <div *ngIf="loading()" style="text-align: center; padding: 40px;">
-                        <div style="color: #6b7280;">Loading settings...</div>
+                        <div style="color: #6b7280;">{{ tLoading }}</div>
                     </div>
 
                     <form *ngIf="!loading() && settings()" (ngSubmit)="onSave()">
                         <!-- Workspace Visibility -->
                         <div class="form-group">
-                            <label class="form-label">Workspace Visibility</label>
+                            <label class="form-label">{{ tVisibilityLabel }}</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input 
@@ -209,7 +209,7 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
                                         value="private"
                                         [(ngModel)]="formData.visibility"
                                     />
-                                    <span>Private</span>
+                                    <span>{{ tPrivate }}</span>
                                 </label>
                                 <label class="radio-option">
                                     <input 
@@ -218,75 +218,75 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
                                         value="public"
                                         [(ngModel)]="formData.visibility"
                                     />
-                                    <span>Public</span>
+                                    <span>{{ tPublic }}</span>
                                 </label>
                             </div>
                             <div class="form-help">
-                                Private workspaces are only visible to members. Public workspaces are viewable by anyone (but only editable by members).
+                                {{ tVisibilityHelp }}
                             </div>
                         </div>
 
                         <!-- Who Can Create Boards -->
                         <div class="form-group">
-                            <label class="form-label" for="createBoards">Who can create boards?</label>
+                            <label class="form-label" for="createBoards">{{ tCreateBoardsLabel }}</label>
                             <select 
                                 id="createBoards"
                                 [(ngModel)]="formData.whoCanCreateBoards"
                                 name="whoCanCreateBoards"
                             >
-                                <option value="admins">Admins only</option>
-                                <option value="members">All members</option>
+                                <option value="admins">{{ tAdminsOnly }}</option>
+                                <option value="members">{{ tAllMembers }}</option>
                             </select>
                             <div class="form-help">
-                                Controls who can create new boards in this workspace.
+                                {{ tCreateBoardsHelp }}
                             </div>
                         </div>
 
                         <!-- Who Can Invite Members -->
                         <div class="form-group">
-                            <label class="form-label" for="inviteMembers">Who can invite members?</label>
+                            <label class="form-label" for="inviteMembers">{{ tInviteMembersLabel }}</label>
                             <select 
                                 id="inviteMembers"
                                 [(ngModel)]="formData.whoCanInviteMembers"
                                 name="whoCanInviteMembers"
                             >
-                                <option value="admins">Admins only</option>
-                                <option value="members">All members</option>
+                                <option value="admins">{{ tAdminsOnly }}</option>
+                                <option value="members">{{ tAllMembers }}</option>
                             </select>
                             <div class="form-help">
-                                Controls who can invite new members to this workspace.
+                                {{ tInviteMembersHelp }}
                             </div>
                         </div>
 
                         <!-- Email Domain Restrictions -->
                         <div class="form-group">
-                            <label class="form-label" for="emailDomains">Allowed email domains (optional)</label>
+                            <label class="form-label" for="emailDomains">{{ tEmailDomainsLabel }}</label>
                             <input 
                                 type="text"
                                 id="emailDomains"
                                 [(ngModel)]="formData.allowedEmailDomains"
                                 name="allowedEmailDomains"
-                                placeholder="e.g., company.com, partner.com"
+                                [placeholder]="tEmailDomainsPlaceholder"
                             />
                             <div class="form-help">
-                                Only users with these email domains can be invited. Leave empty for no restrictions. Separate multiple domains with commas.
+                                {{ tEmailDomainsHelp }}
                             </div>
                         </div>
 
                         <!-- Default Board Visibility -->
                         <div class="form-group">
-                            <label class="form-label" for="defaultVisibility">Default board visibility</label>
+                            <label class="form-label" for="defaultVisibility">{{ tDefaultBoardVisibilityLabel }}</label>
                             <select 
                                 id="defaultVisibility"
                                 [(ngModel)]="formData.defaultBoardVisibility"
                                 name="defaultBoardVisibility"
                             >
-                                <option value="private">Private</option>
-                                <option value="workspace">Workspace visible</option>
-                                <option value="public">Public</option>
+                                <option value="private">{{ tDefaultBoardVisibilityPrivate }}</option>
+                                <option value="workspace">{{ tDefaultBoardVisibilityWorkspace }}</option>
+                                <option value="public">{{ tDefaultBoardVisibilityPublic }}</option>
                             </select>
                             <div class="form-help">
-                                Default visibility setting for newly created boards.
+                                {{ tDefaultBoardVisibilityHelp }}
                             </div>
                         </div>
                     </form>
@@ -294,7 +294,7 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" (click)="close()">
-                        Cancel
+                        {{ tCancel }}
                     </button>
                     <button 
                         type="button" 
@@ -302,7 +302,7 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
                         (click)="onSave()"
                         [disabled]="saving() || loading()"
                     >
-                        {{ saving() ? 'Saving...' : 'Save Settings' }}
+                        {{ saving() ? tSaving : tSave }}
                     </button>
                 </div>
             </div>
@@ -312,6 +312,32 @@ import { WorkspacesService, type WorkspaceSettings, type WorkspaceSettingsUpdate
 export class WorkspaceSettingsAdvancedModalComponent {
     modalService = inject(WorkspaceSettingsAdvancedModalService);
     workspacesService = inject(WorkspacesService);
+    readonly tTitle = $localize`:@@workspaceSettingsAdvanced.title:Workspace Settings`;
+    readonly tSaved = $localize`:@@workspaceSettingsAdvanced.saved:Settings saved successfully!`;
+    readonly tLoading = $localize`:@@workspaceSettingsAdvanced.loading:Loading settings...`;
+    readonly tVisibilityLabel = $localize`:@@workspaceSettingsAdvanced.visibilityLabel:Workspace Visibility`;
+    readonly tPrivate = $localize`:@@workspaceSettingsAdvanced.private:Private`;
+    readonly tPublic = $localize`:@@workspaceSettingsAdvanced.public:Public`;
+    readonly tVisibilityHelp = $localize`:@@workspaceSettingsAdvanced.visibilityHelp:Private workspaces are only visible to members. Public workspaces are viewable by anyone (but only editable by members).`;
+    readonly tCreateBoardsLabel = $localize`:@@workspaceSettingsAdvanced.createBoardsLabel:Who can create boards?`;
+    readonly tInviteMembersLabel = $localize`:@@workspaceSettingsAdvanced.inviteMembersLabel:Who can invite members?`;
+    readonly tAdminsOnly = $localize`:@@workspaceSettingsAdvanced.adminsOnly:Admins only`;
+    readonly tAllMembers = $localize`:@@workspaceSettingsAdvanced.allMembers:All members`;
+    readonly tCreateBoardsHelp = $localize`:@@workspaceSettingsAdvanced.createBoardsHelp:Controls who can create new boards in this workspace.`;
+    readonly tInviteMembersHelp = $localize`:@@workspaceSettingsAdvanced.inviteMembersHelp:Controls who can invite new members to this workspace.`;
+    readonly tEmailDomainsLabel = $localize`:@@workspaceSettingsAdvanced.emailDomainsLabel:Allowed email domains (optional)`;
+    readonly tEmailDomainsPlaceholder = $localize`:@@workspaceSettingsAdvanced.emailDomainsPlaceholder:e.g., company.com, partner.com`;
+    readonly tEmailDomainsHelp = $localize`:@@workspaceSettingsAdvanced.emailDomainsHelp:Only users with these email domains can be invited. Leave empty for no restrictions. Separate multiple domains with commas.`;
+    readonly tDefaultBoardVisibilityLabel = $localize`:@@workspaceSettingsAdvanced.defaultBoardVisibilityLabel:Default board visibility`;
+    readonly tDefaultBoardVisibilityPrivate = $localize`:@@workspaceSettingsAdvanced.defaultBoardVisibilityPrivate:Private`;
+    readonly tDefaultBoardVisibilityWorkspace = $localize`:@@workspaceSettingsAdvanced.defaultBoardVisibilityWorkspace:Workspace visible`;
+    readonly tDefaultBoardVisibilityPublic = $localize`:@@workspaceSettingsAdvanced.defaultBoardVisibilityPublic:Public`;
+    readonly tDefaultBoardVisibilityHelp = $localize`:@@workspaceSettingsAdvanced.defaultBoardVisibilityHelp:Default visibility setting for newly created boards.`;
+    readonly tCancel = $localize`:@@workspaceSettingsAdvanced.cancel:Cancel`;
+    readonly tSave = $localize`:@@workspaceSettingsAdvanced.save:Save Settings`;
+    readonly tSaving = $localize`:@@workspaceSettingsAdvanced.saving:Saving...`;
+    readonly tLoadFailed = $localize`:@@workspaceSettingsAdvanced.loadFailed:Failed to load settings`;
+    readonly tSaveFailed = $localize`:@@workspaceSettingsAdvanced.saveFailed:Failed to save settings`;
 
     settings = signal<WorkspaceSettings | null>(null);
     loading = signal(false);
@@ -358,7 +384,7 @@ export class WorkspaceSettingsAdvancedModalComponent {
                 defaultBoardVisibility: settings.defaultBoardVisibility,
             };
         } catch (err: any) {
-            this.error.set(err?.error?.error || 'Failed to load settings');
+            this.error.set(err?.error?.error || this.tLoadFailed);
         } finally {
             this.loading.set(false);
         }
@@ -390,7 +416,7 @@ export class WorkspaceSettingsAdvancedModalComponent {
                 this.close();
             }, 1500);
         } catch (err: any) {
-            this.error.set(err?.error?.error || 'Failed to save settings');
+            this.error.set(err?.error?.error || this.tSaveFailed);
         } finally {
             this.saving.set(false);
         }

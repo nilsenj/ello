@@ -15,6 +15,19 @@ import { WorkspacesService } from '../../data/workspaces.service';
 export class WorkspaceSettingsModalComponent {
     readonly XIcon = XIcon;
     readonly Trash2Icon = Trash2Icon;
+    readonly tTitle = $localize`:@@workspaceSettings.title:Workspace Settings`;
+    readonly tNameLabel = $localize`:@@workspaceSettings.nameLabel:Workspace Name`;
+    readonly tDescriptionLabel = $localize`:@@workspaceSettings.descriptionLabel:Description`;
+    readonly tAdvancedSettings = $localize`:@@workspaceSettings.advanced:Advanced Settings`;
+    readonly tAdvancedHint = $localize`:@@workspaceSettings.advancedHint:Configure permissions, visibility, and member restrictions`;
+    readonly tDangerZone = $localize`:@@workspaceSettings.danger:Danger Zone`;
+    readonly tDeleteWorkspace = $localize`:@@workspaceSettings.delete:Delete this Workspace`;
+    readonly tDeleting = $localize`:@@workspaceSettings.deleting:Deleting...`;
+    readonly tDeleteHint = $localize`:@@workspaceSettings.deleteHint:This action is permanent and will delete all boards associated with this workspace.`;
+    readonly tCancel = $localize`:@@workspaceSettings.cancel:Cancel`;
+    readonly tSave = $localize`:@@workspaceSettings.save:Save Changes`;
+    readonly tSaving = $localize`:@@workspaceSettings.saving:Saving...`;
+    readonly tDeleteFailed = $localize`:@@workspaceSettings.deleteFailed:Failed to delete workspace. Ensure you are the owner.`;
 
     modal = inject(WorkspaceSettingsModalService);
     advancedModal = inject(WorkspaceSettingsAdvancedModalService);
@@ -68,7 +81,8 @@ export class WorkspaceSettingsModalComponent {
         const ws = this.modal.workspace();
         if (!ws || this.deleting()) return;
 
-        if (!confirm(`Are you sure you want to delete workspace "${ws.name}"? This cannot be undone.`)) return;
+        const confirmMessage = $localize`:@@workspaceSettings.deleteConfirm:Are you sure you want to delete workspace "${ws.name}"? This cannot be undone.`;
+        if (!confirm(confirmMessage)) return;
 
         this.deleting.set(true);
         try {
@@ -77,7 +91,7 @@ export class WorkspaceSettingsModalComponent {
             this.close();
         } catch (err) {
             console.error('Failed to delete workspace', err);
-            alert('Failed to delete workspace. Ensure you are the owner.');
+            alert(this.tDeleteFailed);
         } finally {
             this.deleting.set(false);
         }

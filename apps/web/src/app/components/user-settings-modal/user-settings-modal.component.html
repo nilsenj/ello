@@ -15,7 +15,7 @@
          flex items-center justify-between shrink-0"
         >
             <h2 class="text-lg sm:text-xl font-bold text-gray-800">
-                Account Settings
+                {{ tAccountSettings }}
             </h2>
 
             <button
@@ -45,7 +45,7 @@
                             [class.hover:bg-gray-100]="activeTab() !== 'profile'"
                     >
                         <lucide-icon [img]="UserIcon" class="w-4 h-4"></lucide-icon>
-                        <span class="hidden sm:inline">Profile</span>
+                        <span class="hidden sm:inline">{{ tProfile }}</span>
                     </button>
 
                     <button
@@ -59,7 +59,7 @@
                             [class.hover:bg-gray-100]="activeTab() !== 'security'"
                     >
                         <lucide-icon [img]="LockIcon" class="w-4 h-4"></lucide-icon>
-                        <span class="hidden sm:inline">Security</span>
+                        <span class="hidden sm:inline">{{ tSecurity }}</span>
                     </button>
                 </nav>
             </div>
@@ -78,18 +78,18 @@
                 <!-- Profile Tab -->
                 <div *ngIf="activeTab() === 'profile'" class="space-y-6">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Profile Details</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">{{ tProfileDetails }}</h3>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ tFullName }}</label>
                                 <input type="text" [ngModel]="name()" (ngModelChange)="name.set($event)"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                       placeholder="Enter your name">
+                                       [placeholder]="tNamePlaceholder">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Avatar URL</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ tAvatarUrl }}</label>
                                 <div class="flex flex-col sm:flex-row gap-4">
                                     <div class="shrink-0 flex justify-center sm:justify-start">
                                         <div
@@ -111,10 +111,33 @@
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md
              text-gray-900 bg-white
              focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder="https://example.com/avatar.jpg"
+                                            [placeholder]="tAvatarPlaceholder"
                                     />
                                 </div>
-                                <p class="mt-1 text-xs text-gray-500">Enter a direct link to an image file.</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ tAvatarHint }}</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ tLanguage }}</label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <select
+                                            class="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                            [ngModel]="locale()"
+                                            (ngModelChange)="locale.set($event)"
+                                    >
+                                        <option *ngFor="let code of supportedLocales" [value]="code">
+                                            {{ localeLabels[code] }}
+                                        </option>
+                                    </select>
+                                    <button
+                                            class="w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            [disabled]="!localeDirty()"
+                                            (click)="applyLanguage()"
+                                    >
+                                        {{ tApplyLanguage }}
+                                    </button>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">{{ tLanguageHint }}</p>
                             </div>
 
                             <div class="pt-4">
@@ -125,7 +148,7 @@
          disabled:opacity-50 disabled:cursor-not-allowed
          flex items-center justify-center gap-2">
                                     <lucide-icon [img]="SaveIcon" class="w-4 h-4"></lucide-icon>
-                                    {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+                                    {{ isSaving() ? tSaving : tSaveChanges }}
                                 </button>
                             </div>
                         </div>
@@ -135,22 +158,22 @@
                 <!-- Security Tab -->
                 <div *ngIf="activeTab() === 'security'" class="space-y-6">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">{{ tChangePassword }}</h3>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ tNewPassword }}</label>
                                 <input type="password" [ngModel]="password()" (ngModelChange)="password.set($event)"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                       placeholder="Enter new password">
+                                       [placeholder]="tPasswordPlaceholder">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ tConfirmPassword }}</label>
                                 <input type="password" [ngModel]="confirmPassword()"
                                        (ngModelChange)="confirmPassword.set($event)"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                       placeholder="Confirm new password">
+                                       [placeholder]="tConfirmPasswordPlaceholder">
                             </div>
 
                             <div class="pt-4">
@@ -161,7 +184,7 @@
          disabled:opacity-50 disabled:cursor-not-allowed
          flex items-center justify-center gap-2">
                                     <lucide-icon [img]="SaveIcon" class="w-4 h-4"></lucide-icon>
-                                    {{ isSaving() ? 'Saving...' : 'Update Password' }}
+                                    {{ isSaving() ? tSaving : tUpdatePassword }}
                                 </button>
                             </div>
                         </div>

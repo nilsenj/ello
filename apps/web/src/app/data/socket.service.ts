@@ -31,12 +31,16 @@ export class SocketService implements OnDestroy {
         console.log('[SocketService] Connecting to:', socketUrl || 'current host');
 
 
+        const isFirefox = typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent);
         this.socket = io(socketUrl, {
             auth: { token },
-            transports: ['websocket', 'polling'],
+            // Firefox reloads can interrupt WS upgrades; keep polling-only there.
+            transports: isFirefox ? ['polling'] : ['polling', 'websocket'],
+            upgrade: !isFirefox,
             path: '/socket.io/',
             reconnection: true,
-            reconnectionAttempts: 5
+            reconnectionAttempts: 5,
+            closeOnBeforeunload: true
         });
 
         this.socket.on('connect', () => {

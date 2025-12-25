@@ -6,7 +6,7 @@
         <header class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div class="flex items-center gap-2">
                 <lucide-icon [img]="LayoutTemplateIcon" class="w-5 h-5 text-blue-600"></lucide-icon>
-                <h2 class="text-lg font-semibold text-gray-800">Start with a Template</h2>
+                <h2 class="text-lg font-semibold text-gray-800">{{ tTitle }}</h2>
             </div>
             <button class="p-1 rounded-md hover:bg-gray-100 text-gray-500 transition-colors" (click)="close()">
                 <lucide-icon [img]="XIcon" class="w-5 h-5"></lucide-icon>
@@ -18,37 +18,124 @@
 
             <!-- Workspace Selector -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Choose Workspace</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ tChooseWorkspace }}</label>
                 <select [value]="selectedWorkspaceId()" (change)="selectWorkspace($event)"
                     class="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                     <option *ngFor="let ws of workspaces()" [value]="ws.id">{{ ws.name }}</option>
                 </select>
             </div>
 
-            <!-- Templates Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div *ngFor="let template of templates"
-                    class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
-                    (click)="useTemplate(template)">
+            <!-- Core Templates -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800 uppercase tracking-wide">{{ tCoreTemplates }}</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div *ngFor="let template of coreTemplates()"
+                        class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer group relative"
+                        [class.ring-2]="selectedTemplate()?.id === template.id"
+                        [class.ring-blue-500]="selectedTemplate()?.id === template.id"
+                        (click)="selectTemplate(template)">
+                        <div *ngIf="selectedTemplate()?.id === template.id"
+                            class="absolute inset-0 bg-white/95 border border-blue-100 shadow-lg rounded-none p-4 z-10 flex flex-col justify-end">
+                            <div class="text-xs font-semibold text-gray-700 mb-2">{{ tNameThisBoard }}</div>
+                            <input
+                                class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                [ngModel]="boardNameDraft()"
+                                (ngModelChange)="boardNameDraft.set($event)"
+                                [placeholder]="template.name"
+                                (click)="$event.stopPropagation()"
+                            />
+                            <button
+                                class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                                [disabled]="creating()"
+                                (click)="createFromSelected(); $event.stopPropagation()"
+                            >
+                                {{ tCreateBoard }}
+                            </button>
+                        </div>
+                        <div class="h-24 flex items-end p-4" [style.background-color]="template.background">
+                            <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold shadow-sm">
+                                {{ template.name }}
+                            </div>
+                        </div>
 
-                    <!-- Preview Header -->
-                    <div class="h-24 flex items-end p-4" [style.background-color]="template.background">
-                        <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold shadow-sm">
-                            {{ template.name }}
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{{
+                                template.name }}</h3>
+                            <p class="text-sm text-gray-500 mb-3">{{ template.description }}</p>
+
+                            <div class="flex flex-wrap gap-1">
+                                <span *ngFor="let list of template.lists"
+                                    class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                                    {{ list }}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Content -->
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{{
-                            template.name }}</h3>
-                        <p class="text-sm text-gray-500 mb-3">{{ template.description }}</p>
+            <!-- Business Templates -->
+            <div>
+                <button
+                    class="w-full flex items-center justify-between mb-4 rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-left hover:bg-blue-50 transition-colors"
+                    (click)="toggleBusiness()"
+                    type="button"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-semibold text-gray-800 uppercase tracking-wide">{{ tBusinessTemplates }}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">{{ tBusinessBadge }}</span>
+                        <span class="text-xs text-gray-500 hidden sm:inline">{{ tBusinessHint }}</span>
+                    </div>
+                    <lucide-icon
+                        [img]="ChevronDownIcon"
+                        class="w-4 h-4 text-gray-500 transition-transform"
+                        [class.rotate-180]="showBusiness()"
+                    ></lucide-icon>
+                </button>
 
-                        <div class="flex flex-wrap gap-1">
-                            <span *ngFor="let list of template.lists"
-                                class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
-                                {{ list }}
-                            </span>
+                <div *ngIf="showBusiness()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div *ngFor="let template of businessTemplates()"
+                        class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer group relative"
+                        [class.ring-2]="selectedTemplate()?.id === template.id"
+                        [class.ring-blue-500]="selectedTemplate()?.id === template.id"
+                        (click)="selectTemplate(template)">
+                        <div *ngIf="selectedTemplate()?.id === template.id"
+                            class="absolute inset-0 bg-white/95 border border-blue-100 shadow-lg rounded-none p-4 z-10 flex flex-col justify-end">
+                            <div class="text-xs font-semibold text-gray-700 mb-2">{{ tNameThisBoard }}</div>
+                            <input
+                                class="w-full px-2.5 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                [ngModel]="boardNameDraft()"
+                                (ngModelChange)="boardNameDraft.set($event)"
+                                [placeholder]="template.name"
+                                (click)="$event.stopPropagation()"
+                            />
+                            <button
+                                class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                                [disabled]="creating()"
+                                (click)="createFromSelected(); $event.stopPropagation()"
+                            >
+                                {{ tCreateBoard }}
+                            </button>
+                        </div>
+                        <div class="h-24 flex items-end p-4" [style.background-color]="template.background">
+                            <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-bold shadow-sm">
+                                {{ template.name }}
+                            </div>
+                        </div>
+
+                        <div class="p-4">
+                            <h3 class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{{
+                                template.name }}</h3>
+                            <p class="text-sm text-gray-500 mb-3">{{ template.description }}</p>
+
+                            <div class="flex flex-wrap gap-1">
+                                <span *ngFor="let list of template.lists"
+                                    class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                                    {{ list }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

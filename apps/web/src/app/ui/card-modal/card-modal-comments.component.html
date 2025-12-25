@@ -1,0 +1,33 @@
+<section>
+    <div class="cm-section-title">Comments</div>
+
+    <div class="cm-comment-editor" *ngIf="canEdit; else commentReadOnly">
+        <textarea rows="3" class="cm-textarea" [ngModel]="commentDraft"
+            (ngModelChange)="commentDraft = $event" placeholder="Write a comment…"></textarea>
+        <div class="mt-2">
+            <button class="cm-btn-primary inline-flex items-center" type="button" [disabled]="isCommentBlank()"
+                (click)="addComment()">
+                <lucide-icon [img]="SendIcon" class="mr-1"></lucide-icon>
+                Comment
+            </button>
+        </div>
+    </div>
+    <ng-template #commentReadOnly>
+        <div class="cm-muted text-sm">Comments are read-only for viewers.</div>
+    </ng-template>
+
+    <div class="cm-comments">
+        <div *ngFor="let c of localComments" class="cm-comment">
+            <div class="cm-comment-meta">
+                <span class="cm-author">{{ c.author?.name || 'User' }}</span>
+                <span class="cm-dot">•</span>
+                <span class="cm-date">{{ c.createdAt | date: 'medium' }}</span>
+                <button *ngIf="canEdit" class="cm-link inline-flex items-center ml-auto" (click)="deleteComment(c.id)">
+                    <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
+                    Delete
+                </button>
+            </div>
+            <div class="cm-comment-text">{{ c.text }}</div>
+        </div>
+    </div>
+</section>

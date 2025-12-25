@@ -1,0 +1,133 @@
+<section *ngIf="canArchive || canMoveCopy || canDelete">
+    <div class="cm-section-title">Actions</div>
+    <div class="grid grid-cols-2 gap-2">
+        <button *ngIf="canArchive" class="cm-add inline-flex items-center" (click)="archiveCard()">
+            <lucide-icon [img]="ArchiveIcon" class="mr-1"></lucide-icon>
+            Archive
+        </button>
+        <button *ngIf="canMoveCopy" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('move')">
+            <lucide-icon [img]="MoveIcon" class="mr-1"></lucide-icon>
+            Move
+        </button>
+        <button *ngIf="canMoveCopy" class="cm-add inline-flex items-center" (click)="prepareMoveOrCopy('copy')">
+            <lucide-icon [img]="CopyIcon" class="mr-1"></lucide-icon>
+            Copy
+        </button>
+        <button *ngIf="canDelete" class="cm-add inline-flex items-center text-red-600 hover:bg-red-50"
+            (click)="deleteCard()">
+            <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
+            Delete
+        </button>
+    </div>
+</section>
+
+<section *ngIf="isPanelOpen('move')" data-panel="move">
+    <div class="cm-section-title flex items-center gap-2">
+        <span class="inline-flex items-center">
+            <lucide-icon [img]="MoveIcon" class="mr-1"></lucide-icon>
+            Move Card
+        </span>
+        <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
+            <lucide-icon [img]="XIcon"></lucide-icon>
+            Close
+        </button>
+    </div>
+
+    <div class="space-y-3">
+        <label class="cm-field">
+            <span class="cm-field-label">Board</span>
+            <select class="cm-input" [ngModel]="targetBoardId()" (ngModelChange)="onTargetBoardChange($event)">
+                <option *ngFor="let b of availableBoards" [value]="b.id">{{ b.name }}</option>
+            </select>
+        </label>
+
+        <label class="cm-field">
+            <span class="cm-field-label">List</span>
+            <div *ngIf="isBusyAction()" class="cm-muted text-xs mb-1">Loading lists...</div>
+            <select class="cm-input" [ngModel]="targetListId()" (ngModelChange)="targetListId.set($event)"
+                [disabled]="isBusyAction()">
+                <option *ngFor="let l of targetLists" [value]="l.id">{{ l.title || l.name }}</option>
+            </select>
+        </label>
+
+        <label class="cm-field">
+            <span class="cm-field-label">Position</span>
+            <select class="cm-input" [ngModel]="targetPosition()" (ngModelChange)="targetPosition.set($event)">
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+            </select>
+        </label>
+
+        <button class="cm-btn-primary w-full justify-center" (click)="doMove()"
+            [disabled]="isBusyAction() || !targetListId()">
+            Move
+        </button>
+    </div>
+</section>
+
+<section *ngIf="isPanelOpen('copy')" data-panel="copy">
+    <div class="cm-section-title flex items-center gap-2">
+        <span class="inline-flex items-center">
+            <lucide-icon [img]="CopyIcon" class="mr-1"></lucide-icon>
+            Copy Card
+        </span>
+        <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
+            <lucide-icon [img]="XIcon"></lucide-icon>
+            Close
+        </button>
+    </div>
+
+    <div class="space-y-3">
+        <label class="cm-field">
+            <span class="cm-field-label">Title</span>
+            <textarea class="cm-input" rows="2" [ngModel]="copyTitle()" (ngModelChange)="copyTitle.set($event)">
+            </textarea>
+        </label>
+
+        <label class="cm-field">
+            <span class="cm-field-label">Board</span>
+            <select class="cm-input" [ngModel]="targetBoardId()" (ngModelChange)="onTargetBoardChange($event)">
+                <option *ngFor="let b of availableBoards" [value]="b.id">{{ b.name }}</option>
+            </select>
+        </label>
+
+        <label class="cm-field">
+            <span class="cm-field-label">List</span>
+            <div *ngIf="isBusyAction()" class="cm-muted text-xs mb-1">Loading lists...</div>
+            <select class="cm-input" [ngModel]="targetListId()" (ngModelChange)="targetListId.set($event)"
+                [disabled]="isBusyAction()">
+                <option *ngFor="let l of targetLists" [value]="l.id">{{ l.title || l.name }}</option>
+            </select>
+        </label>
+
+        <button class="cm-btn-primary w-full justify-center" (click)="doCopy()"
+            [disabled]="isBusyAction() || !targetListId() || !copyTitle().trim()">
+            Copy
+        </button>
+    </div>
+</section>
+
+<section *ngIf="isPanelOpen('delete')" data-panel="delete">
+    <div class="cm-section-title flex items-center gap-2 text-red-700">
+        <span class="inline-flex items-center">
+            <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
+            Delete Card?
+        </span>
+        <button class="cm-link inline-flex items-center ml-auto text-ink-base" (click)="closePanel()">
+            <lucide-icon [img]="XIcon"></lucide-icon>
+            Close
+        </button>
+    </div>
+
+    <div class="space-y-3">
+        <p class="text-sm text-ink-sub">
+            All actions will be removed from the activity feed and you won't be able to re-open the card.
+            There is no undo.
+        </p>
+
+        <button class="cm-btn-primary w-full justify-center bg-red-600 hover:bg-red-700 text-white border-transparent"
+            (click)="doDelete()" [disabled]="isBusyAction()">
+            {{ isBusyAction() ? 'Deleting...' : 'Delete' }}
+        </button>
+    </div>
+</section>
