@@ -21,6 +21,22 @@ export class BoardTableViewComponent {
     listsApi = inject(ListsService);
 
     @Input() canEdit = true;
+    readonly tCard = $localize`:@@boardTable.card:Card`;
+    readonly tList = $localize`:@@boardTable.list:List`;
+    readonly tLabels = $localize`:@@boardTable.labels:Labels`;
+    readonly tMembers = $localize`:@@boardTable.members:Members`;
+    readonly tDueDate = $localize`:@@boardTable.dueDate:Due Date`;
+    readonly tAddManageLabels = $localize`:@@boardTable.addManageLabels:Add/Manage Labels`;
+    readonly tManageMembers = $localize`:@@boardTable.manageMembers:Manage Members`;
+    readonly tCardTitlePlaceholder = $localize`:@@boardTable.cardTitlePlaceholder:Card title...`;
+    readonly tAdd = $localize`:@@boardTable.add:Add`;
+    readonly tCancel = $localize`:@@boardTable.cancel:Cancel`;
+    readonly tAddNewCard = $localize`:@@boardTable.addNewCard:+ Add new card`;
+    readonly tViewOnly = $localize`:@@boardTable.viewOnly:View-only access. Ask an admin to add you as a board member to edit.`;
+    readonly tNoCards = $localize`:@@boardTable.noCards:No cards found.`;
+    readonly tUnknownList = $localize`:@@boardTable.unknownList:Unknown`;
+    readonly tUnknownUser = $localize`:@@boardTable.unknownUser:Unknown User`;
+    readonly tUserInitial = $localize`:@@boardTable.userInitial:U`;
 
     private _cards: Card[] = [];
     @Input() set cards(val: Card[]) {
@@ -98,7 +114,7 @@ export class BoardTableViewComponent {
     }
 
     getListName(listId: string) {
-        return this.lists().find(l => l.id === listId)?.title || 'Unknown';
+        return this.lists().find(l => l.id === listId)?.title || this.tUnknownList;
     }
 
     openCard(cardId: string, panel: PanelName | null = null) {
@@ -118,12 +134,12 @@ export class BoardTableViewComponent {
 
     getMemberInitials(userId: string): string {
         const m = this.store.members().find(x => x.id === userId);
-        return (m?.name || 'U').slice(0, 2).toUpperCase();
+        return (m?.name || this.tUserInitial).slice(0, 2).toUpperCase();
     }
 
     getMemberName(userId: string): string {
         const m = this.store.members().find(x => x.id === userId);
-        return m?.name || 'Unknown User';
+        return m?.name || this.tUnknownUser;
     }
 
     trackCard(_: number, item: Card): string {

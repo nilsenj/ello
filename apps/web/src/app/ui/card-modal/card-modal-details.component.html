@@ -1,40 +1,40 @@
 <section
     *ngIf="labelCount || hasStart || hasDue || memberCount || checklistCount || hasPlanning || hasAttachments">
-    <div class="cm-section-title">Card details</div>
+    <div class="cm-section-title">{{ tCardDetails }}</div>
     <div class="flex flex-wrap gap-2">
         <button *ngIf="labelCount" class="cm-chip" (click)="openPanel.emit('labels')">
             <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
-            Labels ({{ labelCount }})
+            {{ tLabels }} ({{ labelCount }})
         </button>
 
         <button *ngIf="hasStart || hasDue" class="cm-chip" (click)="openPanel.emit('dates')">
             <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
-            Dates
-            <span *ngIf="hasStart">• Start</span>
-            <span *ngIf="hasDue">• Due</span>
+            {{ tDates }}
+            <span *ngIf="hasStart">• {{ tStart }}</span>
+            <span *ngIf="hasDue">• {{ tDue }}</span>
         </button>
 
         <button *ngIf="memberCount" class="cm-chip" (click)="openPanel.emit('members')">
             <lucide-icon [img]="UsersIcon" class="mr-1"></lucide-icon>
-            Members ({{ memberCount }})
+            {{ tMembers }} ({{ memberCount }})
         </button>
 
         <button *ngIf="checklistCount" class="cm-chip" (click)="openPanel.emit('checklists')">
             <lucide-icon [img]="ListChecksIcon" class="mr-1"></lucide-icon>
-            Checklists ({{ checklistCount }})
+            {{ tChecklists }} ({{ checklistCount }})
         </button>
 
         <button *ngIf="hasPlanning" class="cm-chip" (click)="openPanel.emit('planning')">
             <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
-            Planning
+            {{ tPlanning }}
             <span *ngIf="currentPriority"> • {{ currentPriority }}</span>
-            <span *ngIf="currentRisk"> • risk: {{ currentRisk }}</span>
-            <span *ngIf="currentEstimate !== ''"> • est: {{ currentEstimate }}</span>
+            <span *ngIf="currentRisk"> • {{ tRisk }}: {{ currentRisk }}</span>
+            <span *ngIf="currentEstimate !== ''"> • {{ tEst }}: {{ currentEstimate }}</span>
         </button>
 
         <button *ngIf="hasAttachments" class="cm-chip" (click)="openPanel.emit('attachments')">
             <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
-            Attachments ({{ attachmentCount }})
+            {{ tAttachments }} ({{ attachmentCount }})
         </button>
     </div>
 </section>

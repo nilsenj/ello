@@ -28,6 +28,47 @@ export class TrelloCardComponent {
     readonly ClockIcon = ClockIcon;
     readonly CalendarIcon = CalendarIcon;
     readonly FileTextIcon = FileTextIcon;
+    readonly tCardAriaLabel = $localize`:@@trelloCard.cardAriaLabel:Card`;
+    readonly tCoverAlt = $localize`:@@trelloCard.coverAlt:Cover`;
+    readonly tMarkComplete = $localize`:@@trelloCard.markComplete:Mark complete`;
+    readonly tCardTitlePlaceholder = $localize`:@@trelloCard.cardTitlePlaceholder:Card title...`;
+    readonly tSave = $localize`:@@trelloCard.save:Save`;
+    readonly tCancel = $localize`:@@trelloCard.cancel:Cancel`;
+    readonly tPriorityTitle = (label: string) =>
+        $localize`:@@trelloCard.priorityTitle:Priority: ${label}:priority:`;
+    readonly tRiskTitle = (label: string) => $localize`:@@trelloCard.riskTitle:Risk: ${label}:risk:`;
+    readonly tEstimationTitle = $localize`:@@trelloCard.estimationTitle:Estimation`;
+    readonly tHasDescription = $localize`:@@trelloCard.hasDescription:Has description`;
+    readonly tDescriptionShort = $localize`:@@trelloCard.descriptionShort:desc`;
+    readonly tMoreMenuClose = $localize`:@@trelloCard.close:Close`;
+    readonly tEditTitle = $localize`:@@trelloCard.editTitle:Edit title`;
+    readonly tMove = $localize`:@@trelloCard.move:Move`;
+    readonly tMoveTop = $localize`:@@trelloCard.moveTop:Move to top`;
+    readonly tMoveUp = $localize`:@@trelloCard.moveUp:Move up`;
+    readonly tMoveDown = $localize`:@@trelloCard.moveDown:Move down`;
+    readonly tMoveBottom = $localize`:@@trelloCard.moveBottom:Move to bottom`;
+    readonly tCopy = $localize`:@@trelloCard.copy:Copy`;
+    readonly tArchive = $localize`:@@trelloCard.archive:Archive`;
+    readonly tDelete = $localize`:@@trelloCard.delete:Delete`;
+    readonly tOverdue = $localize`:@@trelloCard.overdue:overdue`;
+    readonly tDueToday = $localize`:@@trelloCard.dueToday:due today`;
+    readonly tDueInDays = (days: number) => $localize`:@@trelloCard.dueInDays:due in ${days}:days:d`;
+    readonly tStarted = $localize`:@@trelloCard.started:started`;
+    readonly tStartsSoon = $localize`:@@trelloCard.startsSoon:starts soon`;
+    readonly tDueTitle = (date: string) => $localize`:@@trelloCard.dueTitle:Due ${date}:date:`;
+    readonly tStartedTitle = (date: string) => $localize`:@@trelloCard.startedTitle:Started ${date}:date:`;
+    readonly tStartsTitle = (date: string) => $localize`:@@trelloCard.startsTitle:Starts ${date}:date:`;
+    readonly tPointsShort = $localize`:@@trelloCard.pointsShort:pt`;
+    readonly tPriorityLow = $localize`:@@trelloCard.priorityLow:low`;
+    readonly tPriorityMedium = $localize`:@@trelloCard.priorityMedium:medium`;
+    readonly tPriorityHigh = $localize`:@@trelloCard.priorityHigh:high`;
+    readonly tPriorityUrgent = $localize`:@@trelloCard.priorityUrgent:urgent`;
+    readonly tRiskLow = $localize`:@@trelloCard.riskLow:low`;
+    readonly tRiskMedium = $localize`:@@trelloCard.riskMedium:medium`;
+    readonly tRiskHigh = $localize`:@@trelloCard.riskHigh:high`;
+    readonly tDeleteConfirm = $localize`:@@trelloCard.deleteConfirm:Delete this card forever?`;
+    readonly tCopyPrompt = $localize`:@@trelloCard.copyPrompt:Name for the copy:`;
+    readonly tCopyAlert = $localize`:@@trelloCard.copyAlert:Card copied to bottom of list.`;
 
     auth = inject(AuthService);
 
@@ -60,10 +101,10 @@ export class TrelloCardComponent {
         if (!val) return null;
         // dot: left stripe color; border: card border color; bg/fg used by the badge you already show
         const map: Record<string, { label: string; dot: string; border: string; bg: string; fg: string }> = {
-            low: { label: 'low', dot: '#22c55e', border: '#86efac', bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },   // green-400/200
-            medium: { label: 'medium', dot: '#eab308', border: '#fde047', bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },   // amber-500/300
-            high: { label: 'high', dot: '#f97316', border: '#fdba74', bg: 'rgba(249,115,22,0.14)', fg: '#7c2d12' },   // orange-500/300
-            urgent: { label: 'urgent', dot: '#ef4444', border: '#fca5a5', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },   // red-500/300
+            low: { label: this.tPriorityLow, dot: '#22c55e', border: '#86efac', bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },   // green-400/200
+            medium: { label: this.tPriorityMedium, dot: '#eab308', border: '#fde047', bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },   // amber-500/300
+            high: { label: this.tPriorityHigh, dot: '#f97316', border: '#fdba74', bg: 'rgba(249,115,22,0.14)', fg: '#7c2d12' },   // orange-500/300
+            urgent: { label: this.tPriorityUrgent, dot: '#ef4444', border: '#fca5a5', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },   // red-500/300
         };
         return map[val] ?? null;
     }
@@ -86,9 +127,9 @@ export class TrelloCardComponent {
         const val = (this.card as any)?.risk as string | undefined;
         if (!val) return null;
         const map: Record<string, { label: string; bg: string; fg: string }> = {
-            low: { label: 'low', bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },
-            medium: { label: 'medium', bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },
-            high: { label: 'high', bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },
+            low: { label: this.tRiskLow, bg: 'rgba(34,197,94,0.12)', fg: '#14532d' },
+            medium: { label: this.tRiskMedium, bg: 'rgba(234,179,8,0.14)', fg: '#713f12' },
+            high: { label: this.tRiskHigh, bg: 'rgba(239,68,68,0.14)', fg: '#7f1d1d' },
         };
         return map[val] ?? null;
     }
@@ -97,7 +138,7 @@ export class TrelloCardComponent {
         // server may send `estimation` alias; fallback to `estimate`
         const val = (this.card as any)?.estimation ?? (this.card as any)?.estimate;
         if (val === null || val === undefined) return null;
-        return `${val}pt`;
+        return `${val}${this.tPointsShort}`;
     }
 
     dueInfo() {
@@ -119,20 +160,20 @@ export class TrelloCardComponent {
             const diff = due.getTime() - now;
             const days = Math.ceil(diff / 86400000);
             if (diff < 0) {
-                return { text: 'overdue', title: `Due ${due.toLocaleString()}`, class: 'bg-red-50 text-red-700 rounded-full' };
+                return { text: this.tOverdue, title: this.tDueTitle(due.toLocaleString()), class: 'bg-red-50 text-red-700 rounded-full' };
             }
             if (days === 0) {
-                return { text: 'due today', title: `Due ${due.toLocaleString()}`, class: 'bg-amber-50 text-amber-700 rounded-full' };
+                return { text: this.tDueToday, title: this.tDueTitle(due.toLocaleString()), class: 'bg-amber-50 text-amber-700 rounded-full' };
             }
-            return { text: `due in ${days}d`, title: `Due ${due.toLocaleString()}`, class: 'bg-sky-50 text-sky-700 rounded-full' };
+            return { text: this.tDueInDays(days), title: this.tDueTitle(due.toLocaleString()), class: 'bg-sky-50 text-sky-700 rounded-full' };
         }
 
         // If only start exists
         if (start) {
             const started = start.getTime() <= now;
             return started
-                ? { text: 'started', title: `Started ${start.toLocaleString()}`, class: 'bg-emerald-50 text-emerald-700 rounded-full' }
-                : { text: 'starts soon', title: `Starts ${start.toLocaleString()}`, class: 'bg-sky-50 text-sky-700 rounded-full' };
+                ? { text: this.tStarted, title: this.tStartedTitle(start.toLocaleString()), class: 'bg-emerald-50 text-emerald-700 rounded-full' }
+                : { text: this.tStartsSoon, title: this.tStartsTitle(start.toLocaleString()), class: 'bg-sky-50 text-sky-700 rounded-full' };
         }
 
         return null;
@@ -154,7 +195,7 @@ export class TrelloCardComponent {
         this.editing = false;
     }
     async delete() {
-        if (!confirm('Delete this card forever?')) return;
+        if (!confirm(this.tDeleteConfirm)) return;
         await this.cardsApi.deleteCard(this.card.id);
         this.store.removeCardLocally?.(this.card.id);
         this.showMore = false;
@@ -233,12 +274,12 @@ export class TrelloCardComponent {
     }
 
     async copy() {
-        const title = prompt('Name for the copy:', this.card.title + ' (copy)');
+        const title = prompt(this.tCopyPrompt, this.card.title + ' (copy)');
         if (!title) return;
 
         await this.cardsApi.copyCard(this.card.id, this.listId, title);
         this.showMore = false;
-        alert('Card copied to bottom of list.');
+        alert(this.tCopyAlert);
     }
 
     cardDone(): boolean {

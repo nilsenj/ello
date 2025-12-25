@@ -17,6 +17,19 @@ import { BoardStore } from '../../store/board-store.service';
 export class CardModalDescriptionComponent implements OnChanges {
     private cardsApi = inject(CardsService);
     private store = inject(BoardStore);
+    readonly tDescription = $localize`:@@cardModalDescription.title:Description`;
+    readonly tAddDescription = $localize`:@@cardModalDescription.addDescription:Add a more detailed description...`;
+    readonly tNoDescription = $localize`:@@cardModalDescription.noDescription:No description yet.`;
+    readonly tEdit = $localize`:@@cardModalDescription.edit:Edit`;
+    readonly tBold = $localize`:@@cardModalDescription.bold:Bold`;
+    readonly tItalic = $localize`:@@cardModalDescription.italic:Italic`;
+    readonly tList = $localize`:@@cardModalDescription.list:List`;
+    readonly tHeading = $localize`:@@cardModalDescription.heading:Heading`;
+    readonly tLink = $localize`:@@cardModalDescription.link:Link`;
+    readonly tLinkText = $localize`:@@cardModalDescription.linkText:link text`;
+    readonly tSave = $localize`:@@cardModalDescription.save:Save`;
+    readonly tCancel = $localize`:@@cardModalDescription.cancel:Cancel`;
+    readonly tCharacters = $localize`:@@cardModalDescription.characters:characters`;
 
     @Input({ required: true }) cardId!: string;
     @Input({ required: true }) canEdit!: boolean;
@@ -144,7 +157,7 @@ export class CardModalDescriptionComponent implements OnChanges {
         const start = el.selectionStart;
         const end = el.selectionEnd;
         const val = this.descDraft || '';
-        const selected = val.slice(start, end) || 'link text';
+        const selected = val.slice(start, end) || this.tLinkText;
         const ins = `[${selected}](https://)`;
         const next = val.slice(0, start) + ins + val.slice(end);
 

@@ -1,40 +1,40 @@
 <div class="space-y-6">
     <section>
-        <div class="cm-section-title">Add to card</div>
+        <div class="cm-section-title">{{ tAddToCard }}</div>
         <div class="grid grid-cols-2 gap-2">
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('labels')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
-                Labels
+                {{ tLabels }}
             </button>
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('members')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="UsersIcon" class="mr-1"></lucide-icon>
-                Members
+                {{ tMembers }}
             </button>
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('dates')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
-                Dates
+                {{ tDates }}
             </button>
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('checklists')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="ListChecksIcon" class="mr-1"></lucide-icon>
-                Checklist
+                {{ tChecklist }}
             </button>
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('attachments')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
-                Attachment
+                {{ tAttachment }}
             </button>
             <button class="cm-add inline-flex items-center" (click)="canEdit && openPanel('planning')"
                 [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                 <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
-                Planning
+                {{ tPlanning }}
             </button>
         </div>
         <div *ngIf="!canEdit" class="cm-muted text-xs mt-2">
-            View-only access. Ask a board admin to add you as a member to edit.
+            {{ tViewOnly }}
         </div>
     </section>
 
@@ -43,11 +43,11 @@
             <div class="cm-section-title flex items-center gap-2">
                 <span class="inline-flex items-center">
                     <lucide-icon [img]="TagIcon" class="mr-1"></lucide-icon>
-                    Labels
+                    {{ tLabels }}
                 </span>
                 <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                     <lucide-icon [img]="XIcon"></lucide-icon>
-                    Close
+                    {{ tClose }}
                 </button>
             </div>
 
@@ -62,7 +62,7 @@
                     </button>
                     <button *ngIf="canEdit"
                         class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded opacity-0 group-hover/lb:opacity-100 transition-opacity"
-                        (click)="startEditLabel(lb)" title="Edit label">
+                        (click)="startEditLabel(lb)" [attr.title]="tEditLabel">
                         <lucide-icon [img]="PencilIcon" class="w-4 h-4"></lucide-icon>
                     </button>
                 </div>
@@ -70,7 +70,7 @@
 
             <button *ngIf="canEdit" class="cm-btn w-full justify-center mt-3 bg-slate-100 hover:bg-slate-200 text-slate-600"
                 (click)="startCreateLabel()">
-                Create a new label
+                {{ tCreateNewLabel }}
             </button>
         </ng-container>
 
@@ -79,18 +79,18 @@
                 <button class="cm-icon-btn -ml-1 mr-1" (click)="cancelLabelEdit()">
                     <lucide-icon [img]="ChevronLeftIcon" class="w-5 h-5"></lucide-icon>
                 </button>
-                {{ labelDraftId() ? 'Edit label' : 'Create label' }}
+                {{ labelDraftId() ? tEditLabel : tCreateLabel }}
             </div>
 
             <div class="space-y-4">
                 <label class="cm-field">
-                    <span class="cm-field-label">Name</span>
-                    <input class="cm-input" placeholder="Label name" [ngModel]="labelNameDraft()"
+                    <span class="cm-field-label">{{ tName }}</span>
+                    <input class="cm-input" [placeholder]="tLabelNamePlaceholder" [ngModel]="labelNameDraft()"
                         (ngModelChange)="labelNameDraft.set($event)" autoFocus />
                 </label>
 
                 <div class="cm-field">
-                    <span class="cm-field-label">Select a color</span>
+                    <span class="cm-field-label">{{ tSelectColor }}</span>
                     <div class="grid grid-cols-5 gap-2">
                         <button *ngFor="let c of labelColors" type="button"
                             class="h-8 rounded cursor-pointer relative ring-offset-1 transition-all"
@@ -104,12 +104,12 @@
 
                 <div class="flex items-center justify-between pt-2">
                     <button class="cm-btn-primary" (click)="saveLabel()" [disabled]="!labelNameDraft().trim()">
-                        {{ labelDraftId() ? 'Save' : 'Create' }}
+                        {{ labelDraftId() ? tSave : tCreate }}
                     </button>
 
                     <button *ngIf="labelDraftId()" class="cm-btn text-red-600 hover:bg-red-50 border-red-200"
                         (click)="deleteLabel()">
-                        Delete
+                        {{ tDelete }}
                     </button>
                 </div>
             </div>
@@ -120,23 +120,23 @@
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
-                Dates
+                {{ tDates }}
             </span>
             <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                 <lucide-icon [img]="XIcon"></lucide-icon>
-                Close
+                {{ tClose }}
             </button>
         </div>
 
         <label class="cm-field">
-            <span class="cm-field-label">Start</span>
+            <span class="cm-field-label">{{ tStart }}</span>
             <input type="datetime-local" class="cm-input" [ngModel]="startDraft()"
                 [disabled]="!canEdit"
                 (ngModelChange)="startDraft.set($event || null); setDates('start', $event || null)" />
         </label>
 
         <label class="cm-field">
-            <span class="cm-field-label">Due</span>
+            <span class="cm-field-label">{{ tDue }}</span>
             <input type="datetime-local" class="cm-input" [ngModel]="dueDraft()"
                 [disabled]="!canEdit"
                 (ngModelChange)="dueDraft.set($event || null); setDates('due', $event || null)" />
@@ -152,10 +152,10 @@
 
     <section *ngIf="isPanelOpen('checklists')" data-panel="checklists">
         <div class="cm-section-title flex items-center gap-2">
-            <span class="inline-flex items-center">checklists</span>
+            <span class="inline-flex items-center">{{ tChecklists }}</span>
             <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                 <lucide-icon [img]="XIcon"></lucide-icon>
-                Close
+                {{ tClose }}
             </button>
         </div>
 
@@ -165,7 +165,7 @@
                     [readonly]="!canEdit"
                     (ngModelChange)="renameChecklist(cl.id, $event)" />
                 <button *ngIf="canEdit" class="cm-icon-btn text-gray-400 hover:text-red-600" (click)="deleteChecklist(cl.id)"
-                    title="Delete checklist">
+                    [attr.title]="tDeleteChecklist">
                     <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
                 </button>
             </div>
@@ -191,7 +191,7 @@
                         (blur)="updateChecklistItemText(cl.id, it.id, $any($event.target).value)"
                         (keydown.enter)="$any($event.target).blur()" />
                     <button *ngIf="canEdit" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 p-0.5"
-                        (click)="deleteChecklistItem(cl.id, it.id)" title="Delete item">
+                        (click)="deleteChecklistItem(cl.id, it.id)" [attr.title]="tDeleteItem">
                         <lucide-icon [img]="XIcon" class="w-3 h-3"></lucide-icon>
                     </button>
                 </li>
@@ -199,13 +199,13 @@
 
             <button *ngIf="canEdit" class="cm-btn inline-flex items-center mt-2 text-xs" (click)="addChecklistItem(cl.id)">
                 <lucide-icon [img]="PlusIcon" class="mr-1 w-3 h-3"></lucide-icon>
-                Add item
+                {{ tAddItem }}
             </button>
         </div>
 
         <button *ngIf="canEdit" class="cm-btn inline-flex items-center mt-2" (click)="addChecklist()">
             <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
-            Add checklist
+            {{ tAddChecklist }}
         </button>
     </section>
 
@@ -213,18 +213,18 @@
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
-                Attachments
+                {{ tAttachments }}
             </span>
             <span class="cm-badge ml-2" *ngIf="attachments.length">{{ attachments.length }}</span>
             <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                 <lucide-icon [img]="XIcon"></lucide-icon>
-                Close
+                {{ tClose }}
             </button>
         </div>
 
         <div class="space-y-3">
             <div class="cm-dropzone" [class.is-active]="dropActive()" tabindex="0" role="button"
-                aria-label="Upload files. You can also drag and drop." (dragover)="onDragOver($event)"
+                [attr.aria-label]="tUploadAria" (dragover)="onDragOver($event)"
                 (dragleave)="onDragLeave($event)" (drop)="onDropFiles($event)"
                 (keydown.enter)="openHiddenFileInput.click()" (keydown.space)="openHiddenFileInput.click()">
                 <input #openHiddenFileInput type="file" class="sr-only" multiple
@@ -239,30 +239,30 @@
                         <lucide-icon [img]="PlusIcon"></lucide-icon>
                     </div>
                     <div class="cm-dropzone-text">
-                        <strong>Upload files</strong> or drop them here
-                        <span class="cm-muted block">PNG, JPG, PDF, DOCX, ZIP…</span>
+                        <strong>{{ tUploadFiles }}</strong> {{ tDropFilesHere }}
+                        <span class="cm-muted block">{{ tFileTypesHint }}</span>
                     </div>
                     <button type="button" class="cm-btn ml-auto" (click)="openHiddenFileInput.click()"
                         [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
-                        Choose files
+                        {{ tChooseFiles }}
                     </button>
                 </div>
             </div>
 
             <div class="cm-attachments-url-row flex items-center gap-2">
-                <input class="cm-input flex-1" placeholder="https://example.com/file.png"
+                <input class="cm-input flex-1" [placeholder]="tAttachUrlPlaceholder"
                     [ngModel]="attachUrlDraft()" (ngModelChange)="attachUrlDraft.set($event)"
                     [readonly]="!canEdit" />
                 <button class="cm-btn inline-flex items-center" (click)="addAttachmentByUrl()"
                     [disabled]="!canEdit" [class.opacity-60]="!canEdit" [class.cursor-not-allowed]="!canEdit">
                     <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
-                    Attach URL
+                    {{ tAttachUrl }}
                 </button>
             </div>
 
             <div class="cm-uploading" *ngIf="isUploading()">
                 <span class="cm-spinner" aria-hidden="true"></span>
-                <span>Uploading…</span>
+                <span>{{ tUploading }}</span>
             </div>
         </div>
 
@@ -288,7 +288,7 @@
                             <ng-template #docThumb>
                                 <ng-container *ngIf="isPdf(a); else genericIcon">
                                     <iframe [src]="safeMediaUrl(attachmentApiFileUrl(a))" class="cm-attachment-pdf"
-                                        title="PDF preview"></iframe>
+                                        [attr.title]="tPdfPreview"></iframe>
                                 </ng-container>
 
                                 <ng-template #genericIcon>
@@ -299,20 +299,20 @@
                             </ng-template>
                         </ng-template>
 
-                        <div class="cm-attachment-cover" *ngIf="a.isCover">Cover</div>
+                        <div class="cm-attachment-cover" *ngIf="a.isCover">{{ tCover }}</div>
                     </ng-template>
 
                     <div class="cm-attachment-overlay">
-                        <button class="cm-overlay-btn" (click)="previewAttachment(a)" aria-label="Open">
-                            Open
+                        <button class="cm-overlay-btn" (click)="previewAttachment(a)" [attr.aria-label]="tOpen">
+                            {{ tOpen }}
                         </button>
                         <button *ngIf="isImage(a) && !a.isCover && canEdit" class="cm-overlay-btn mt-2"
-                            (click)="setAsCover(a.id)" aria-label="Make Cover">
-                            Make Cover
+                            (click)="setAsCover(a.id)" [attr.aria-label]="tMakeCover">
+                            {{ tMakeCover }}
                         </button>
                         <button *ngIf="a.isCover && canEdit" class="cm-overlay-btn mt-2" (click)="removeCover(a.id)"
-                            aria-label="Remove Cover">
-                            Remove Cover
+                            [attr.aria-label]="tRemoveCover">
+                            {{ tRemoveCover }}
                         </button>
                     </div>
                 </div>
@@ -320,27 +320,27 @@
                 <div class="cm-attachment-body">
                     <div class="cm-attachment-row">
                         <div class="cm-attachment-name" *ngIf="renameDraftId() !== a.id; else renameTpl">
-                            {{ a.name || 'attachment' }}
+                            {{ a.name || tAttachmentFallback }}
                         </div>
                         <span class="cm-ext-badge">{{ fileExt(a) }}</span>
                     </div>
 
                     <div class="cm-attachment-meta">
-                        <span class="cm-muted">{{ a.mime || 'file' }}</span>
+                        <span class="cm-muted">{{ a.mime || tFileFallback }}</span>
                         <span class="cm-meta-dot"></span>
                         <span class="cm-muted">{{ humanBytes(a.size ?? 0) }}</span>
                         <span class="cm-meta-dot"></span>
 
                         <button *ngIf="isExternal(a)" class="cm-link inline-flex items-center"
-                            (click)="previewAttachment(a)" aria-label="Visit link">
+                            (click)="previewAttachment(a)" [attr.aria-label]="tVisit">
                             <lucide-icon [img]="ExternalLinkIcon" class="mr-1"></lucide-icon>
-                            Visit
+                            {{ tVisit }}
                         </button>
 
                         <button *ngIf="!isExternal(a)" class="cm-link inline-flex items-center"
-                            (click)="downloadAttachment(a)" [disabled]="isDownloading(a.id)" aria-label="Download">
+                            (click)="downloadAttachment(a)" [disabled]="isDownloading(a.id)" [attr.aria-label]="tDownload">
                             <lucide-icon [img]="DownloadIcon" class="mr-1"></lucide-icon>
-                            <ng-container *ngIf="!isDownloading(a.id); else dlProg">Download</ng-container>
+                            <ng-container *ngIf="!isDownloading(a.id); else dlProg">{{ tDownload }}</ng-container>
                         </button>
 
                         <ng-template #dlProg>{{ downloadPercent(a.id) }}%</ng-template>
@@ -351,15 +351,15 @@
                     </div>
 
                     <div class="cm-actionbar" *ngIf="canEdit">
-                        <button class="cm-action" (click)="startRename(a)" aria-label="Rename">
+                        <button class="cm-action" (click)="startRename(a)" [attr.aria-label]="tRename">
                             <lucide-icon [img]="PencilIcon" class="mr-1"></lucide-icon>
-                            <span>Rename</span>
+                            <span>{{ tRename }}</span>
                         </button>
 
                         <button class="cm-action cm-action--danger" (click)="removeAttachment(a.id)"
-                            aria-label="Delete">
+                            [attr.aria-label]="tDelete">
                             <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>
-                            <span>Delete</span>
+                            <span>{{ tDelete }}</span>
                         </button>
                     </div>
                 </div>
@@ -370,11 +370,11 @@
                             (ngModelChange)="renameDraftName.set($event)" />
                         <button class="cm-btn-primary inline-flex items-center" (click)="saveRename()">
                             <lucide-icon [img]="SaveIcon" class="mr-1"></lucide-icon>
-                            Save
+                            {{ tSave }}
                         </button>
                         <button class="cm-btn inline-flex items-center" (click)="cancelRename()">
                             <lucide-icon [img]="XCircleIcon" class="mr-1"></lucide-icon>
-                            Cancel
+                            {{ tCancel }}
                         </button>
                     </div>
                 </ng-template>
@@ -386,8 +386,8 @@
                 <div class="cm-empty-icon">
                     <lucide-icon [img]="PaperclipIcon"></lucide-icon>
                 </div>
-                <div class="cm-empty-text">No attachments yet.</div>
-                <div class="cm-empty-sub">Upload files or attach a URL to get started.</div>
+                <div class="cm-empty-text">{{ tNoAttachments }}</div>
+                <div class="cm-empty-sub">{{ tNoAttachmentsHint }}</div>
             </div>
         </ng-template>
     </section>
@@ -396,43 +396,43 @@
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
-                Planning
+                {{ tPlanning }}
             </span>
             <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
                 <lucide-icon [img]="XIcon"></lucide-icon>
-                Close
+                {{ tClose }}
             </button>
         </div>
 
                 <label class="cm-field">
-                    <span class="cm-field-label">Priority</span>
+                    <span class="cm-field-label">{{ tPriority }}</span>
                     <select class="cm-input" [ngModel]="priorityDraft()" (ngModelChange)="savePriority($event)"
                         [disabled]="!canEdit">
-                        <option value="">—</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
+                        <option value="">{{ tNone }}</option>
+                        <option value="low">{{ tLow }}</option>
+                        <option value="medium">{{ tMedium }}</option>
+                        <option value="high">{{ tHigh }}</option>
+                        <option value="urgent">{{ tUrgent }}</option>
                     </select>
                 </label>
 
                 <label class="cm-field">
-                    <span class="cm-field-label">Risk</span>
+                    <span class="cm-field-label">{{ tRisk }}</span>
                     <select class="cm-input" [ngModel]="riskDraft()" (ngModelChange)="saveRisk($event)"
                         [disabled]="!canEdit">
-                        <option value="">—</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
+                        <option value="">{{ tNone }}</option>
+                        <option value="low">{{ tLow }}</option>
+                        <option value="medium">{{ tMedium }}</option>
+                        <option value="high">{{ tHigh }}</option>
                     </select>
                 </label>
 
                 <label class="cm-field">
-                    <span class="cm-field-label">Estimation</span>
-                    <input type="number" min="0" step="0.5" class="cm-input" placeholder="e.g. 3"
+                    <span class="cm-field-label">{{ tEstimation }}</span>
+                    <input type="number" min="0" step="0.5" class="cm-input" [placeholder]="tEstimationPlaceholder"
                         [ngModel]="estimationDraft()" (ngModelChange)="saveEstimation($event ?? '')"
                         [disabled]="!canEdit" />
-            <small class="cm-muted">Story Points</small>
+            <small class="cm-muted">{{ tStoryPoints }}</small>
         </label>
     </section>
 </div>

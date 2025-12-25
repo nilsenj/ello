@@ -1,7 +1,7 @@
 <section>
     <div class="cm-section-title flex items-center gap-2">
         <lucide-icon [img]="ActivityIcon" class="text-slate-500"></lucide-icon>
-        Activity
+        {{ tActivity }}
     </div>
     <div class="cm-comments">
         <div *ngFor="let act of activities" class="cm-comment">
@@ -10,12 +10,12 @@
                     class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                     <img *ngIf="act.user?.avatar" [src]="act.user.avatar" class="w-full h-full object-cover">
                     <span *ngIf="!act.user?.avatar" class="text-xs font-medium text-slate-600">
-                        {{ (act.user?.name || 'U').slice(0,2).toUpperCase() }}
+                        {{ (act.user?.name || tUserInitial).slice(0,2).toUpperCase() }}
                     </span>
                 </div>
                 <div>
                     <p class="text-slate-800">
-                        <span class="font-semibold">{{ act.user?.name || 'User' }}</span>
+                        <span class="font-semibold">{{ act.user?.name || tUserFallback }}</span>
                         {{ formatActivity(act) }}
                     </p>
                     <p class="text-xs text-slate-500 mt-0.5">{{ act.createdAt | date:'MMM d, h:mm a' }}</p>
@@ -23,7 +23,7 @@
             </div>
         </div>
         <div *ngIf="activities.length === 0" class="text-sm text-slate-500 italic pl-11">
-            No activity yet.
+            {{ tNoActivity }}
         </div>
     </div>
 </section>

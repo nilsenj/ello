@@ -8,7 +8,7 @@
                 <lucide-icon [img]="SearchIcon" class="w-4 h-4 opacity-80"></lucide-icon>
                 <input
                         class="bg-transparent text-white/95 placeholder-white/70 outline-none border-none text-sm w-48 xl:w-64"
-                        type="search" placeholder="Filter cards…" [(ngModel)]="filter"/>
+                        type="search" [placeholder]="tFilterPlaceholder" [(ngModel)]="filter"/>
             </div>
 
             <!-- Label filter -->
@@ -56,7 +56,7 @@
                             (click)="updateActiveLabel(''); closeAllDropdowns()"
                     >
                         <span class="w-3 h-3 rounded-sm bg-slate-200"></span>
-                        <span class="flex-1">All labels</span>
+                        <span class="flex-1">{{ tAllLabels }}</span>
                         <span *ngIf="!activeLabel" class="text-emerald-600">
                             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
@@ -130,7 +130,7 @@
                             [class.font-semibold]="!activeMemberId"
                             (click)="updateActiveMember(''); closeAllDropdowns()"
                     >
-                        <span class="flex-1">All members</span>
+                        <span class="flex-1">{{ tAllMembers }}</span>
                         <span *ngIf="!activeMemberId" class="text-emerald-600">
                             <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
@@ -165,7 +165,7 @@
                     class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
                     (click)="toggleFilterMenu()">
                 <lucide-icon [img]="FilterIcon" class="w-4 h-4"></lucide-icon>
-                <span class="hidden sm:inline">Filters</span>
+                <span class="hidden sm:inline">{{ tFilters }}</span>
                 <span *ngIf="filter || activeLabel || activeMemberId" class="w-2 h-2 bg-blue-400 rounded-full"></span>
             </button>
 
@@ -174,7 +174,7 @@
             <div *ngIf="showFilterMenu"
                  class="absolute top-full left-0 mt-2 w-[280px] bg-white rounded-lg shadow-xl py-4 px-4 z-30 border border-gray-200 text-gray-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-tight">Filters</h3>
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-tight">{{ tFilters }}</h3>
                     <button (click)="closeFilterMenu()" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -185,26 +185,26 @@
 
                 <!-- Card Search -->
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">Search Cards</label>
+                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tSearchCards }}</label>
                     <div
                             class="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1.5 border border-gray-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
                         <lucide-icon [img]="SearchIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
                         <input
                                 class="bg-transparent text-gray-800 placeholder-gray-400 outline-none border-none text-sm w-full"
-                                type="search" placeholder="Enter keyword..." [(ngModel)]="filter"/>
+                                type="search" [placeholder]="tSearchPlaceholder" [(ngModel)]="filter"/>
                     </div>
                 </div>
 
                 <!-- Labels -->
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">Label</label>
+                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tLabel }}</label>
                     <div class="relative">
                         <lucide-icon [img]="TagIcon"
                                      class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
                         <select
                                 class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
                                 [(ngModel)]="activeLabel" (ngModelChange)="updateActiveLabel($event)">
-                            <option value="">All labels</option>
+                            <option value="">{{ tAllLabels }}</option>
                             <option *ngFor="let lb of store.labels()" [value]="lb.id">{{ lb.name }}</option>
                         </select>
                         <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
@@ -218,14 +218,14 @@
 
                 <!-- Members -->
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">Member</label>
+                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tMember }}</label>
                     <div class="relative">
                         <lucide-icon [img]="UserIcon"
                                      class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
                         <select
                                 class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
                                 [(ngModel)]="activeMemberId" (ngModelChange)="updateActiveMember($event)">
-                            <option value="">All members</option>
+                            <option value="">{{ tAllMembers }}</option>
                             <option *ngFor="let m of store.members()" [value]="m.id">{{ m.name || m.email }}</option>
                         </select>
                         <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
@@ -240,7 +240,7 @@
                 <div class="pt-2 border-t border-gray-100">
                     <button (click)="filter=''; activeLabel=''; activeMemberId=''"
                             class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
-                        Clear all filters
+                        {{ tClearFilters }}
                     </button>
                 </div>
             </div>
@@ -257,7 +257,7 @@
                      stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16M4 12h16m-7 6h7"/>
                 </svg>
-                <span class="hidden md:inline">View</span>
+                <span class="hidden md:inline">{{ tView }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 opacity-80" viewBox="0 0 20 20"
                      fill="currentColor">
                     <path fill-rule="evenodd"
@@ -284,7 +284,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
                     </svg>
-                    Board View
+                    {{ tBoardView }}
                 </a>
 
                 <!-- Table View Link -->
@@ -299,7 +299,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                     </svg>
-                    Table View
+                    {{ tTableView }}
                 </a>
 
                 <!-- Calendar View Link -->
@@ -315,7 +315,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    Calendar
+                    {{ tCalendarView }}
                 </a>
             </div>
         </div>
@@ -325,8 +325,8 @@
                 class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium"
                 (click)="menu.open()">
             <span class="hidden sm:inline">•••</span>
-            <span class="sm:hidden">Menu</span>
-            <span class="hidden sm:inline">Show menu</span>
+            <span class="sm:hidden">{{ tMenu }}</span>
+            <span class="hidden sm:inline">{{ tShowMenu }}</span>
         </button>
     </div>
 </div>
@@ -334,7 +334,7 @@
 <div *ngIf="showWorkspaceViewerBanner()" class="board-banner" role="status" aria-live="polite">
     <span class="board-banner-dot" aria-hidden="true"></span>
     <span class="board-banner-text">
-        You have view-only access to this board. Ask a board admin to add you as a member to edit.
+        {{ tViewOnlyBanner }}
     </span>
 </div>
 
@@ -346,7 +346,7 @@
     <!-- Mobile Add List -->
     <button class="w-full text-sm bg-white/90 text-gray-800 px-3 py-1.5 rounded shadow-sm font-medium"
             (click)="focusNewList()">
-        + Add list
+        {{ tAddListMobile }}
     </button>
 </div>
 
@@ -395,21 +395,21 @@
             <div *ngIf="!newListTitle">
                 <button class="w-full rounded-md py-2 transition-colors text-left pl-2 font-medium"
                         [ngClass]="isLightBoard() ? 'text-gray-600 hover:text-gray-800 hover:bg-black/5' : 'bg-white/30 hover:bg-white/40'"
-                        (click)="newListTitle = 'New list'">
-                    + Add another list
+                        (click)="newListTitle = tNewList">
+                    {{ tAddAnotherList }}
                 </button>
             </div>
 
             <div *ngIf="newListTitle" class="space-y-2">
                 <input #newListInput
                        class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
-                       [(ngModel)]="newListTitle" (keydown.enter)="addList()" placeholder="Enter list title…"/>
+                       [(ngModel)]="newListTitle" (keydown.enter)="addList()" [placeholder]="tListTitlePlaceholder"/>
                 <div class="flex gap-2">
                     <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-sm"
-                            [disabled]="!newListTitle.trim()" (click)="addList()">Add list
+                            [disabled]="!newListTitle.trim()" (click)="addList()">{{ tAddList }}
                     </button>
                     <button class="rounded-md bg-transparent px-3 py-1 text-sm hover:underline"
-                            [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">Cancel
+                            [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">{{ tCancel }}
                     </button>
                 </div>
             </div>

@@ -11,9 +11,9 @@
                (keydown.enter)="saveTitle()"
                [readonly]="!canEdit()"
                [class.cursor-not-allowed]="!canEdit()"
-               [attr.aria-label]="'Card title. Priority: ' + ((data()?.priority || priorityDraft()) || 'none')"/>
+               [attr.aria-label]="tCardTitleAria((data()?.priority || priorityDraft()) || tNone)"/>
 
-        <button class="cm-close" (click)="close()" aria-label="Close">
+        <button class="cm-close" (click)="close()" [attr.aria-label]="tClose">
             <lucide-icon [img]="XIcon"></lucide-icon>
         </button>
     </div>
@@ -125,7 +125,7 @@
         </div>
 
         <ng-template #loadingTpl>
-            <div class="cm-loading">Loading…</div>
+            <div class="cm-loading">{{ tLoading }}</div>
         </ng-template>
     </div>
 </div>

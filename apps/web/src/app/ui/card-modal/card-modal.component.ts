@@ -110,6 +110,18 @@ export class CardModalComponent {
     readonly ArchiveIcon = ArchiveIcon;
     readonly ActivityIcon = ActivityIcon;
     readonly ExternalLinkIcon = ExternalLinkIcon;
+    readonly tClose = $localize`:@@cardModal.close:Close`;
+    readonly tNone = $localize`:@@cardModal.none:none`;
+    readonly tCardTitleAria = (priority: string) =>
+        $localize`:@@cardModal.titleAria:Card title. Priority: ${priority}:priority:`;
+    readonly tLoading = $localize`:@@cardModal.loading:Loading...`;
+    readonly tChecklistDefault = $localize`:@@cardModal.checklistDefault:Checklist`;
+    readonly tChecklistItemDefault = $localize`:@@cardModal.checklistItemDefault:New item`;
+    readonly tDeleteChecklistConfirm = $localize`:@@cardModal.deleteChecklistConfirm:Delete this checklist?`;
+    readonly tArchiveCardConfirm = $localize`:@@cardModal.archiveCardConfirm:Archive this card?`;
+    readonly tUnknownSize = $localize`:@@cardModal.unknownSize:—`;
+    readonly tActivityCardFallback = $localize`:@@cardModal.activity.cardFallback:this card`;
+    readonly tActivityListFallback = $localize`:@@cardModal.activity.listFallback:a list`;
 
 
     readonly CopyIcon = CopyIcon; // Need to import this
@@ -483,7 +495,7 @@ export class CardModalComponent {
     addChecklist = async () => {
         const c = this.data();
         if (!c) return;
-        const created = await this.cardsApi.addChecklist(c.id, { title: 'Checklist' });
+        const created = await this.cardsApi.addChecklist(c.id, { title: this.tChecklistDefault });
         const checklistWithItems = { ...(created as object), items: [] };
         this.data.set({ ...c, checklists: [...((((c as any).checklists as Checklist[]) ?? [])), checklistWithItems] } as any);
     };
@@ -499,7 +511,7 @@ export class CardModalComponent {
     addChecklistItem = async (cid: string) => {
         const c = this.data();
         if (!c) return;
-        const created = await this.cardsApi.addChecklistItem(cid, { text: 'New item' });
+        const created = await this.cardsApi.addChecklistItem(cid, { text: this.tChecklistItemDefault });
         const next = this.checklists().map(cl => (cl.id === cid ? { ...cl, items: [...cl.items, created] } : cl));
         this.data.set({ ...c, checklists: next } as any);
     };
@@ -538,7 +550,7 @@ export class CardModalComponent {
     deleteChecklist = async (cid: string) => {
         const c = this.data();
         if (!c) return;
-        if (!confirm('Delete this checklist?')) return;
+        if (!confirm(this.tDeleteChecklistConfirm)) return;
         await this.cardsApi.deleteChecklist(cid);
         const next = this.checklists().filter(cl => cl.id !== cid);
         this.data.set({ ...c, checklists: next } as any);
@@ -761,7 +773,7 @@ export class CardModalComponent {
     archiveCard = async () => {
         const c = this.data();
         if (!c) return;
-        if (!confirm('Archive this card?')) return;
+        if (!confirm(this.tArchiveCardConfirm)) return;
         try {
             await this.cardsApi.archiveCard(c.id);
             this.store.upsertCardLocally(c.listId, { ...c, isArchived: true });
@@ -938,14 +950,29 @@ export class CardModalComponent {
     // ------- Activity Helper -------
     formatActivity = (act: any) => {
         switch (act.type) {
-            case 'create_card': return `added this card to ${act.payload?.listName || 'a list'}`;
-            case 'update_description': return `changed the description of this card`;
-            case 'move_card': return `moved this card from ${act.payload?.fromList || '...'} to ${act.payload?.toList || '...'}`;
-            case 'comment_card': return `commented on this card`;
-            case 'archive_card': return `archived this card`;
-            case 'restore_card': return `restored this card`;
-            case 'card_completion': return act.payload?.isDone ? `marked this card as complete` : `marked this card as incomplete`;
-            default: return `performed ${act.type}`;
+            case 'create_card': {
+                const listName = act.payload?.listName || this.tActivityListFallback;
+                return $localize`:@@cardModal.activity.createCard:added this card to ${listName}:listName:`;
+            }
+            case 'update_description':
+                return $localize`:@@cardModal.activity.updateDescription:changed the description of this card`;
+            case 'move_card': {
+                const fromList = act.payload?.fromList || this.tActivityListFallback;
+                const toList = act.payload?.toList || this.tActivityListFallback;
+                return $localize`:@@cardModal.activity.moveCard:moved this card from ${fromList}:fromList: to ${toList}:toList:`;
+            }
+            case 'comment_card':
+                return $localize`:@@cardModal.activity.commentCard:commented on this card`;
+            case 'archive_card':
+                return $localize`:@@cardModal.activity.archiveCard:archived this card`;
+            case 'restore_card':
+                return $localize`:@@cardModal.activity.restoreCard:restored this card`;
+            case 'card_completion':
+                return act.payload?.isDone
+                    ? $localize`:@@cardModal.activity.cardComplete:marked this card as complete`
+                    : $localize`:@@cardModal.activity.cardIncomplete:marked this card as incomplete`;
+            default:
+                return $localize`:@@cardModal.activity.performed:performed ${act.type}:action:`;
         }
     };
 
@@ -970,7 +997,7 @@ export class CardModalComponent {
     };
 
     humanBytes = (n?: number | null) => {
-        if (!n || n < 0) return '—';
+        if (!n || n < 0) return this.tUnknownSize;
         const u = ['B', 'KB', 'MB', 'GB', 'TB'];
         let i = 0,
             v = n;

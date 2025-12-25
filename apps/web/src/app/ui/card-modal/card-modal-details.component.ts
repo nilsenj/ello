@@ -12,6 +12,17 @@ import type { PanelName } from './card-modal.service';
     styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalDetailsComponent {
+    readonly tCardDetails = $localize`:@@cardModalDetails.title:Card details`;
+    readonly tLabels = $localize`:@@cardModalDetails.labels:Labels`;
+    readonly tDates = $localize`:@@cardModalDetails.dates:Dates`;
+    readonly tStart = $localize`:@@cardModalDetails.start:Start`;
+    readonly tDue = $localize`:@@cardModalDetails.due:Due`;
+    readonly tMembers = $localize`:@@cardModalDetails.members:Members`;
+    readonly tChecklists = $localize`:@@cardModalDetails.checklists:Checklists`;
+    readonly tPlanning = $localize`:@@cardModalDetails.planning:Planning`;
+    readonly tRisk = $localize`:@@cardModalDetails.risk:Risk`;
+    readonly tEst = $localize`:@@cardModalDetails.estimate:Est`;
+    readonly tAttachments = $localize`:@@cardModalDetails.attachments:Attachments`;
     @Input({ required: true }) labelCount!: number;
     @Input({ required: true }) hasStart!: boolean;
     @Input({ required: true }) hasDue!: boolean;

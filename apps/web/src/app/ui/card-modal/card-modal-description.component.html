@@ -1,10 +1,10 @@
 <section>
-    <div class="cm-section-title">Description</div>
+    <div class="cm-section-title">{{ tDescription }}</div>
 
     <div *ngIf="!isEditingDesc && !descDraft?.trim()" class="cm-btn inline-flex items-center"
         (click)="startDescEdit()" [class.cursor-not-allowed]="!canEdit" [class.opacity-60]="!canEdit">
         <lucide-icon [img]="PlusIcon" class="mr-1"></lucide-icon>
-        {{ canEdit ? 'Add a more detailed description…' : 'No description yet.' }}
+        {{ canEdit ? tAddDescription : tNoDescription }}
     </div>
 
     <div *ngIf="!isEditingDesc && (descDraft?.trim()?.length || 0) > 0" class="space-y-2">
@@ -13,7 +13,7 @@
         <div *ngIf="canEdit">
             <button class="cm-btn inline-flex items-center" (click)="startDescEdit()">
                 <lucide-icon [img]="PencilIcon" class="mr-1"></lucide-icon>
-                Edit
+                {{ tEdit }}
             </button>
         </div>
     </div>
@@ -24,29 +24,29 @@
             <div class="bg-gray-50 border-b border-slate-200 px-2 py-1.5 flex gap-1 items-center">
                 <button type="button"
                     class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                    (click)="wrapSelection(descInput, '**','**')" title="Bold">
+                    (click)="wrapSelection(descInput, '**','**')" [attr.title]="tBold">
                     <lucide-icon [img]="BoldIcon" class="w-4 h-4"></lucide-icon>
                 </button>
                 <button type="button"
                     class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                    (click)="wrapSelection(descInput, '_','_')" title="Italic">
+                    (click)="wrapSelection(descInput, '_','_')" [attr.title]="tItalic">
                     <lucide-icon [img]="ItalicIcon" class="w-4 h-4"></lucide-icon>
                 </button>
                 <div class="w-px h-4 bg-slate-300 mx-1"></div>
                 <button type="button"
                     class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                    (click)="insertPrefix(descInput, '- ')" title="List">
+                    (click)="insertPrefix(descInput, '- ')" [attr.title]="tList">
                     <lucide-icon [img]="ListIcon" class="w-4 h-4"></lucide-icon>
                 </button>
                 <button type="button"
                     class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                    (click)="makeHeading(descInput)" title="Heading">
+                    (click)="makeHeading(descInput)" [attr.title]="tHeading">
                     <lucide-icon [img]="Heading1Icon" class="w-4 h-4"></lucide-icon>
                 </button>
                 <div class="w-px h-4 bg-slate-300 mx-1"></div>
                 <button type="button"
                     class="p-1.5 rounded hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
-                    (click)="insertLink(descInput)" title="Link">
+                    (click)="insertLink(descInput)" [attr.title]="tLink">
                     <lucide-icon [img]="LinkIcon" class="w-4 h-4"></lucide-icon>
                 </button>
             </div>
@@ -54,20 +54,20 @@
             <textarea #descInput
                 class="w-full min-h-[160px] p-3 text-sm focus:outline-none bg-white resize-y cm-textarea" rows="8"
                 [ngModel]="descDraft" (ngModelChange)="descDraft = $event"
-                placeholder="Add a more detailed description…"></textarea>
+                [placeholder]="tAddDescription"></textarea>
         </div>
 
         <div class="flex items-center justify-between">
             <div class="flex gap-2">
                 <button class="cm-btn-primary inline-flex items-center" type="button" (click)="saveDescription()">
-                    Save
+                    {{ tSave }}
                 </button>
                 <button class="cm-btn inline-flex items-center" (click)="cancelDescEdit()">
-                    Cancel
+                    {{ tCancel }}
                 </button>
             </div>
             <span class="text-xs text-slate-400">
-                {{ descCharCount | number }} characters
+                {{ descCharCount | number }} {{ tCharacters }}
             </span>
         </div>
     </div>

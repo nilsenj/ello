@@ -15,6 +15,12 @@ import { CardsService } from '../../data/cards.service';
 })
 export class CardModalCommentsComponent implements OnChanges {
     private cardsApi = inject(CardsService);
+    readonly tComments = $localize`:@@cardModalComments.title:Comments`;
+    readonly tWriteComment = $localize`:@@cardModalComments.writeComment:Write a comment...`;
+    readonly tComment = $localize`:@@cardModalComments.comment:Comment`;
+    readonly tReadOnly = $localize`:@@cardModalComments.readOnly:Comments are read-only for viewers.`;
+    readonly tUserFallback = $localize`:@@cardModalComments.userFallback:User`;
+    readonly tDelete = $localize`:@@cardModalComments.delete:Delete`;
 
     @Input({ required: true }) cardId!: string;
     @Input({ required: true }) canEdit!: boolean;

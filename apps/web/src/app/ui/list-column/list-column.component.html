@@ -2,7 +2,7 @@
     <div class="px-2 py-1 font-semibold text-ink-base flex justify-between items-start" cdkDragHandle>
         <span>{{ title() }}</span>
         <button *ngIf="canEdit" class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
-            (click)="requestArchive()" title="Archive list">
+            (click)="requestArchive()" [attr.title]="tArchiveListTitle">
             <lucide-icon [img]="ArchiveIcon" class="h-4 w-4"></lucide-icon>
         </button>
     </div>
@@ -15,7 +15,7 @@
 
         <!-- Visible target when there are no cards -->
         <div *ngIf="cards().length === 0" class="empty-placeholder">
-            Drop cards here
+            {{ tDropCardsHere }}
         </div>
 
         <!-- Render filtered if provided, otherwise full -->
@@ -29,17 +29,16 @@
     <div class="mt-2" *ngIf="canEdit">
         <ng-container *ngIf="!adding(); else editor">
             <button class="w-full text-left text-sm text-ink-sub hover:text-ink-base px-2 py-1 rounded hover:bg-white"
-                (click)="adding.set(true)">+ Add a card</button>
+                (click)="adding.set(true)">{{ tAddCard }}</button>
         </ng-container>
         <ng-template #editor>
             <div class="bg-white rounded p-2 shadow-card">
                 <textarea [(ngModel)]="newTitle" rows="3"
                     class="w-full rounded border border-gray-300 text-sm px-2 py-1"
-                    placeholder="Enter a title for this card..."></textarea>
+                    [placeholder]="tCardTitlePlaceholder"></textarea>
                 <div class="mt-2 flex items-center gap-2">
-                    <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm" (click)="createCard()">Add
-                        card</button>
-                    <button class="text-ink-sub" (click)="cancel()">✕</button>
+                    <button class="bg-accent-blue text-white rounded px-3 py-1 text-sm" (click)="createCard()">{{ tAddCardButton }}</button>
+                    <button class="text-ink-sub" (click)="cancel()">{{ tCancel }}</button>
                 </div>
             </div>
         </ng-template>
@@ -53,17 +52,17 @@
         (mousedown)="$event.stopPropagation()">
         <!-- header -->
         <header class="relative px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-            <span class="font-semibold text-[15px] text-slate-800">Archive List</span>
+            <span class="font-semibold text-[15px] text-slate-800">{{ tArchiveListHeading }}</span>
             <button class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100"
-                (click)="closeArchiveModal()" aria-label="Close">
+                (click)="closeArchiveModal()" [attr.aria-label]="tClose">
                 <lucide-icon [img]="XIcon" class="h-4 w-4 text-slate-600"></lucide-icon>
             </button>
         </header>
 
         <!-- body -->
         <div class="p-5 text-sm text-slate-600">
-            <p>Are you sure you want to archive <strong>{{ title() }}</strong>?</p>
-            <p class="mt-2">You can restore it later from the board menu.</p>
+            <p>{{ tArchivePrompt(title()) }}</p>
+            <p class="mt-2">{{ tArchiveHint }}</p>
         </div>
 
         <!-- footer -->
@@ -71,12 +70,12 @@
             <button
                 class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
                 (click)="closeArchiveModal()">
-                Cancel
+                {{ tCancel }}
             </button>
             <button
                 class="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700"
                 (click)="confirmArchive()">
-                Archive
+                {{ tArchiveConfirm }}
             </button>
         </footer>
     </div>

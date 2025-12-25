@@ -35,7 +35,17 @@ export class BoardCalendarViewComponent {
     createModal = inject(CardCreateModalService);
     cardsApi = inject(CardsService);
 
-    weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    readonly tToday = $localize`:@@boardCalendar.today:Today`;
+    readonly tAddCard = $localize`:@@boardCalendar.addCard:Add card`;
+    weekDays = [
+        $localize`:@@boardCalendar.sun:Sun`,
+        $localize`:@@boardCalendar.mon:Mon`,
+        $localize`:@@boardCalendar.tue:Tue`,
+        $localize`:@@boardCalendar.wed:Wed`,
+        $localize`:@@boardCalendar.thu:Thu`,
+        $localize`:@@boardCalendar.fri:Fri`,
+        $localize`:@@boardCalendar.sat:Sat`,
+    ];
 
     // Signals
     currentDate = signal(new Date());

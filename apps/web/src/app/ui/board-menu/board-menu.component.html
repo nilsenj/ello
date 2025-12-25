@@ -11,10 +11,7 @@
             <lucide-icon [img]="ChevronLeftIcon" [size]="16"></lucide-icon>
         </button>
         <h3 class="font-semibold text-gray-700 flex-1 text-center">
-            {{ view() === 'main' ? 'Menu' : view() === 'background' ? 'Background' : view() === 'visibility' ?
-            'Visibility' : view() === 'activity' ? 'Activity'
-            : view() === 'members' ? 'Members' : view() === 'archived' ? 'Archived Items'
-            : view() === 'importExport' ? 'Import / Export' : 'Menu' }}
+            {{ viewTitle() }}
         </h3>
         <button (click)="close()" class="text-gray-500 hover:text-gray-800">
             <lucide-icon [img]="XIcon" [size]="18"></lucide-icon>
@@ -26,7 +23,7 @@
         <!-- Menu Items -->
         <div class="p-3 space-y-1" *ngIf="view() === 'main'">
             <div *ngIf="canRenameBoard()" class="px-3 py-2">
-                <div class="text-xs font-semibold text-slate-500 mb-2">Rename board</div>
+                <div class="text-xs font-semibold text-slate-500 mb-2">{{ tRenameBoard }}</div>
                 <div *ngIf="!renaming(); else renameFormTpl" class="flex items-center gap-2">
                     <div class="text-sm font-medium text-slate-800 truncate flex-1">{{ renameDraft() }}</div>
                     <button
@@ -34,7 +31,7 @@
                         (click)="startRenameBoard()"
                     >
                         <lucide-icon [img]="PencilIcon" [size]="14"></lucide-icon>
-                        Edit
+                        {{ tEdit }}
                     </button>
                 </div>
                 <ng-template #renameFormTpl>
@@ -51,14 +48,14 @@
                             class="p-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                             (click)="saveRenameBoard()"
                             [disabled]="renameSaving()"
-                            title="Save"
+                            [attr.title]="tSave"
                         >
                             <lucide-icon [img]="CheckIcon" [size]="14"></lucide-icon>
                         </button>
                         <button
                             class="p-1.5 rounded bg-slate-100 text-slate-700 hover:bg-slate-200"
                             (click)="cancelRenameBoard()"
-                            title="Cancel"
+                            [attr.title]="tCancel"
                         >
                             <lucide-icon [img]="XIcon" [size]="14"></lucide-icon>
                         </button>
@@ -69,25 +66,25 @@
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="view.set('background')">
                 <lucide-icon [img]="PaletteIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Change background
+                {{ tChangeBackground }}
             </button>
             <button *ngIf="canEditBoard()"
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="view.set('visibility')">
                 <lucide-icon [img]="UsersIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Visibility
+                {{ tVisibility }}
             </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showActivity()">
                 <lucide-icon [img]="ActivityIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Activity
+                {{ tActivity }}
             </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showMembers()">
                 <lucide-icon [img]="UsersIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Members
+                {{ tMembers }}
             </button>
             <hr class="my-2 border-slate-200">
             <button
@@ -95,50 +92,50 @@
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="openImportExport()">
                 <lucide-icon [img]="DownloadIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Import / Export
+                {{ tImportExport }}
             </button>
             <button
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="showArchived()">
                 <lucide-icon [img]="ArchiveIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                Archived items
+                {{ tArchivedItems }}
             </button>
         </div>
 
         <!-- Visibility View -->
         <div *ngIf="view() === 'visibility'" class="p-3">
-            <h3 class="font-semibold text-sm mb-3">Board Visibility</h3>
+            <h3 class="font-semibold text-sm mb-3">{{ tBoardVisibility }}</h3>
             <div class="space-y-2">
                 <button (click)="selectVisibility('private')"
                     class="w-full text-left p-3 rounded-md border transition-all"
                     [class.border-blue-500]="getCurrentVisibility() === 'private'"
                     [class.bg-blue-50]="getCurrentVisibility() === 'private'"
                     [class.border-slate-200]="getCurrentVisibility() !== 'private'">
-                    <div class="font-medium text-sm">Private</div>
-                    <div class="text-xs text-slate-500 mt-1">Only board members can see and edit this board</div>
+                    <div class="font-medium text-sm">{{ tPrivate }}</div>
+                    <div class="text-xs text-slate-500 mt-1">{{ tVisibilityPrivateHint }}</div>
                 </button>
                 <button (click)="selectVisibility('workspace')"
                     class="w-full text-left p-3 rounded-md border transition-all"
                     [class.border-blue-500]="getCurrentVisibility() === 'workspace'"
                     [class.bg-blue-50]="getCurrentVisibility() === 'workspace'"
                     [class.border-slate-200]="getCurrentVisibility() !== 'workspace'">
-                    <div class="font-medium text-sm">Workspace</div>
-                    <div class="text-xs text-slate-500 mt-1">All workspace members can see this board</div>
+                    <div class="font-medium text-sm">{{ tWorkspace }}</div>
+                    <div class="text-xs text-slate-500 mt-1">{{ tVisibilityWorkspaceHint }}</div>
                 </button>
                 <button (click)="selectVisibility('public')"
                     class="w-full text-left p-3 rounded-md border transition-all"
                     [class.border-blue-500]="getCurrentVisibility() === 'public'"
                     [class.bg-blue-50]="getCurrentVisibility() === 'public'"
                     [class.border-slate-200]="getCurrentVisibility() !== 'public'">
-                    <div class="font-medium text-sm">Public</div>
-                    <div class="text-xs text-slate-500 mt-1">Anyone with the link can view this board</div>
+                    <div class="font-medium text-sm">{{ tPublic }}</div>
+                    <div class="text-xs text-slate-500 mt-1">{{ tVisibilityPublicHint }}</div>
                 </button>
             </div>
         </div>
 
         <!-- Background View -->
         <div *ngIf="view() === 'background'" class="p-3">
-            <h3 class="font-semibold text-sm mb-3">Colors</h3>
+            <h3 class="font-semibold text-sm mb-3">{{ tColors }}</h3>
             <div class="grid grid-cols-2 gap-2 mb-6">
                 <button *ngFor="let bg of backgrounds"
                     class="relative h-20 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2"
@@ -152,7 +149,7 @@
                 </button>
             </div>
 
-            <h3 class="font-semibold text-sm mb-3">Photos</h3>
+            <h3 class="font-semibold text-sm mb-3">{{ tPhotos }}</h3>
             <div class="grid grid-cols-2 gap-2">
                 <button *ngFor="let img of images"
                     class="relative h-20 rounded-lg shadow-sm hover:shadow-md transition-shadow border-2 bg-cover bg-center"
@@ -165,19 +162,19 @@
         <!-- Archived View -->
         <div *ngIf="view() === 'archived'" class="flex flex-col h-full">
             <div class="p-3 border-b border-slate-200">
-                <h3 class="font-semibold text-sm">Archived Items</h3>
+                <h3 class="font-semibold text-sm">{{ tArchivedItems }}</h3>
                 <div class="mt-2 flex gap-2 text-xs">
                     <button class="px-2 py-1 rounded font-medium" [class.bg-slate-100]="archivedView() === 'cards'"
                         [class.text-slate-700]="archivedView() === 'cards'"
                         [class.hover:bg-slate-100]="archivedView() !== 'cards'"
                         [class.text-slate-500]="archivedView() !== 'cards'" (click)="switchToArchivedCards()">
-                        Cards
+                        {{ tArchivedCards }}
                     </button>
                     <button class="px-2 py-1 rounded font-medium" [class.bg-slate-100]="archivedView() === 'lists'"
                         [class.text-slate-700]="archivedView() === 'lists'"
                         [class.hover:bg-slate-100]="archivedView() !== 'lists'"
                         [class.text-slate-500]="archivedView() !== 'lists'" (click)="switchToArchivedLists()">
-                        Lists
+                        {{ tArchivedLists }}
                     </button>
                 </div>
             </div>
@@ -188,13 +185,14 @@
                     class="p-2 rounded border border-slate-200 bg-white shadow-sm">
                     <div class="text-sm font-medium text-slate-800 mb-1">{{ card.title }}</div>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
-                        <span>List: {{ getListName(card.listId) }}</span>
-                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreCard(card)" aria-label="Send to board">Send to
-                            board</button>
+                        <span>{{ tListLabel }} {{ getListName(card.listId) }}</span>
+                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreCard(card)" [attr.aria-label]="tSendToBoard">
+                            {{ tSendToBoard }}
+                        </button>
                     </div>
                 </div>
                 <div *ngIf="archivedCards().length === 0" class="text-center py-8 text-sm text-slate-500">
-                    No archived cards
+                    {{ tNoArchivedCards }}
                 </div>
             </div>
 
@@ -204,13 +202,14 @@
                     class="p-2 rounded border border-slate-200 bg-white shadow-sm">
                     <div class="text-sm font-medium text-slate-800 mb-1">{{ list.name }}</div>
                     <div class="flex items-center gap-2 text-xs text-slate-500">
-                        <span>{{ (list.cards || []).length }} card(s)</span>
-                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreList(list)" aria-label="Send to board">Send to
-                            board</button>
+                        <span>{{ tCardsCount((list.cards || []).length) }}</span>
+                        <button class="ml-auto text-blue-600 hover:underline" (click)="restoreList(list)" [attr.aria-label]="tSendToBoard">
+                            {{ tSendToBoard }}
+                        </button>
                     </div>
                 </div>
                 <div *ngIf="archivedLists().length === 0" class="text-center py-8 text-sm text-slate-500">
-                    No archived lists
+                    {{ tNoArchivedLists }}
                 </div>
             </div>
         </div>
@@ -218,7 +217,7 @@
         <!-- Activity View -->
         <div *ngIf="view() === 'activity'" class="flex flex-col h-full">
             <div class="p-3 border-b border-slate-200">
-                <h3 class="font-semibold text-sm">Activity</h3>
+                <h3 class="font-semibold text-sm">{{ tActivityTitle }}</h3>
             </div>
             <div class="flex-1 overflow-y-auto p-3 space-y-3">
                 <div *ngFor="let act of activities()" class="flex gap-3 text-sm">
@@ -226,34 +225,34 @@
                         class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
                         <img *ngIf="act.user?.avatar" [src]="act.user.avatar" class="w-full h-full object-cover">
                         <span *ngIf="!act.user?.avatar" class="text-xs font-medium text-slate-600">
-                            {{ (act.user?.name || 'U').slice(0,2).toUpperCase() }}
+                            {{ (act.user?.name || tUserInitial).slice(0,2).toUpperCase() }}
                         </span>
                     </div>
                     <div>
                         <p class="text-slate-800">
-                            <span class="font-semibold">{{ act.user?.name || 'User' }}</span>
+                            <span class="font-semibold">{{ act.user?.name || tUserFallback }}</span>
                             {{ formatActivity(act) }}
                         </p>
                         <p class="text-xs text-slate-500 mt-0.5">{{ act.createdAt | date:'MMM d, h:mm a' }}</p>
                     </div>
                 </div>
                 <div *ngIf="activities().length === 0" class="text-center py-8 text-sm text-slate-500">
-                    No activity found
+                    {{ tNoActivityFound }}
                 </div>
             </div>
         </div>
 
         <!-- Members View -->
         <div *ngIf="view() === 'members'" class="p-3">
-            <h3 class="font-semibold text-sm mb-3">Board Members</h3>
+            <h3 class="font-semibold text-sm mb-3">{{ tBoardMembers }}</h3>
 
             <!-- Invite Form (Admins/Owners only) -->
             <div *ngIf="canEditBoard()" class="mb-4 p-3 bg-slate-50 rounded-md border border-slate-200 relative">
-                <div class="text-xs font-medium text-slate-500 mb-2">Invite to board</div>
+                <div class="text-xs font-medium text-slate-500 mb-2">{{ tInviteToBoard }}</div>
                 <div class="flex gap-2 mb-2">
                     <div class="flex-1 relative">
                         <input type="text" [ngModel]="inviteEmail()" (input)="onInviteSearch($event)"
-                            placeholder="Email address or name"
+                            [placeholder]="tEmailOrName"
                             class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500">
 
                         <!-- Dropdown -->
@@ -277,14 +276,14 @@
 
                     <select [ngModel]="inviteRole()" (ngModelChange)="inviteRole.set($event)"
                         class="px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500 bg-white">
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
-                        <option value="viewer">Viewer</option>
+                        <option value="member">{{ tRoleMember }}</option>
+                        <option value="admin">{{ tRoleAdmin }}</option>
+                        <option value="viewer">{{ tRoleViewer }}</option>
                     </select>
                 </div>
                 <button (click)="inviteMember()" [disabled]="!inviteEmail() || isInviting()"
                     class="w-full px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    {{ isInviting() ? 'Inviting...' : 'Invite' }}
+                    {{ isInviting() ? tInviting : tInvite }}
                 </button>
                 <div *ngIf="inviteError()" class="mt-2 text-xs text-red-600">
                     {{ inviteError() }}
@@ -293,7 +292,7 @@
 
             <!-- Search -->
             <div class="mb-3">
-                <input type="text" placeholder="Search members..." (input)="onMemberSearch($event)"
+                <input type="text" [placeholder]="tSearchMembers" (input)="onMemberSearch($event)"
                     class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-500">
             </div>
 
@@ -309,25 +308,25 @@
                         <div class="text-sm font-medium text-slate-900 truncate flex items-center gap-2">
                             {{ m.name }}
                             <span *ngIf="m.status === 'pending'"
-                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase tracking-wide">Pending</span>
+                                class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 uppercase tracking-wide">{{ tPending }}</span>
                         </div>
-                        <div class="text-xs text-slate-500 truncate">{{ getMemberHandle(m) }} • {{ m.role }}</div>
+                        <div class="text-xs text-slate-500 truncate">{{ getMemberHandle(m) }} • {{ roleLabel(m.role) }}</div>
                     </div>
 
                     <div *ngIf="canManageMember(m)">
                         <select [ngModel]="m.role" (ngModelChange)="updateRole(m.id, $event)"
                             class="text-xs border-none bg-transparent text-slate-500 font-medium focus:ring-0 cursor-pointer hover:text-slate-700">
                             <option *ngFor="let r of getAvailableRoles()" [value]="r">
-                                {{ r | titlecase }}
+                                {{ roleLabel(r) }}
                             </option>
                         </select>
                     </div>
                     <div *ngIf="!canManageMember(m)" class="text-xs text-slate-400 italic px-2">
-                        {{ m.role | titlecase }}
+                        {{ roleLabel(m.role) }}
                     </div>
                 </div>
                 <div *ngIf="members().length === 0" class="text-center py-8 text-sm text-slate-500">
-                    No members found
+                    {{ tNoMembersFound }}
                 </div>
             </div>
         </div>
@@ -335,8 +334,8 @@
         <!-- Import / Export View -->
         <div *ngIf="view() === 'importExport'" class="p-3 space-y-5">
             <div>
-                <h3 class="font-semibold text-sm mb-2">Export Board</h3>
-                <p class="text-xs text-slate-500 mb-3">Download the current board as a JSON file.</p>
+                <h3 class="font-semibold text-sm mb-2">{{ tExportBoard }}</h3>
+                <p class="text-xs text-slate-500 mb-3">{{ tExportHint }}</p>
                 <button
                     class="w-full text-left px-3 py-2 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-sm font-medium text-slate-700 flex items-center gap-2"
                     (click)="exportBoard()"
@@ -344,18 +343,18 @@
                     [class.opacity-60]="!canExportBoard()"
                     [class.cursor-not-allowed]="!canExportBoard()">
                     <lucide-icon [img]="DownloadIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                    Export JSON
+                    {{ tExportJson }}
                 </button>
                 <p *ngIf="!canExportBoard()" class="text-xs text-amber-700 mt-2">
-                    Only board owners or admins can export this board.
+                    {{ tExportPermissionHint }}
                 </p>
             </div>
 
             <div class="border-t border-slate-200 pt-4">
-                <h3 class="font-semibold text-sm mb-2">Import Board</h3>
-                <p class="text-xs text-slate-500 mb-3">Import a JSON board file into a workspace.</p>
+                <h3 class="font-semibold text-sm mb-2">{{ tImportBoard }}</h3>
+                <p class="text-xs text-slate-500 mb-3">{{ tImportHint }}</p>
 
-                <label class="block text-xs font-medium text-slate-600 mb-2">Workspace</label>
+                <label class="block text-xs font-medium text-slate-600 mb-2">{{ tWorkspaceLabel }}</label>
                 <select [value]="importWorkspaceId()" (change)="selectImportWorkspace($event)"
                     class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white mb-3"
                     [disabled]="!canImportWorkspace()"
@@ -367,11 +366,11 @@
                 <label
                     class="w-full flex items-center gap-2 px-3 py-2 rounded-md border border-dashed border-slate-300 bg-white text-sm text-slate-600 hover:bg-slate-50 cursor-pointer">
                     <lucide-icon [img]="UploadIcon" [size]="18" class="text-slate-500"></lucide-icon>
-                    <span>{{ importing() ? 'Importing…' : 'Choose JSON file to import' }}</span>
+                    <span>{{ importing() ? tImporting : tChooseJson }}</span>
                     <input type="file" accept="application/json" class="hidden" (change)="importBoardFromFile($event)" [disabled]="!canImportWorkspace()">
                 </label>
                 <p *ngIf="!canImportWorkspace()" class="text-xs text-amber-700 mt-2">
-                    Only workspace admins or owners can import into this workspace.
+                    {{ tImportPermissionHint }}
                 </p>
                 <p *ngIf="importError()" class="text-xs text-red-600 mt-2">{{ importError() }}</p>
             </div>

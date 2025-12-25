@@ -62,6 +62,30 @@ export class KanbanBoardComponent implements OnInit {
     readonly SearchIcon = SearchIcon;
     readonly UserIcon = UserIcon;
     readonly TagIcon = TagIcon;
+    readonly tFilterPlaceholder = $localize`:@@kanban.filterPlaceholder:Filter cards...`;
+    readonly tAllLabels = $localize`:@@kanban.allLabels:All labels`;
+    readonly tLabelDefault = $localize`:@@kanban.labelDefault:Label`;
+    readonly tAllMembers = $localize`:@@kanban.allMembers:All members`;
+    readonly tMemberDefault = $localize`:@@kanban.memberDefault:Member`;
+    readonly tFilters = $localize`:@@kanban.filters:Filters`;
+    readonly tSearchCards = $localize`:@@kanban.searchCards:Search cards`;
+    readonly tSearchPlaceholder = $localize`:@@kanban.searchPlaceholder:Enter keyword...`;
+    readonly tLabel = $localize`:@@kanban.label:Label`;
+    readonly tMember = $localize`:@@kanban.member:Member`;
+    readonly tClearFilters = $localize`:@@kanban.clearFilters:Clear all filters`;
+    readonly tView = $localize`:@@kanban.view:View`;
+    readonly tBoardView = $localize`:@@kanban.boardView:Board view`;
+    readonly tTableView = $localize`:@@kanban.tableView:Table view`;
+    readonly tCalendarView = $localize`:@@kanban.calendarView:Calendar`;
+    readonly tMenu = $localize`:@@kanban.menu:Menu`;
+    readonly tShowMenu = $localize`:@@kanban.showMenu:Show menu`;
+    readonly tViewOnlyBanner = $localize`:@@kanban.viewOnlyBanner:You have view-only access to this board. Ask a board admin to add you as a member to edit.`;
+    readonly tAddListMobile = $localize`:@@kanban.addListMobile:+ Add list`;
+    readonly tAddAnotherList = $localize`:@@kanban.addAnotherList:+ Add another list`;
+    readonly tListTitlePlaceholder = $localize`:@@kanban.listTitlePlaceholder:Enter list title...`;
+    readonly tAddList = $localize`:@@kanban.addList:Add list`;
+    readonly tCancel = $localize`:@@kanban.cancel:Cancel`;
+    readonly tNewList = $localize`:@@kanban.newList:New list`;
 
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
 
@@ -102,14 +126,14 @@ export class KanbanBoardComponent implements OnInit {
     }
 
     activeLabelName() {
-        if (!this.activeLabel) return 'All labels';
-        return this.store.labels().find(l => l.id === this.activeLabel)?.name || 'Label';
+        if (!this.activeLabel) return this.tAllLabels;
+        return this.store.labels().find(l => l.id === this.activeLabel)?.name || this.tLabelDefault;
     }
 
     activeMemberName() {
-        if (!this.activeMemberId) return 'All members';
+        if (!this.activeMemberId) return this.tAllMembers;
         const m = this.store.members().find(m => m.id === this.activeMemberId);
-        return m?.name || m?.email || 'Member';
+        return m?.name || m?.email || this.tMemberDefault;
     }
 
     activeMemberInitials() {

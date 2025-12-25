@@ -1,10 +1,10 @@
 <div class="relative isolate overflow-visible bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
-    aria-label="Card" (click)="openModal($event)">
+    [attr.aria-label]="tCardAriaLabel" (click)="openModal($event)">
 
     <!-- Cover Image -->
     <div *ngIf="card.coverAttachment"
         class="-mx-3 -mt-2 mb-2 h-32 overflow-hidden relative group-hover:opacity-90 transition-opacity">
-        <img [src]="card.coverAttachment.url" class="w-full h-full object-cover" alt="Cover" />
+        <img [src]="card.coverAttachment.url" class="w-full h-full object-cover" [attr.alt]="tCoverAlt" />
     </div>
     <span *ngIf="card?.priority === 'urgent'"
         class="absolute -inset-0.5 rounded-md ring-2 ring-red-300/60 animate-pulse pointer-events-none"></span>
@@ -14,7 +14,7 @@
         aria-hidden="true"></span>
     <!-- hover checkbox -->
     <button class="absolute -left-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity"
-        (click)="toggleDone($event)" title="Mark complete" data-stop-open>
+        (click)="toggleDone($event)" [attr.title]="tMarkComplete" data-stop-open>
         <span class="inline-flex items-center justify-center w-6 h-6 rounded-full border bg-white shadow"
             [class.bg-emerald-500]="cardDone()" [class.border-emerald-500]="cardDone()" [class.text-white]="cardDone()">
             <svg *ngIf="cardDone()" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
@@ -43,15 +43,15 @@
     <ng-template #editMode>
         <div class="space-y-2" data-stop-open>
             <input class="w-full rounded-md bg-white px-2 py-1 text-sm outline-none focus:ring" [(ngModel)]="titleDraft"
-                (keydown)="onEditKeydown($event)" placeholder="Card title…" />
+                (keydown)="onEditKeydown($event)" [placeholder]="tCardTitlePlaceholder" />
             <div class="flex gap-2">
                 <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-xs" [disabled]="!(titleDraft?.trim())"
                     (click)="saveEdit()">
-                    Save
+                    {{ tSave }}
                 </button>
                 <button class="rounded-md bg-transparent px-3 py-1 text-xs text-ink-sub hover:underline"
                     (click)="cancelEdit()">
-                    Cancel
+                    {{ tCancel }}
                 </button>
             </div>
         </div>
@@ -61,19 +61,19 @@
     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-sub">
         <!-- Priority pill -->
         <span *ngIf="priority() as p" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
-            [style.backgroundColor]="p.bg" [style.color]="p.fg" [attr.title]="'Priority: ' + p.label">
+            [style.backgroundColor]="p.bg" [style.color]="p.fg" [attr.title]="tPriorityTitle(p.label)">
             <span class="inline-block w-2 h-2 rounded-full" [style.backgroundColor]="p.dot"></span>
             {{ p.label }}
         </span>
 
         <!-- Risk pill -->
         <span *ngIf="risk() as r" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
-            [style.backgroundColor]="r.bg" [style.color]="r.fg" [attr.title]="'Risk: ' + r.label">
+            [style.backgroundColor]="r.bg" [style.color]="r.fg" [attr.title]="tRiskTitle(r.label)">
             ▲ {{ r.label }}
         </span>
 
         <!-- Estimation -->
-        <span *ngIf="estimation() !== null" class="inline-flex items-center gap-1" [attr.title]="'Estimation'">
+        <span *ngIf="estimation() !== null" class="inline-flex items-center gap-1" [attr.title]="tEstimationTitle">
             <lucide-icon [img]="ClockIcon" class="w-3 h-3"></lucide-icon>
             {{ estimation() }}
         </span>
@@ -86,9 +86,9 @@
         </span>
 
         <!-- Has description -->
-        <span *ngIf="card.description" class="inline-flex items-center gap-1" title="Has description">
+        <span *ngIf="card.description" class="inline-flex items-center gap-1" [attr.title]="tHasDescription">
             <lucide-icon [img]="FileTextIcon" class="w-3 h-3"></lucide-icon>
-            desc
+            {{ tDescriptionShort }}
         </span>
 
         <!-- Right controls -->
@@ -104,36 +104,33 @@
     <div *ngIf="showMore" class="absolute right-2 top-12 bg-white rounded p-2 shadow border z-20"
         clickOutside (clickOutside)="showMore = false" (click)="$event.stopPropagation()" data-stop-open>
         <button type="button" class="absolute right-1 top-1 rounded px-2 py-1 text-xs hover:bg-gray-100"
-            (click)="showMore = false">×</button>
+            (click)="showMore = false">{{ tMoreMenuClose }}</button>
 
         <div class="flex flex-col gap-1">
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="startEdit()">Edit
-                title</button>
+                (click)="startEdit()">{{ tEditTitle }}</button>
 
             <div *ngIf="canEdit()" class="h-px bg-gray-200 my-1"></div>
 
-            <div *ngIf="canEdit()" class="px-2 text-[10px] uppercase tracking-wide text-gray-400">Move</div>
+            <div *ngIf="canEdit()" class="px-2 text-[10px] uppercase tracking-wide text-gray-400">{{ tMove }}</div>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="moveTop()">Move to
-                top</button>
+                (click)="moveTop()">{{ tMoveTop }}</button>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="moveUp()">Move up</button>
+                (click)="moveUp()">{{ tMoveUp }}</button>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="moveDown()">Move down</button>
+                (click)="moveDown()">{{ tMoveDown }}</button>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="moveBottom()">Move to
-                bottom</button>
+                (click)="moveBottom()">{{ tMoveBottom }}</button>
 
             <div *ngIf="canEdit()" class="h-px bg-gray-200 my-1"></div>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 rounded hover:bg-gray-100"
-                (click)="copy()">Copy</button>
+                (click)="copy()">{{ tCopy }}</button>
 
             <hr *ngIf="canEdit()" class="my-1 border-gray-200">
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
-                (click)="archive()">Archive</button>
+                (click)="archive()">{{ tArchive }}</button>
             <button *ngIf="canEdit()" class="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-red-600"
-                (click)="delete()">Delete</button>
+                (click)="delete()">{{ tDelete }}</button>
         </div>
     </div>
 </div>

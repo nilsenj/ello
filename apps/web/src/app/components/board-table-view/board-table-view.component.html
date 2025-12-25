@@ -4,18 +4,18 @@
         class="flex items-center bg-gray-50 border-b font-semibold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-10">
         <div class="flex-1 px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-1 border-r"
             (click)="sort('title')">
-            Card
+            {{ tCard }}
             <span *ngIf="sortColumn === 'title'" class="text-blue-600">{{ sortDirection === 'asc' ? '↓' : '↑' }}</span>
         </div>
         <div class="w-40 px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-1 border-r"
             (click)="sort('list')">
-            List
+            {{ tList }}
             <span *ngIf="sortColumn === 'list'" class="text-blue-600">{{ sortDirection === 'asc' ? '↓' : '↑' }}</span>
         </div>
-        <div class="w-48 px-4 py-2 border-r">Labels</div>
-        <div class="w-32 px-4 py-2 border-r">Members</div>
+        <div class="w-48 px-4 py-2 border-r">{{ tLabels }}</div>
+        <div class="w-32 px-4 py-2 border-r">{{ tMembers }}</div>
         <div class="w-32 px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-1" (click)="sort('dueDate')">
-            Due Date
+            {{ tDueDate }}
             <span *ngIf="sortColumn === 'dueDate'" class="text-blue-600">{{ sortDirection === 'asc' ? '↓' : '↑'
                 }}</span>
         </div>
@@ -63,7 +63,7 @@
                     <!-- Add label button -->
                     <button
                         class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-colors"
-                        title="Add/Manage Labels" (click)="openCard(card.id, 'labels')"
+                        [attr.title]="tAddManageLabels" (click)="openCard(card.id, 'labels')"
                         [disabled]="!canEdit"
                         [class.opacity-60]="!canEdit"
                         [class.cursor-not-allowed]="!canEdit">
@@ -89,7 +89,7 @@
                     <!-- Add member button -->
                     <button
                         class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 hover:text-gray-600 ring-2 ring-white flex items-center justify-center transition-colors z-10"
-                        title="Manage Members" (click)="openCard(card.id, 'members')"
+                        [attr.title]="tManageMembers" (click)="openCard(card.id, 'members')"
                         [disabled]="!canEdit"
                         [class.opacity-60]="!canEdit"
                         [class.cursor-not-allowed]="!canEdit">
@@ -115,32 +115,32 @@
             <div class="flex-1 px-4 py-2 flex items-center gap-2" *ngIf="showNewCardRow; else addBtn">
                 <input #newCardInput type="text" [(ngModel)]="newCardTitle"
                     class="flex-1 border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Card title..." (keydown.enter)="createCard()"
+                    [placeholder]="tCardTitlePlaceholder" (keydown.enter)="createCard()"
                     (keydown.escape)="showNewCardRow = false">
                 <select [(ngModel)]="newCardListId" class="border-gray-300 rounded px-2 py-1 text-sm">
                     <option *ngFor="let l of lists()" [value]="l.id">{{ l.title }}</option>
                 </select>
                 <button (click)="createCard()"
-                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-bold">Add</button>
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-bold">{{ tAdd }}</button>
                 <button (click)="showNewCardRow = false"
-                    class="px-2 py-1 text-gray-500 hover:text-gray-700">Cancel</button>
+                    class="px-2 py-1 text-gray-500 hover:text-gray-700">{{ tCancel }}</button>
             </div>
             <ng-template #addBtn>
                 <button (click)="showNewCardRow = true; newCardListId = lists()[0]?.id || ''"
                     class="flex-1 text-left px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 flex items-center gap-2 transition">
-                    <span>+ Add new card</span>
+                    <span>{{ tAddNewCard }}</span>
                 </button>
             </ng-template>
         </div>
         <ng-template #viewOnlyRow>
             <div class="flex-1 px-4 py-2 text-xs text-gray-500">
-                View-only access. Ask an admin to add you as a board member to edit.
+                {{ tViewOnly }}
             </div>
         </ng-template>
 
         <!-- Empty State -->
         <div *ngIf="getAllCards().length === 0" class="p-8 text-center text-gray-500">
-            No cards found.
+            {{ tNoCards }}
         </div>
     </div>
 </div>

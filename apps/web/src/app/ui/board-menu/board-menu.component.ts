@@ -50,6 +50,82 @@ export class BoardMenuComponent {
     readonly UploadIcon = UploadIcon;
     readonly PencilIcon = PencilIcon;
     readonly CheckIcon = CheckIcon;
+    readonly tMenu = $localize`:@@boardMenu.menu:Menu`;
+    readonly tBackground = $localize`:@@boardMenu.background:Background`;
+    readonly tVisibility = $localize`:@@boardMenu.visibility:Visibility`;
+    readonly tActivity = $localize`:@@boardMenu.activity:Activity`;
+    readonly tMembers = $localize`:@@boardMenu.members:Members`;
+    readonly tArchivedItems = $localize`:@@boardMenu.archivedItems:Archived Items`;
+    readonly tImportExport = $localize`:@@boardMenu.importExport:Import / Export`;
+    readonly tRenameBoard = $localize`:@@boardMenu.renameBoard:Rename board`;
+    readonly tEdit = $localize`:@@boardMenu.edit:Edit`;
+    readonly tSave = $localize`:@@boardMenu.save:Save`;
+    readonly tCancel = $localize`:@@boardMenu.cancel:Cancel`;
+    readonly tChangeBackground = $localize`:@@boardMenu.changeBackground:Change background`;
+    readonly tBoardVisibility = $localize`:@@boardMenu.boardVisibility:Board Visibility`;
+    readonly tPrivate = $localize`:@@boardMenu.private:Private`;
+    readonly tWorkspace = $localize`:@@boardMenu.workspace:Workspace`;
+    readonly tPublic = $localize`:@@boardMenu.public:Public`;
+    readonly tVisibilityPrivateHint = $localize`:@@boardMenu.visibilityPrivateHint:Only board members can see and edit this board`;
+    readonly tVisibilityWorkspaceHint = $localize`:@@boardMenu.visibilityWorkspaceHint:All workspace members can see this board`;
+    readonly tVisibilityPublicHint = $localize`:@@boardMenu.visibilityPublicHint:Anyone with the link can view this board`;
+    readonly tColors = $localize`:@@boardMenu.colors:Colors`;
+    readonly tPhotos = $localize`:@@boardMenu.photos:Photos`;
+    readonly tArchivedCards = $localize`:@@boardMenu.archivedCards:Cards`;
+    readonly tArchivedLists = $localize`:@@boardMenu.archivedLists:Lists`;
+    readonly tListLabel = $localize`:@@boardMenu.listLabel:List:`;
+    readonly tSendToBoard = $localize`:@@boardMenu.sendToBoard:Send to board`;
+    readonly tNoArchivedCards = $localize`:@@boardMenu.noArchivedCards:No archived cards`;
+    readonly tNoArchivedLists = $localize`:@@boardMenu.noArchivedLists:No archived lists`;
+    readonly tActivityTitle = $localize`:@@boardMenu.activityTitle:Activity`;
+    readonly tNoActivityFound = $localize`:@@boardMenu.noActivityFound:No activity found`;
+    readonly tUserFallback = $localize`:@@boardMenu.userFallback:User`;
+    readonly tUserInitial = $localize`:@@boardMenu.userInitial:U`;
+    readonly tBoardMembers = $localize`:@@boardMenu.boardMembers:Board Members`;
+    readonly tInviteToBoard = $localize`:@@boardMenu.inviteToBoard:Invite to board`;
+    readonly tEmailOrName = $localize`:@@boardMenu.emailOrName:Email address or name`;
+    readonly tRoleMember = $localize`:@@boardMenu.roleMember:Member`;
+    readonly tRoleAdmin = $localize`:@@boardMenu.roleAdmin:Admin`;
+    readonly tRoleViewer = $localize`:@@boardMenu.roleViewer:Viewer`;
+    readonly tRoleOwner = $localize`:@@boardMenu.roleOwner:Owner`;
+    readonly tInviting = $localize`:@@boardMenu.inviting:Inviting...`;
+    readonly tInvite = $localize`:@@boardMenu.invite:Invite`;
+    readonly tSearchMembers = $localize`:@@boardMenu.searchMembers:Search members...`;
+    readonly tPending = $localize`:@@boardMenu.pending:Pending`;
+    readonly tNoMembersFound = $localize`:@@boardMenu.noMembersFound:No members found`;
+    readonly tExportBoard = $localize`:@@boardMenu.exportBoard:Export Board`;
+    readonly tExportHint = $localize`:@@boardMenu.exportHint:Download the current board as a JSON file.`;
+    readonly tExportJson = $localize`:@@boardMenu.exportJson:Export JSON`;
+    readonly tExportPermissionHint = $localize`:@@boardMenu.exportPermissionHint:Only board owners or admins can export this board.`;
+    readonly tImportBoard = $localize`:@@boardMenu.importBoard:Import Board`;
+    readonly tImportHint = $localize`:@@boardMenu.importHint:Import a JSON board file into a workspace.`;
+    readonly tWorkspaceLabel = $localize`:@@boardMenu.workspaceLabel:Workspace`;
+    readonly tImporting = $localize`:@@boardMenu.importing:Importing...`;
+    readonly tChooseJson = $localize`:@@boardMenu.chooseJson:Choose JSON file to import`;
+    readonly tImportPermissionHint = $localize`:@@boardMenu.importPermissionHint:Only workspace admins or owners can import into this workspace.`;
+    readonly tImportFailed = $localize`:@@boardMenu.importFailed:Failed to import board`;
+    readonly tInviteFailed = $localize`:@@boardMenu.inviteFailed:Failed to invite user`;
+    readonly tDeleteCardConfirm = $localize`:@@boardMenu.deleteCardConfirm:Delete this card forever?`;
+    readonly tUnknownList = $localize`:@@boardMenu.unknownList:Unknown List`;
+    readonly tCardsCount = (count: number) => $localize`:@@boardMenu.cardsCount:${count}:count: card(s)`;
+    readonly tActivityCardFallback = $localize`:@@boardMenu.activity.cardFallback:a card`;
+    readonly tActivityListFallback = $localize`:@@boardMenu.activity.listFallback:a list`;
+    readonly tActivityAnotherListFallback = $localize`:@@boardMenu.activity.anotherListFallback:another list`;
+    readonly tActivityLabelFallback = $localize`:@@boardMenu.activity.labelFallback:a label`;
+    readonly tActivityMemberFallback = $localize`:@@boardMenu.activity.memberFallback:a member`;
+    readonly tActivityPerformed = $localize`:@@boardMenu.activity.performed:performed an action`;
+    readonly tBackgroundDefault = $localize`:@@boardMenu.backgroundDefault:Default`;
+    readonly tBackgroundBlue = $localize`:@@boardMenu.backgroundBlue:Blue`;
+    readonly tBackgroundGreen = $localize`:@@boardMenu.backgroundGreen:Green`;
+    readonly tBackgroundPurple = $localize`:@@boardMenu.backgroundPurple:Purple`;
+    readonly tBackgroundRed = $localize`:@@boardMenu.backgroundRed:Red`;
+    readonly tBackgroundOrange = $localize`:@@boardMenu.backgroundOrange:Orange`;
+    readonly tBackgroundPink = $localize`:@@boardMenu.backgroundPink:Pink`;
+    readonly tBackgroundOcean = $localize`:@@boardMenu.backgroundOcean:Ocean`;
+    readonly tBackgroundPurpleSky = $localize`:@@boardMenu.backgroundPurpleSky:Purple Sky`;
+    readonly tBackgroundSunset = $localize`:@@boardMenu.backgroundSunset:Sunset`;
+    readonly tBackgroundForest = $localize`:@@boardMenu.backgroundForest:Forest`;
+    readonly tBackgroundDeepOcean = $localize`:@@boardMenu.backgroundDeepOcean:Deep Ocean`;
 
     workspacesApi = inject(WorkspacesService); // Inject WorkspacesService
     router = inject(Router);
@@ -170,9 +246,30 @@ export class BoardMenuComponent {
         return [];
     }
 
+    roleLabel(role: MemberRole) {
+        switch (role) {
+            case 'admin': return this.tRoleAdmin;
+            case 'viewer': return this.tRoleViewer;
+            case 'member': return this.tRoleMember;
+            case 'owner': return this.tRoleOwner;
+            default: return role;
+        }
+    }
+
     isOpen = signal(false);
     view = signal<'main' | 'background' | 'visibility' | 'archived' | 'activity' | 'members' | 'importExport'>('main');
     archivedView = signal<'cards' | 'lists'>('cards'); // Tab selection for archived view
+    viewTitle = computed(() => {
+        switch (this.view()) {
+            case 'background': return this.tBackground;
+            case 'visibility': return this.tVisibility;
+            case 'activity': return this.tActivity;
+            case 'members': return this.tMembers;
+            case 'archived': return this.tArchivedItems;
+            case 'importExport': return this.tImportExport;
+            default: return this.tMenu;
+        }
+    });
 
     archivedCards = signal<Card[]>([]);
     archivedLists = signal<ListDto[]>([]);
@@ -202,18 +299,18 @@ export class BoardMenuComponent {
 
     // Background options
     backgrounds = [
-        { id: 'none', name: 'Default', class: 'bg-slate-50' },
-        { id: 'blue', name: 'Blue', class: 'bg-blue-500' },
-        { id: 'green', name: 'Green', class: 'bg-green-500' },
-        { id: 'purple', name: 'Purple', class: 'bg-purple-500' },
-        { id: 'red', name: 'Red', class: 'bg-red-500' },
-        { id: 'orange', name: 'Orange', class: 'bg-orange-500' },
-        { id: 'pink', name: 'Pink', class: 'bg-pink-500' },
-        { id: 'gradient-blue', name: 'Ocean', class: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
-        { id: 'gradient-purple', name: 'Purple Sky', class: 'bg-gradient-to-br from-purple-400 to-pink-500' },
-        { id: 'gradient-sunset', name: 'Sunset', class: 'bg-gradient-to-br from-orange-400 to-red-500' },
-        { id: 'gradient-forest', name: 'Forest', class: 'bg-gradient-to-br from-green-400 to-emerald-600' },
-        { id: 'gradient-ocean', name: 'Deep Ocean', class: 'bg-gradient-to-br from-cyan-500 to-blue-700' },
+        { id: 'none', name: this.tBackgroundDefault, class: 'bg-slate-50' },
+        { id: 'blue', name: this.tBackgroundBlue, class: 'bg-blue-500' },
+        { id: 'green', name: this.tBackgroundGreen, class: 'bg-green-500' },
+        { id: 'purple', name: this.tBackgroundPurple, class: 'bg-purple-500' },
+        { id: 'red', name: this.tBackgroundRed, class: 'bg-red-500' },
+        { id: 'orange', name: this.tBackgroundOrange, class: 'bg-orange-500' },
+        { id: 'pink', name: this.tBackgroundPink, class: 'bg-pink-500' },
+        { id: 'gradient-blue', name: this.tBackgroundOcean, class: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
+        { id: 'gradient-purple', name: this.tBackgroundPurpleSky, class: 'bg-gradient-to-br from-purple-400 to-pink-500' },
+        { id: 'gradient-sunset', name: this.tBackgroundSunset, class: 'bg-gradient-to-br from-orange-400 to-red-500' },
+        { id: 'gradient-forest', name: this.tBackgroundForest, class: 'bg-gradient-to-br from-green-400 to-emerald-600' },
+        { id: 'gradient-ocean', name: this.tBackgroundDeepOcean, class: 'bg-gradient-to-br from-cyan-500 to-blue-700' },
     ];
 
     images = [
@@ -338,7 +435,7 @@ export class BoardMenuComponent {
             this.close();
             this.router.navigate(['/b', board.id]);
         } catch (err: any) {
-            this.importError.set(err?.message || 'Failed to import board');
+            this.importError.set(err?.message || this.tImportFailed);
         } finally {
             this.importing.set(false);
             input.value = '';
@@ -403,7 +500,7 @@ export class BoardMenuComponent {
     }
 
     async deleteCard(card: Card) {
-        if (!confirm('Delete this card forever?')) return;
+        if (!confirm(this.tDeleteCardConfirm)) return;
         await this.cardsApi.deleteCard(card.id);
         // Store automatically removes it via deleteCard service call usually, but let's be sure
         // actually cardsApi.deleteCard calls store.removeCardLocally
@@ -447,45 +544,45 @@ export class BoardMenuComponent {
 
     formatActivity(act: Activity): string {
         const payload = act.payload || {};
-        const cardTitle = act.card?.title || 'a card';
+        const cardTitle = act.card?.title || this.tActivityCardFallback;
 
         switch (act.type) {
             case 'create_card':
-                const listName = payload.listName || 'a list';
-                return `created card "${cardTitle}" in ${listName}`;
+                const listName = payload.listName || this.tActivityListFallback;
+                return $localize`:@@boardMenu.activity.createCard:created card "${cardTitle}:cardTitle:" in ${listName}:listName:`;
             case 'move_card':
-                const fromList = payload.fromList || 'a list';
-                const toList = payload.toList || 'another list';
-                return `moved "${cardTitle}" from ${fromList} to ${toList}`;
+                const fromList = payload.fromList || this.tActivityListFallback;
+                const toList = payload.toList || this.tActivityAnotherListFallback;
+                return $localize`:@@boardMenu.activity.moveCard:moved "${cardTitle}:cardTitle:" from ${fromList}:fromList: to ${toList}:toList:`;
             case 'archive_card':
-                return `archived "${cardTitle}"`;
+                return $localize`:@@boardMenu.activity.archiveCard:archived "${cardTitle}:cardTitle:"`;
             case 'restore_card':
-                return `restored "${cardTitle}"`;
+                return $localize`:@@boardMenu.activity.restoreCard:restored "${cardTitle}:cardTitle:"`;
             case 'delete_card':
-                return `deleted "${cardTitle}"`;
+                return $localize`:@@boardMenu.activity.deleteCard:deleted "${cardTitle}:cardTitle:"`;
             case 'comment_card':
-                return `commented on "${cardTitle}"`;
+                return $localize`:@@boardMenu.activity.commentCard:commented on "${cardTitle}:cardTitle:"`;
             case 'update_card':
                 if (payload.field === 'title') {
-                    return `renamed card to "${cardTitle}"`;
+                    return $localize`:@@boardMenu.activity.renameCard:renamed card to "${cardTitle}:cardTitle:"`;
                 } else if (payload.field === 'description') {
-                    return `updated description on "${cardTitle}"`;
+                    return $localize`:@@boardMenu.activity.updateDescription:updated description on "${cardTitle}:cardTitle:"`;
                 }
-                return `updated "${cardTitle}"`;
+                return $localize`:@@boardMenu.activity.updateCard:updated "${cardTitle}:cardTitle:"`;
             case 'add_label':
-                const labelName = payload.labelName || 'a label';
-                return `added label "${labelName}" to "${cardTitle}"`;
+                const labelName = payload.labelName || this.tActivityLabelFallback;
+                return $localize`:@@boardMenu.activity.addLabel:added label "${labelName}:labelName:" to "${cardTitle}:cardTitle:"`;
             case 'remove_label':
-                const removedLabel = payload.labelName || 'a label';
-                return `removed label "${removedLabel}" from "${cardTitle}"`;
+                const removedLabel = payload.labelName || this.tActivityLabelFallback;
+                return $localize`:@@boardMenu.activity.removeLabel:removed label "${removedLabel}:labelName:" from "${cardTitle}:cardTitle:"`;
             case 'add_member':
-                const memberName = payload.memberName || 'a member';
-                return `added ${memberName} to "${cardTitle}"`;
+                const memberName = payload.memberName || this.tActivityMemberFallback;
+                return $localize`:@@boardMenu.activity.addMember:added ${memberName}:memberName: to "${cardTitle}:cardTitle:"`;
             case 'remove_member':
-                const removedMember = payload.memberName || 'a member';
-                return `removed ${removedMember} from "${cardTitle}"`;
+                const removedMember = payload.memberName || this.tActivityMemberFallback;
+                return $localize`:@@boardMenu.activity.removeMember:removed ${removedMember}:memberName: from "${cardTitle}:cardTitle:"`;
             default:
-                return 'performed an action';
+                return this.tActivityPerformed;
         }
     }
 
@@ -540,7 +637,7 @@ export class BoardMenuComponent {
             this.showInviteDropdown.set(false);
             await this.fetchMembers();
         } catch (err: any) {
-            this.inviteError.set(err?.error?.error || 'Failed to invite user');
+            this.inviteError.set(err?.error?.error || this.tInviteFailed);
         } finally {
             this.isInviting.set(false);
         }
@@ -580,6 +677,6 @@ export class BoardMenuComponent {
 
     getListName(listId: string): string {
         const list = this.store.lists().find(l => l.id === listId);
-        return list?.name || 'Unknown List';
+        return list?.name || this.tUnknownList;
     }
 }

@@ -45,6 +45,18 @@ export class ListColumnComponent {
     // Icons
     readonly ArchiveIcon = Archive;
     readonly XIcon = X;
+    readonly tArchiveListTitle = $localize`:@@listColumn.archiveListTitle:Archive list`;
+    readonly tDropCardsHere = $localize`:@@listColumn.dropCardsHere:Drop cards here`;
+    readonly tAddCard = $localize`:@@listColumn.addCard:+ Add a card`;
+    readonly tCardTitlePlaceholder = $localize`:@@listColumn.cardTitlePlaceholder:Enter a title for this card...`;
+    readonly tAddCardButton = $localize`:@@listColumn.addCardButton:Add card`;
+    readonly tCancel = $localize`:@@listColumn.cancel:Cancel`;
+    readonly tArchiveListHeading = $localize`:@@listColumn.archiveListHeading:Archive list`;
+    readonly tArchivePrompt = (name: string) =>
+        $localize`:@@listColumn.archivePrompt:Are you sure you want to archive ${name}:listName:?`;
+    readonly tArchiveHint = $localize`:@@listColumn.archiveHint:You can restore it later from the board menu.`;
+    readonly tArchiveConfirm = $localize`:@@listColumn.archiveConfirm:Archive`;
+    readonly tClose = $localize`:@@listColumn.close:Close`;
 
     newTitle = '';
     adding = signal(false);
