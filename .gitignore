@@ -116,3 +116,5 @@ Icon?
 docker-data/
 *.pid
 apps/api/uploads/*
+apps/web-e2e/apps/web-e2e/playwright-report/
+apps/web-e2e/apps/web-e2e/test-results/
