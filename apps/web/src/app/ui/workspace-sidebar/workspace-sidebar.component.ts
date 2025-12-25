@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Layout, Plus } from 'lucide-angular';
+import { LucideAngularModule, Layout, LayoutTemplate, Plus } from 'lucide-angular';
 import { WorkspaceLite } from '../../data/workspaces.service';
 
 @Component({
@@ -13,6 +13,7 @@ import { WorkspaceLite } from '../../data/workspaces.service';
 export class WorkspaceSidebarComponent {
     // Icons
     readonly LayoutIcon = Layout;
+    readonly TemplatesIcon = LayoutTemplate;
     readonly PlusIcon = Plus;
     readonly tBoards = $localize`:@@sidebar.boards:Boards`;
     readonly tTemplates = $localize`:@@sidebar.templates:Templates`;
