@@ -63,6 +63,8 @@ export const routes: Routes = [
         title: 'Create account'
     },
     {path: 'forgot', loadComponent: () => import('./auth/forgot.page').then(m => m.default), title: 'Reset password'},
+    {path: 'roadmap', loadComponent: () => import('./pages/roadmap.page').then(m => m.default), title: 'Product roadmap'},
+    {path: 'privacy', loadComponent: () => import('./pages/privacy.page').then(m => m.default), title: 'Privacy'},
 
     // Public landing page (guests only)
     {

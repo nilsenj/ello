@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import {
+  ChevronDownIcon,
   ColumnsIcon,
   ListPlusIcon,
   LucideAngularModule,
@@ -11,6 +12,7 @@ import {
   ZapIcon,
   ShieldCheckIcon
 } from 'lucide-angular';
+import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, setStoredLocale } from '../i18n/i18n';
 
 @Component({
   standalone: true,
@@ -67,6 +69,39 @@ import {
           </a>
 
           <nav class="flex items-center gap-4">
+            <div class="relative" (click)="$event.stopPropagation()">
+              <button
+                class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                type="button"
+                (click)="toggleLocaleMenu()"
+                aria-haspopup="listbox"
+                [attr.aria-expanded]="isLocaleMenuOpen"
+                aria-label="Language"
+                i18n-aria-label="@@settings.language"
+              >
+                <span>{{ localeLabels[currentLocale] }}</span>
+                <lucide-icon [img]="ChevronDownIcon" class="w-3.5 h-3.5 text-slate-400"></lucide-icon>
+              </button>
+              <div
+                *ngIf="isLocaleMenuOpen"
+                class="absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 p-1"
+                role="listbox"
+              >
+                <button
+                  *ngFor="let code of supportedLocales"
+                  type="button"
+                  class="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg transition-colors"
+                  [class.bg-indigo-50]="code === currentLocale"
+                  [class.text-indigo-700]="code === currentLocale"
+                  [class.text-slate-600]="code !== currentLocale"
+                  [class.hover:bg-slate-50]="code !== currentLocale"
+                  (click)="onLocaleSelect(code)"
+                >
+                  <span>{{ localeLabels[code] }}</span>
+                  <span *ngIf="code === currentLocale" class="text-[10px] uppercase tracking-widest">Active</span>
+                </button>
+              </div>
+            </div>
             <a
               routerLink="/login"
               class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
@@ -294,7 +329,7 @@ import {
                   Start your free board
                 </a>
                 <a
-                  routerLink="/login"
+                  routerLink="/roadmap"
                   class="inline-flex items-center justify-center px-8 py-4 rounded-2xl border border-white/40 text-white font-semibold text-lg hover:bg-white/10 transition-all"
                   i18n="@@landing.cta.roadmap"
                 >
@@ -321,7 +356,7 @@ import {
             <div class="flex gap-8 text-sm font-semibold text-slate-500">
               <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.doc">Documentation</a>
               <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.changelog">Changelog</a>
-              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.privacy">Privacy</a>
+              <a routerLink="/privacy" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.privacy">Privacy</a>
             </div>
 
             <div class="text-sm font-medium text-slate-400">
@@ -422,6 +457,11 @@ export default class LandingPage {
   readonly LayoutDashboardIcon = LayoutDashboardIcon;
   readonly ZapIcon = ZapIcon;
   readonly ShieldCheckIcon = ShieldCheckIcon;
+  readonly ChevronDownIcon = ChevronDownIcon;
+  supportedLocales = SUPPORTED_LOCALES;
+  localeLabels = LOCALE_LABELS;
+  currentLocale = getStoredLocale();
+  isLocaleMenuOpen = false;
 
   currentYear = new Date().getFullYear();
   footerCopyright = $localize`:@@landing.footer.copyright:© ${this.currentYear}:year: Ello Kanban. Built with ❤️ for developers.`;
@@ -476,4 +516,26 @@ export default class LandingPage {
       note: $localize`:@@landing.useCases.support.note:Resolve without chaos.`
     }
   ];
+
+  onLocaleChange(next: string) {
+    const normalized = normalizeLocale(next);
+    if (normalized === this.currentLocale) return;
+    this.currentLocale = normalized;
+    setStoredLocale(normalized);
+    window.location.reload();
+  }
+
+  toggleLocaleMenu() {
+    this.isLocaleMenuOpen = !this.isLocaleMenuOpen;
+  }
+
+  onLocaleSelect(code: string) {
+    this.isLocaleMenuOpen = false;
+    this.onLocaleChange(code);
+  }
+
+  @HostListener('document:click')
+  closeLocaleMenu() {
+    this.isLocaleMenuOpen = false;
+  }
 }
