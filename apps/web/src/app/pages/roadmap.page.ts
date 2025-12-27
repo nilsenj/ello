@@ -3,18 +3,20 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChevronDownIcon, LucideAngularModule } from 'lucide-angular';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, setStoredLocale } from '../i18n/i18n';
+import { NativeBackButtonComponent } from '../ui/native-back-button.component';
 
 @Component({
   standalone: true,
   selector: 'public-roadmap',
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, RouterLink, LucideAngularModule, NativeBackButtonComponent],
   template: `
     <div class="roadmap-root min-h-screen selection:bg-indigo-200 selection:text-slate-900">
       <div class="roadmap-bg absolute inset-0 -z-10"></div>
 
-      <header class="sticky top-0 z-50 w-full border-b border-indigo-200/60 bg-white/70 backdrop-blur-md">
+      <header class="native-safe-header sticky top-0 z-50 w-full border-b border-indigo-200/60 bg-white/70 backdrop-blur-md">
         <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <a routerLink="/" class="flex items-center gap-3 group transition-transform hover:scale-105">
+          <div class="flex items-center gap-3">
+            <a routerLink="/" class="flex items-center gap-3 group transition-transform hover:scale-105">
             <div class="relative w-9 h-9 flex items-center justify-center bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 group-hover:bg-indigo-700 transition-colors">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" class="text-white">
                 <rect x="4" y="4" width="6" height="16" rx="2" fill="currentColor" fill-opacity="0.9" />
@@ -28,7 +30,8 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
                 Personal Kanban
               </div>
             </div>
-          </a>
+            </a>
+          </div>
 
           <nav class="flex items-center gap-4">
             <div class="relative" (click)="$event.stopPropagation()">
@@ -73,7 +76,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
             </a>
             <a
               routerLink="/register"
-              class="px-5 py-2.5 text-sm font-bold rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+              class="native-hide px-5 py-2.5 text-sm font-bold rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
               i18n="@@landing.getStarted"
             >
               Get Started
@@ -83,6 +86,9 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
       </header>
 
       <main class="mx-auto max-w-6xl px-6 pb-20">
+        <div class="pt-6 pb-2">
+          <native-back-button class="text-slate-700"></native-back-button>
+        </div>
         <section class="pt-16 pb-12">
           <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-6 border border-indigo-200/80">
             <span i18n="@@roadmap.kicker">Product roadmap</span>
@@ -141,6 +147,31 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
             </a>
           </div>
         </section>
+
+        <footer class="mt-16 py-12 border-t border-indigo-100/70">
+          <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 flex items-center justify-center bg-slate-900 rounded-lg">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="text-white">
+                  <rect x="4" y="4" width="6" height="16" rx="2" fill="currentColor" />
+                  <rect x="14" y="4" width="6" height="7" rx="2" fill="currentColor" fill-opacity="0.7" />
+                  <rect x="14" y="13" width="6" height="7" rx="2" fill="currentColor" fill-opacity="0.4" />
+                </svg>
+              </div>
+              <span class="font-bold text-slate-900 text-lg tracking-tighter">ello</span>
+            </div>
+
+            <div class="flex gap-8 text-sm font-semibold text-slate-500">
+              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.doc">Documentation</a>
+              <a routerLink="/login" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.changelog">Changelog</a>
+              <a routerLink="/privacy" class="hover:text-slate-900 transition-colors" i18n="@@landing.footer.privacy">Privacy</a>
+            </div>
+
+            <div class="text-sm font-medium text-slate-400">
+              {{ footerCopyright }}
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   `,
@@ -210,6 +241,8 @@ export default class RoadmapPage {
   localeLabels = LOCALE_LABELS;
   currentLocale = getStoredLocale();
   isLocaleMenuOpen = false;
+  currentYear = new Date().getFullYear();
+  footerCopyright = $localize`:@@landing.footer.copyright:© ${this.currentYear}:year: Ello Kanban. Built with ❤️ for developers.`;
 
   roadmapColumns = [
     {

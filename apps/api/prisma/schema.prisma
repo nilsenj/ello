@@ -30,6 +30,7 @@ model User {
   watchedCards          WatchedCard[]
   watchedBoards         WatchedBoard[]
   sentInvitations       PendingInvitation[]
+  pushTokens            PushDeviceToken[]
 }
 
 model Workspace {
@@ -268,6 +269,16 @@ model WorkspaceIntegration {
   updatedAt       DateTime @updatedAt
 
   @@unique([workspaceId, type])
+}
+
+model PushDeviceToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Card-to-card relations for diagram visualization

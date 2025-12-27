@@ -20,6 +20,40 @@ html, body {
     background: #f1f2f4;
 }
 
+.native-safe-area .native-safe-header {
+    padding-top: env(safe-area-inset-top);
+}
+
+.native-safe-area .native-safe-top {
+    padding-top: env(safe-area-inset-top);
+}
+
+.native-safe-area .native-hide {
+    display: none;
+}
+
+.native-safe-area .cm-panel {
+    top: 24px;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    min-height: calc(100vh - 48px);
+}
+
+@media (max-width: 1024px) {
+    .native-safe-area .cm-panel {
+        top: 12px;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        min-height: calc(100vh - 24px);
+    }
+}
+
+.native-safe-area .cm-header {
+    padding-top: calc(28px + env(safe-area-inset-top));
+}
+
 .board-header {
     background: var(--board-bg);
 }

@@ -3,6 +3,7 @@ import angular from '@analogjs/vite-plugin-angular'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -15,7 +16,26 @@ export default defineConfig(({ mode }) => {
                 jit: false,
                 tsconfig: resolve(__dirname, 'tsconfig.app.json'),
             }) as any,
-            tsconfigPaths() as any
+            tsconfigPaths() as any,
+            VitePWA({
+                registerType: 'autoUpdate',
+                includeAssets: ['favicon.svg', 'assets/logo.svg'],
+                manifest: {
+                    name: 'ELLO',
+                    short_name: 'ELLO',
+                    start_url: '/',
+                    display: 'standalone',
+                    background_color: '#f1f2f4',
+                    theme_color: '#0f6ad4',
+                    icons: [
+                        {
+                            src: 'assets/logo.svg',
+                            sizes: 'any',
+                            type: 'image/svg+xml'
+                        }
+                    ]
+                }
+            })
         ],
         resolve: {
             alias: {

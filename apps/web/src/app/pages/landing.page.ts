@@ -13,11 +13,12 @@ import {
   ShieldCheckIcon
 } from 'lucide-angular';
 import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, setStoredLocale } from '../i18n/i18n';
+import { ClickOutsideDirective } from '../ui/click-outside.directive';
 
 @Component({
   standalone: true,
   selector: 'public-landing',
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, RouterLink, LucideAngularModule, ClickOutsideDirective],
   animations: [
     trigger('fadeInUp', [
       transition(':enter', [
@@ -48,9 +49,9 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
 
       <header
         @navbarFade
-        class="sticky top-0 z-50 w-full border-b border-indigo-200/60 bg-white/70 backdrop-blur-md transition-all duration-300"
+        class="native-safe-header sticky top-0 z-50 w-full border-b border-indigo-200/60 bg-white/70 backdrop-blur-md transition-all duration-300"
       >
-        <div class="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-row flex-wrap items-center justify-between gap-4">
           <a routerLink="/" class="flex items-center gap-3 group transition-transform hover:scale-105">
             <div class="relative w-9 h-9 flex items-center justify-center bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 group-hover:bg-indigo-700 transition-colors">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
@@ -68,8 +69,8 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
             </div>
           </a>
 
-          <nav class="flex items-center gap-4">
-            <div class="relative" (click)="$event.stopPropagation()">
+          <nav class="flex flex-wrap items-center gap-3 sm:gap-4 w-auto justify-end">
+            <div class="relative" clickOutside (clickOutside)="isLocaleMenuOpen = false">
               <button
                 class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 type="button"
@@ -84,7 +85,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
               </button>
               <div
                 *ngIf="isLocaleMenuOpen"
-                class="absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 p-1"
+                class="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 sm:w-44 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 p-1"
                 role="listbox"
               >
                 <button
@@ -111,7 +112,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
             </a>
             <a
               routerLink="/register"
-              class="px-5 py-2.5 text-sm font-bold rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+              class="native-hide px-5 py-2.5 text-sm font-bold rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
               i18n="@@landing.getStarted"
             >
               Get Started
@@ -178,45 +179,45 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
 
               <div class="mt-12 grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-xl">
                 <div *ngFor="let stat of stats" class="rounded-2xl border border-indigo-200/70 bg-white/70 p-4 shadow-[0_15px_35px_-28px_rgba(15,23,42,0.6)]">
-                  <div class="text-2xl font-bold text-slate-900">{{ stat.value }}</div>
-                  <div class="text-[11px] uppercase tracking-widest text-slate-500 mt-1">{{ stat.label }}</div>
+                  <div class="text-xl sm:text-2xl font-bold text-slate-900 break-words">{{ stat.value }}</div>
+                  <div class="text-[10px] uppercase tracking-widest text-slate-500 mt-1 leading-tight break-words">{{ stat.label }}</div>
                 </div>
               </div>
             </div>
 
             <div @fadeInUp class="relative">
               <div class="absolute -inset-8 bg-gradient-to-tr from-indigo-100 via-blue-100 to-slate-100 rounded-[3rem] blur-3xl opacity-70 -z-10"></div>
-              <div class="preview-shell rounded-[2.5rem] border border-indigo-200/60 shadow-[0_40px_100px_-60px_rgba(15,23,42,0.6)] overflow-hidden">
-                <div class="bg-white/80 border-b border-indigo-200/60 px-6 py-4 flex items-center justify-between">
+              <div class="preview-shell w-full rounded-[1.75rem] sm:rounded-[2.5rem] border border-indigo-200/60 shadow-[0_40px_100px_-60px_rgba(15,23,42,0.6)] overflow-hidden">
+                <div class="bg-white/80 border-b border-indigo-200/60 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
                   <div class="flex gap-1.5">
                     <div class="w-3 h-3 rounded-full bg-rose-400"></div>
                     <div class="w-3 h-3 rounded-full bg-sky-400"></div>
                     <div class="w-3 h-3 rounded-full bg-indigo-400"></div>
                   </div>
-                  <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]" i18n="@@landing.preview.title">Personal Flow</div>
-                  <div class="px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700" i18n="@@landing.preview.alpha">Alpha</div>
+                  <div class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]" i18n="@@landing.preview.title">Personal Flow</div>
+                  <div class="px-2 py-1 rounded-full text-[9px] sm:text-[10px] font-bold bg-indigo-100 text-indigo-700" i18n="@@landing.preview.alpha">Alpha</div>
                 </div>
 
-                <div class="p-8 space-y-6">
-                  <div class="grid grid-cols-3 gap-4">
-                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.backlog">Backlog</div>
+                <div class="p-4 sm:p-8 space-y-4 sm:space-y-6">
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-3 sm:p-4 space-y-3">
+                      <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.backlog">Backlog</div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-8 rounded-xl bg-indigo-600/90 text-white text-xs font-semibold flex items-center px-3">
                         <span i18n="@@landing.preview.refineLanding">Refine landing</span>
                       </div>
                     </div>
-                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.inProgress">In Progress</div>
+                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-3 sm:p-4 space-y-3">
+                      <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.inProgress">In Progress</div>
                       <div class="h-8 rounded-xl bg-slate-900 text-white text-xs font-semibold flex items-center px-3">
                         <span i18n="@@landing.preview.launchCopy">Launch copy</span>
                       </div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                     </div>
-                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-4 space-y-3">
-                      <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.done">Done</div>
+                    <div class="rounded-2xl bg-slate-50/80 border border-slate-200/60 p-3 sm:p-4 space-y-3">
+                      <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400" i18n="@@landing.preview.done">Done</div>
                       <div class="h-6 rounded-lg bg-white border border-slate-200"></div>
                       <div class="h-8 rounded-xl bg-blue-500 text-white text-xs font-semibold flex items-center px-3">
                         <span i18n="@@landing.preview.weeklyPlan">Weekly plan</span>
@@ -225,8 +226,8 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="rounded-2xl bg-slate-900 p-5 text-white relative overflow-hidden">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div class="rounded-2xl bg-slate-900 p-4 sm:p-5 text-white relative overflow-hidden">
                       <div class="absolute -top-10 -right-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl"></div>
                       <div class="text-[11px] uppercase tracking-widest text-indigo-200" i18n="@@landing.preview.momentum">Momentum</div>
                       <div class="mt-3 flex items-center gap-3">
@@ -236,7 +237,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
                         <div class="text-xl font-bold">+12%</div>
                       </div>
                     </div>
-                    <div class="rounded-2xl bg-white/90 border border-slate-200/60 p-5">
+                    <div class="rounded-2xl bg-white/90 border border-slate-200/60 p-4 sm:p-5">
                       <div class="text-[11px] uppercase tracking-widest text-slate-400" i18n="@@landing.preview.focus">Focus</div>
                       <div class="mt-3 text-sm text-slate-600 leading-relaxed" i18n="@@landing.preview.focusBody">
                         Smart limits keep WIP balanced and blockers visible.
@@ -249,10 +250,10 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, normalizeLocale, set
                 </div>
               </div>
 
-              <div class="absolute -right-6 top-24 rounded-2xl bg-white/80 border border-slate-200/70 px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg animate-[float_10s_ease-in-out_infinite]" i18n="@@landing.preview.loved">
+              <div class="hidden sm:block absolute -right-6 top-24 rounded-2xl bg-white/80 border border-slate-200/70 px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg animate-[float_10s_ease-in-out_infinite]" i18n="@@landing.preview.loved">
                 Loved by solo makers
               </div>
-              <div class="absolute -left-6 bottom-10 rounded-2xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold shadow-xl animate-[float_12s_ease-in-out_infinite]" i18n="@@landing.preview.zeroSetup">
+              <div class="hidden sm:block absolute -left-6 bottom-10 rounded-2xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold shadow-xl animate-[float_12s_ease-in-out_infinite]" i18n="@@landing.preview.zeroSetup">
                 Zero setup
               </div>
             </div>
@@ -467,9 +468,9 @@ export default class LandingPage {
   footerCopyright = $localize`:@@landing.footer.copyright:© ${this.currentYear}:year: Ello Kanban. Built with ❤️ for developers.`;
 
   stats = [
-    { value: $localize`:@@landing.stats.twoMin:2 min`, label: $localize`:@@landing.stats.cleanSetup:Clean setup` },
-    { value: $localize`:@@landing.stats.zeroValue:Zero`, label: $localize`:@@landing.stats.zeroFriction:Setup friction` },
-    { value: $localize`:@@landing.stats.lightValue:Light`, label: $localize`:@@landing.stats.dailyFocus:Daily focus` }
+    { value: $localize`:@@landing.stats.twoMin:2 min`, label: $localize`:@@landing.stats.cleanSetup:To start your board` },
+    { value: $localize`:@@landing.stats.zeroValue:Free`, label: $localize`:@@landing.stats.zeroFriction:No setup cost` },
+    { value: $localize`:@@landing.stats.lightValue:Lightweight`, label: $localize`:@@landing.stats.dailyFocus:Made for daily focus` }
   ];
 
   features = [

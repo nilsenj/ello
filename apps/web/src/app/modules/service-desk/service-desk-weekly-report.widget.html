@@ -2,7 +2,7 @@
     <div *ngIf="loading" class="text-sm text-slate-500">{{ tLoading }}</div>
 
     <div *ngIf="!loading && report" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
                 <div class="text-xs uppercase text-slate-500">{{ tCreated }}</div>
                 <div class="text-2xl font-semibold text-slate-900">{{ report.created }}</div>

@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
+import { NativeBackButtonComponent } from '../ui/native-back-button.component';
 
 @Component({
   standalone: true,
   selector: 'auth-login',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, NativeBackButtonComponent],
   template: `
-  <div class="mx-auto max-w-md p-6">
+  <div class="native-safe-top mx-auto max-w-md p-6">
+    <native-back-button class="mb-3"></native-back-button>
     <h1 class="text-xl font-semibold mb-4">{{ tTitle }}</h1>
 
     <form #f="ngForm" (ngSubmit)="submit(f)" class="space-y-3">

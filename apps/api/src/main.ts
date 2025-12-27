@@ -19,6 +19,7 @@ import { registerAttachmentRoutes } from './routes/attachments.js';
 import { registerActivityRoutes } from './routes/activity.js';
 import { registerNotificationRoutes } from './routes/notifications.js';
 import { registerServiceDeskRoutes } from './routes/service-desk.js';
+import { registerPushRoutes } from './routes/push.js';
 import { setupSocketIO } from './socket.js';
 import { NotificationService } from './services/notification-service.js';
 import { startServiceDeskSlaScanner } from './services/service-desk-sla-scanner.js';
@@ -76,6 +77,7 @@ async function bootstrap() {
     await registerActivityRoutes(app, prisma);
     await registerNotificationRoutes(app, prisma);
     await registerServiceDeskRoutes(app, prisma);
+    await registerPushRoutes(app, prisma);
 
     // Initialize Socket.IO
     await setupSocketIO(app, prisma);

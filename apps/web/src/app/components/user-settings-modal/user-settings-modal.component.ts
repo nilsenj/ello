@@ -11,6 +11,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, getStoredLocale, setStoredLocale } fr
     selector: 'user-settings-modal',
     imports: [CommonModule, FormsModule, LucideAngularModule],
     templateUrl: './user-settings-modal.component.html',
+    styleUrls: ['./user-settings-modal.component.css'],
 })
 export class UserSettingsModalComponent {
     modal = inject(UserSettingsModalService);

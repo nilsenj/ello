@@ -1,8 +1,8 @@
 <div class="space-y-4">
     <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
 
-    <div class="flex flex-wrap items-start gap-3">
-        <div class="space-y-1 text-sm text-slate-700 relative min-w-[220px]" clickOutside (clickOutside)="closeBoardMenu()">
+    <div class="flex flex-col lg:flex-row lg:items-end gap-3">
+        <div class="space-y-1 text-sm text-slate-700 relative w-full sm:w-64" clickOutside (clickOutside)="closeBoardMenu()">
             <span class="text-xs font-medium text-slate-500">{{ tBoardLabel }}</span>
             <button
                 type="button"
@@ -38,7 +38,7 @@
                 </div>
             </div>
         </div>
-        <div class="space-y-1 text-sm text-slate-700">
+        <div class="space-y-1 text-sm text-slate-700 w-full sm:w-44">
             <span class="text-xs font-medium text-slate-500">{{ tFrom }}</span>
             <input
                 type="text"
@@ -48,7 +48,7 @@
                 [flatpickrValue]="from()"
                 (flatpickrChange)="onFromChange($event)" />
         </div>
-        <div class="space-y-1 text-sm text-slate-700">
+        <div class="space-y-1 text-sm text-slate-700 w-full sm:w-44">
             <span class="text-xs font-medium text-slate-500">{{ tTo }}</span>
             <input
                 type="text"
@@ -58,7 +58,7 @@
                 [flatpickrValue]="to()"
                 (flatpickrChange)="onToChange($event)" />
         </div>
-        <div class="flex items-center gap-2 mb-2 self-end">
+        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:self-end">
             <button
                     type="button"
                     class="px-3 py-2 rounded-md border text-sm hover:bg-slate-50"

@@ -50,7 +50,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
         }
     `],
     template: `
-        <header class="hdr w-full relative z-50">
+        <header class="hdr native-safe-header w-full relative z-50">
             <div class="mx-auto max-w-full px-2 sm:px-4 py-2 flex items-center justify-between relative min-h-[52px]">
 
                 <!-- Left: Logo & Board Switcher -->

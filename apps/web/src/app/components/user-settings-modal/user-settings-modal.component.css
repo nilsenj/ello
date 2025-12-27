@@ -1,0 +1,17 @@
+:host-context(.native-safe-area) .usm-shell {
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+:host-context(.native-safe-area) .usm-panel {
+    position: fixed;
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    border-radius: 0;
+}

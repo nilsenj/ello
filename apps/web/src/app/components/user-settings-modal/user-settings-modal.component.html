@@ -1,16 +1,16 @@
-<div *ngIf="modal.isOpen()" class="fixed inset-0 z-[1000] flex items-center justify-center">
+<div *ngIf="modal.isOpen()" class="usm-shell fixed inset-0 z-[1000] flex items-center justify-center">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="close()"></div>
 
     <!-- Modal -->
-    <div class="relative bg-white rounded-lg shadow-xl
+    <div class="usm-panel relative bg-white rounded-lg shadow-xl
          w-full sm:max-w-xl lg:max-w-2xl
          h-full sm:h-auto
          max-h-[100vh] sm:max-h-[90vh]
          overflow-hidden flex flex-col">
         <!-- Header -->
         <div
-                class="px-4 sm:px-6 py-3 sm:py-4
+                class="usm-header px-4 sm:px-6 py-3 sm:py-4
          border-b border-gray-100
          flex items-center justify-between shrink-0"
         >

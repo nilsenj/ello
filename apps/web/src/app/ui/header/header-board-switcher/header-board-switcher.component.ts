@@ -1,10 +1,11 @@
 import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ClickOutsideDirective } from '../../click-outside.directive';
 
 @Component({
     standalone: true,
     selector: 'header-board-switcher',
-    imports: [CommonModule],
+    imports: [CommonModule, ClickOutsideDirective],
     templateUrl: './header-board-switcher.component.html',
     styles: [`
         .pill {

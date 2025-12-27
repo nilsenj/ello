@@ -75,6 +75,30 @@
     box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot, transparent), transparent 88%);
 }
 
+:host-context(.native-safe-area) .cm-panel {
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    max-width: none;
+    border-radius: 0;
+    min-height: calc(100vh - env(safe-area-inset-top));
+}
+
+@media (max-width: 1024px) {
+    :host-context(.native-safe-area) .cm-panel {
+        top: env(safe-area-inset-top);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        max-width: none;
+        border-radius: 0;
+        min-height: calc(100vh - env(safe-area-inset-top));
+    }
+}
+
 .cm-header-accent {
     position: absolute;
     left: 0;

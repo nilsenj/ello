@@ -17,10 +17,18 @@
     "db:seed": "pnpm -F api run seed",
     "dev": "pnpm -w nx run-many -t serve --projects web,api",
     "dev:expose": "cross-env VITE_EXPOSE=true pnpm dev --host 0.0.0.0",
+    "cap:add:ios": "pnpm exec cap add ios",
+    "cap:add:android": "pnpm exec cap add android",
+    "cap:sync": "pnpm exec cap sync",
+    "cap:open:ios": "pnpm exec cap open ios",
+    "cap:open:android": "pnpm exec cap open android",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down -v"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@nrwl/angular": "19.8.0",
     "@playwright/test": "^1.50.0",
     "@types/node": "^24.10.0",
@@ -29,7 +37,8 @@
     "lint-staged": "^15.2.10",
     "nx": "19.8.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vite-plugin-pwa": "^1.2.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md}": "nx format:write --uncommitted"

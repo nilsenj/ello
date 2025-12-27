@@ -1,10 +1,10 @@
 <div class="space-y-6">
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 class="text-lg font-semibold text-slate-900">{{ tOverview }}</h2>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
             <select
-                class="ui-select"
+                class="ui-select w-full sm:w-auto"
                 [ngModel]="selectedBoardId()"
                 (ngModelChange)="selectedBoardId.set($event); loadBoard($event)"
             >
@@ -15,7 +15,7 @@
 
     <div *ngIf="loading()" class="text-sm text-slate-500">Loading overview…</div>
 
-    <div *ngIf="!loading()" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div *ngIf="!loading()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div class="text-xs uppercase text-slate-500">{{ tRequests }}</div>
             <div class="text-2xl font-semibold text-slate-900">{{ requestCount() }}</div>
@@ -33,7 +33,7 @@
 
     <div class="rounded-lg border border-slate-200 bg-white p-4">
         <div class="text-sm font-semibold text-slate-900 mb-3">{{ tQuickLinks }}</div>
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-col sm:flex-row gap-3">
             <a class="px-3 py-2 rounded-md bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
                [routerLink]="['../requests']">{{ tGoRequests }}</a>
             <a class="px-3 py-2 rounded-md bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200"

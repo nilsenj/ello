@@ -22,12 +22,17 @@
     "@angular/platform-browser": "18.2.14",
     "@angular/platform-browser-dynamic": "18.2.14",
     "@angular/router": "18.2.14",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/device": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
     "@types/d3": "^7.4.3",
     "d3": "^7.9.0",
     "flatpickr": "^4.6.13",
     "lucide-angular": "^0.553.0",
     "rxjs": "^7.8.1",
     "socket.io-client": "^4.8.1",
+    "workbox-window": "^7.4.0",
     "zone.js": "^0.14.8"
   },
   "devDependencies": {
