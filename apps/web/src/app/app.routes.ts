@@ -104,6 +104,43 @@ export const routes: Routes = [
                 component: BoardTableViewComponent
             },
             {path: 'b/:boardId', component: BoardPageComponent, title: 'Board'},
+            {
+                path: 'w/:workspaceId/service-desk',
+                loadComponent: () => import('./modules/service-desk/service-desk.page').then(m => m.ServiceDeskPageComponent),
+                children: [
+                    { path: '', pathMatch: 'full', redirectTo: 'overview' },
+                    {
+                        path: 'overview',
+                        loadComponent: () => import('./modules/service-desk/service-desk-overview.page')
+                            .then(m => m.ServiceDeskOverviewPageComponent),
+                        title: 'Service Desk'
+                    },
+                    {
+                        path: 'requests',
+                        loadComponent: () => import('./modules/service-desk/service-desk-requests.page')
+                            .then(m => m.ServiceDeskRequestsPageComponent),
+                        title: 'Service Desk Requests'
+                    },
+                    {
+                        path: 'sla',
+                        loadComponent: () => import('./modules/service-desk/service-desk-sla.page')
+                            .then(m => m.ServiceDeskSlaPageComponent),
+                        title: 'Service Desk SLA'
+                    },
+                    {
+                        path: 'integrations',
+                        loadComponent: () => import('./modules/service-desk/service-desk-integrations.page')
+                            .then(m => m.ServiceDeskIntegrationsPageComponent),
+                        title: 'Service Desk Integrations'
+                    },
+                    {
+                        path: 'reports',
+                        loadComponent: () => import('./modules/service-desk/service-desk-reports.page')
+                            .then(m => m.ServiceDeskReportsPageComponent),
+                        title: 'Service Desk Reports'
+                    }
+                ]
+            },
         ],
     },
 

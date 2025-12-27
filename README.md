@@ -24,6 +24,7 @@ Supports drag & drop with rank-based ordering, inline list & card editing, label
   - [Lists](#lists)
   - [Cards](#cards)
   - [Labels](#labels)
+  - [Service Desk Webhook](#service-desk-webhook)
 - [Data Model (Prisma)](#data-model-prisma)
 - [Rank Ordering](#rank-ordering)
 - [Troubleshooting](#troubleshooting)
@@ -317,6 +318,37 @@ Base URL (dev): typically `http://localhost:3000`
     Removes junction; returns `{ ok: true }`
 
 > The web app uses the shorthand `POST /api/cards/:cardId/labels` + `DELETE /api/cards/:cardId/labels/:labelId` via `LabelsService`.  
+
+### Service Desk Webhook
+
+Generate a secret webhook URL from the Service Desk module:
+1) Open `Service Desk → Integrations`
+2) Click “Generate secret URL”
+3) Copy the URL
+
+Example payload:
+
+```json
+{
+  "customerName": "Jane Doe",
+  "customerPhone": "+1 555 0100",
+  "address": "123 Main St",
+  "serviceType": "AC repair",
+  "notes": "Unit is not cooling",
+  "scheduledAt": "2025-01-25T10:30:00Z"
+}
+```
+
+Optional fields:
+- `boardId` (string) — target a specific Service Desk board. If omitted, the first board with an `Inbox` list in the workspace is used.
+
+Example curl:
+
+```bash
+curl -X POST "$WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"customerName":"Jane Doe","customerPhone":"+1 555 0100","serviceType":"AC repair","notes":"Unit is not cooling"}'
+```
 > When moving cards (`/api/cards/:id/move`), the backend typically returns the card without label joins. The UI reloads labels for the active board after moves to keep pills in sync.
 
 ---

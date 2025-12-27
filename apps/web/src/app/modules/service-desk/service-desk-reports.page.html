@@ -1,0 +1,83 @@
+<div class="space-y-4">
+    <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
+
+    <div class="flex flex-wrap items-start gap-3">
+        <div class="space-y-1 text-sm text-slate-700 relative min-w-[220px]" clickOutside (clickOutside)="closeBoardMenu()">
+            <span class="text-xs font-medium text-slate-500">{{ tBoardLabel }}</span>
+            <button
+                type="button"
+                class="ui-input w-full h-10 flex items-center justify-between gap-2 bg-white text-left border border-gray-500 rounded-none py-2 px-3 text-base leading-6"
+                (click)="toggleBoardMenu()"
+                [attr.aria-expanded]="boardMenuOpen()">
+                <span class="truncate">{{ selectedBoardName() }}</span>
+                <svg class="w-4 h-4 text-slate-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5.25 7.5l4.5 4.5 4.5-4.5" />
+                </svg>
+            </button>
+            <div *ngIf="boardMenuOpen()" class="absolute z-30 mt-2 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+                <div class="p-2 border-b border-slate-100">
+                    <input
+                        class="ui-input w-full text-sm"
+                        [ngModel]="boardQuery()"
+                        (ngModelChange)="boardQuery.set($event)"
+                        [placeholder]="tBoardSearch" />
+                </div>
+                <div class="max-h-64 overflow-y-auto p-1">
+                    <button
+                        *ngFor="let b of filteredBoards()"
+                        type="button"
+                        class="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-slate-50"
+                        [class.bg-blue-50]="b.id === selectedBoardId()"
+                        [class.text-blue-700]="b.id === selectedBoardId()"
+                        (click)="selectBoard(b.id)">
+                        <span class="truncate">{{ b.name }}</span>
+                    </button>
+                    <div *ngIf="filteredBoards().length === 0" class="px-3 py-3 text-xs text-slate-500">
+                        {{ tNoBoards }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-1 text-sm text-slate-700">
+            <span class="text-xs font-medium text-slate-500">{{ tFrom }}</span>
+            <input
+                type="text"
+                class="ui-input w-full h-10 flex items-center justify-between gap-2 bg-white text-left flatpickr-input"
+                flatpickr
+                [flatpickrOptions]="{ dateFormat: 'Y-m-d', allowInput: true }"
+                [flatpickrValue]="from()"
+                (flatpickrChange)="onFromChange($event)" />
+        </div>
+        <div class="space-y-1 text-sm text-slate-700">
+            <span class="text-xs font-medium text-slate-500">{{ tTo }}</span>
+            <input
+                type="text"
+                class="ui-input w-full h-10 flex items-center justify-between gap-2 bg-white text-left flatpickr-input"
+                flatpickr
+                [flatpickrOptions]="{ dateFormat: 'Y-m-d', allowInput: true }"
+                [flatpickrValue]="to()"
+                (flatpickrChange)="onToChange($event)" />
+        </div>
+        <div class="flex items-center gap-2 mb-2 self-end">
+            <button
+                    type="button"
+                    class="px-3 py-2 rounded-md border text-sm hover:bg-slate-50"
+                    [class.border-slate-200]="rangePreset() !== 'this'"
+                    [class.text-slate-700]="rangePreset() !== 'this'"
+                    [class.bg-slate-50]="rangePreset() !== 'this'"
+                    [class.border-blue-600]="rangePreset() === 'this'"
+                    [class.text-blue-700]="rangePreset() === 'this'"
+                    [class.bg-blue-50]="rangePreset() === 'this'"
+                    (click)="setThisWeek(); runReport()">
+                {{ tThisWeek }}
+            </button>
+            <button class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                    type="button"
+                    (click)="runReport()" [disabled]="loading()">
+                {{ tRun }}
+            </button>
+        </div>
+    </div>
+
+    <service-desk-weekly-report-widget [report]="report()" [loading]="loading()"></service-desk-weekly-report-widget>
+</div>

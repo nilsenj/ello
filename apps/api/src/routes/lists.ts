@@ -65,6 +65,12 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
                 dueDate: c.dueDate,
                 startDate: c.startDate,
                 estimate: c.estimate,
+                scheduledAt: c.scheduledAt,
+                lastStatusChangedAt: c.lastStatusChangedAt,
+                customerName: c.customerName,
+                customerPhone: c.customerPhone,
+                address: c.address,
+                serviceType: c.serviceType,
                 labelIds: (c.labels ?? []).map(x => x.labelId),
                 assignees: c.assignees.map(a => ({
                     userId: a.userId,

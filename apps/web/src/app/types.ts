@@ -43,6 +43,12 @@ export type Card = {
     estimate?: number | null;
     startDate?: string | null;
     dueDate?: string | null;
+    scheduledAt?: string | null;
+    lastStatusChangedAt?: string | null;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    address?: string | null;
+    serviceType?: string | null;
     assignees?: AssigneeDto[];
     checklists?: Checklist[];
     comments?: CommentDto[];
@@ -61,6 +67,12 @@ export type ModalCard = Card & {
     assignees?: AssigneeDto[];
     checklists?: Checklist[];
     comments?: CommentDto[];
+    scheduledAt?: string | null;
+    lastStatusChangedAt?: string | null;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    address?: string | null;
+    serviceType?: string | null;
     // if backend also returns labels via junction:
     labels?: any[];
     cardLabels?: any[];

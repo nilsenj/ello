@@ -157,6 +157,17 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Overdue filter -->
+            <button
+                    class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
+                    [ngClass]="activeOverdue ? 'bg-white/40' : ''"
+                    (click)="activeOverdue = !activeOverdue"
+            >
+                <span class="inline-block w-2 h-2 rounded-full"
+                      [ngClass]="activeOverdue ? 'bg-red-300' : 'bg-white/60'"></span>
+                <span>{{ tOverdueFilter }}</span>
+            </button>
         </div>
 
         <!-- Filter Button (Mobile/Tablet) -->
@@ -166,7 +177,7 @@
                     (click)="toggleFilterMenu()">
                 <lucide-icon [img]="FilterIcon" class="w-4 h-4"></lucide-icon>
                 <span class="hidden sm:inline">{{ tFilters }}</span>
-                <span *ngIf="filter || activeLabel || activeMemberId" class="w-2 h-2 bg-blue-400 rounded-full"></span>
+                <span *ngIf="filter || activeLabel || activeMemberId || activeOverdue" class="w-2 h-2 bg-blue-400 rounded-full"></span>
             </button>
 
             <!-- Filter Setup Popup -->
@@ -237,8 +248,17 @@
                     </div>
                 </div>
 
+                <!-- Overdue -->
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tOverdueFilter }}</label>
+                    <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" [(ngModel)]="activeOverdue" />
+                        <span>{{ tOverdueFilter }}</span>
+                    </label>
+                </div>
+
                 <div class="pt-2 border-t border-gray-100">
-                    <button (click)="filter=''; activeLabel=''; activeMemberId=''"
+                    <button (click)="filter=''; activeLabel=''; activeMemberId=''; activeOverdue=false"
                             class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
                         {{ tClearFilters }}
                     </button>
@@ -385,7 +405,7 @@
             </ng-template>
 
             <!-- Your actual column (cards DnD remains inside) -->
-            <list-column [list]="l" [filtered]="cards(l.id)" [canEdit]="canEditBoard()">
+            <list-column [list]="l" [filtered]="cards(l.id)" [canEdit]="canEditBoard()" [overdueMap]="overdueMap()">
             </list-column>
         </div>
 

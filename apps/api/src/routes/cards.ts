@@ -8,6 +8,8 @@ import { between } from '../utils/rank.js';
 import { ensureUser } from '../utils/ensure-user.js';
 import { ensureBoardAccess } from '../utils/permissions.js';
 import { NotificationService } from '../services/notification-service.js';
+import { decryptSecret } from '../utils/integrations.js';
+import { isWorkspaceEntitled } from '../utils/service-desk.js';
 import { emitToBoard } from '../socket.js';
 
 type ListParams = { listId: string };
@@ -43,6 +45,12 @@ const shapeCard = (c: any) => ({
     estimate: c.estimate,
     startDate: c.startDate,
     dueDate: c.dueDate,
+    scheduledAt: c.scheduledAt,
+    lastStatusChangedAt: c.lastStatusChangedAt,
+    customerName: c.customerName,
+    customerPhone: c.customerPhone,
+    address: c.address,
+    serviceType: c.serviceType,
     isArchived: c.isArchived,
     isDone: c.isDone,
 });
@@ -74,6 +82,45 @@ async function boardIdByCard(prisma: PrismaClient, cardId: string) {
     return row?.list?.boardId ?? null;
 }
 
+async function sendTelegram(botToken: string, chatId: string, text: string) {
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text }),
+    });
+}
+
+async function sendWebhookNotify(url: string, payload: any) {
+    await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+function formatMoveMessage(payload: {
+    title: string;
+    fromList?: string | null;
+    toList?: string | null;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    address?: string | null;
+    serviceType?: string | null;
+    notes?: string | null;
+}) {
+    return [
+        `Service Desk status update`,
+        `Card: ${payload.title}`,
+        payload.fromList ? `From: ${payload.fromList}` : null,
+        payload.toList ? `To: ${payload.toList}` : null,
+        payload.customerName ? `Customer: ${payload.customerName}` : null,
+        payload.customerPhone ? `Phone: ${payload.customerPhone}` : null,
+        payload.address ? `Address: ${payload.address}` : null,
+        payload.serviceType ? `Service: ${payload.serviceType}` : null,
+        payload.notes ? `Notes: ${payload.notes}` : null,
+    ].filter(Boolean).join('\n');
+}
 
 
 // --- routes ----------------------------------------------------------------
@@ -220,7 +267,11 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
         const moved = await prisma.card.update({
             where: { id },
-            data: { listId: toListId, rank: newRank },
+            data: {
+                listId: toListId,
+                rank: newRank,
+                ...(listChanged ? { lastStatusChangedAt: new Date(), serviceDeskOverdueNotifiedAt: null } : {}),
+            },
             include: { labels: { select: { labelId: true } } },
         });
 
@@ -237,6 +288,81 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
                     fromListId: currentCard.listId,
                     toListId: toListId
                 }).catch(console.error);
+            }
+
+            const board = await prisma.board.findUnique({
+                where: { id: srcBoardId },
+                select: { workspaceId: true },
+            });
+            if (board?.workspaceId) {
+                const entitled = await isWorkspaceEntitled(prisma, board.workspaceId).catch(() => false);
+                if (entitled) {
+                    const cardDetails = await prisma.card.findUnique({
+                        where: { id },
+                        select: {
+                            title: true,
+                            description: true,
+                            customerName: true,
+                            customerPhone: true,
+                            address: true,
+                            serviceType: true,
+                        },
+                    });
+
+                    const integrationsClient = (prisma as any).workspaceIntegration;
+                    if (integrationsClient?.findUnique) {
+                        const telegram = await integrationsClient.findUnique({
+                            where: { workspaceId_type: { workspaceId: board.workspaceId, type: 'telegram' } },
+                            select: { botTokenEncrypted: true, chatId: true },
+                        });
+                        if (telegram?.botTokenEncrypted && telegram?.chatId) {
+                            try {
+                                const token = decryptSecret(telegram.botTokenEncrypted);
+                                const text = formatMoveMessage({
+                                    title: cardDetails?.title || currentCard?.title || 'Card',
+                                    fromList: fromList?.name,
+                                    toList: toList?.name,
+                                    customerName: cardDetails?.customerName,
+                                    customerPhone: cardDetails?.customerPhone,
+                                    address: cardDetails?.address,
+                                    serviceType: cardDetails?.serviceType,
+                                    notes: cardDetails?.description,
+                                });
+                                await sendTelegram(token, telegram.chatId, text);
+                            } catch (err) {
+                                console.error('[CardsRoute] Telegram move alert failed', err);
+                            }
+                        }
+
+                        const webhook = await integrationsClient.findUnique({
+                            where: { workspaceId_type: { workspaceId: board.workspaceId, type: 'webhook' } },
+                            select: { webhookNotifyUrlEncrypted: true },
+                        });
+                        if (webhook?.webhookNotifyUrlEncrypted) {
+                            try {
+                                const url = decryptSecret(webhook.webhookNotifyUrlEncrypted);
+                                await sendWebhookNotify(url, {
+                                    event: 'card.moved',
+                                    cardId: id,
+                                    boardId: srcBoardId,
+                                    fromListId: currentCard?.listId,
+                                    toListId,
+                                    fromListName: fromList?.name,
+                                    toListName: toList?.name,
+                                    title: cardDetails?.title || currentCard?.title || 'Card',
+                                    customerName: cardDetails?.customerName ?? null,
+                                    customerPhone: cardDetails?.customerPhone ?? null,
+                                    address: cardDetails?.address ?? null,
+                                    serviceType: cardDetails?.serviceType ?? null,
+                                    notes: cardDetails?.description ?? null,
+                                    movedAt: new Date().toISOString(),
+                                });
+                            } catch (err) {
+                                console.error('[CardsRoute] Webhook move alert failed', err);
+                            }
+                        }
+                    }
+                }
             }
 
             // Real-time update

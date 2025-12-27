@@ -20,6 +20,7 @@ export class TrelloCardComponent {
     @Input({ required: true }) card!: Card;
     @Input({ required: true }) listId!: string;
     @Input() disableClick = false;
+    @Input() overdue = false;
 
     showMore = false;
     editing = false;

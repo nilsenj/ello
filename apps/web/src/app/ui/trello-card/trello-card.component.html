@@ -59,6 +59,11 @@
 
     <!-- Meta row: priority • risk • estimation • dates • desc flag -->
     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-sub">
+        <!-- Overdue -->
+        <span *ngIf="overdue" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-red-50 text-red-700">
+            {{ tOverdue }}
+        </span>
+
         <!-- Priority pill -->
         <span *ngIf="priority() as p" class="inline-flex items-center gap-1 px-2 py-[2px] rounded-full"
             [style.backgroundColor]="p.bg" [style.color]="p.fg" [attr.title]="tPriorityTitle(p.label)">

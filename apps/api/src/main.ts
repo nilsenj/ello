@@ -18,8 +18,10 @@ import { registerWorkspaceRoutes } from './routes/workspaces.js';
 import { registerAttachmentRoutes } from './routes/attachments.js';
 import { registerActivityRoutes } from './routes/activity.js';
 import { registerNotificationRoutes } from './routes/notifications.js';
+import { registerServiceDeskRoutes } from './routes/service-desk.js';
 import { setupSocketIO } from './socket.js';
 import { NotificationService } from './services/notification-service.js';
+import { startServiceDeskSlaScanner } from './services/service-desk-sla-scanner.js';
 
 const prisma = new PrismaClient();
 
@@ -73,9 +75,13 @@ async function bootstrap() {
     });
     await registerActivityRoutes(app, prisma);
     await registerNotificationRoutes(app, prisma);
+    await registerServiceDeskRoutes(app, prisma);
 
     // Initialize Socket.IO
     await setupSocketIO(app, prisma);
+
+    // Service Desk SLA scanner (overdue alerts)
+    startServiceDeskSlaScanner(prisma);
 
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`API on ${PUBLIC_BASE_URL}`);

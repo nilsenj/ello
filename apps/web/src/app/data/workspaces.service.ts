@@ -9,6 +9,7 @@ export type WorkspaceLite = {
     id: string;
     name: string;
     description?: string;
+    isPersonal?: boolean;
     whoCanCreateBoards?: 'admins' | 'members';
     whoCanInviteMembers?: 'admins' | 'members';
     role?: 'owner' | 'admin' | 'member' | 'viewer';
@@ -78,7 +79,7 @@ export class WorkspacesService {
     }
 
     /** POST /api/workspaces */
-    async create(body: { name: string; description?: string }): Promise<WorkspaceLite> {
+    async create(body: { name: string; description?: string; isPersonal?: boolean }): Promise<WorkspaceLite> {
         return this.api.post<WorkspaceLite>('/api/workspaces', body);
     }
 

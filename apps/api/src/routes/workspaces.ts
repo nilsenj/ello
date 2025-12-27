@@ -27,6 +27,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                         id: true,
                         name: true,
                         description: true,
+                        isPersonal: true,
                         whoCanCreateBoards: true,
                         whoCanInviteMembers: true,
                     }
@@ -40,9 +41,9 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
     });
 
     // Create workspace
-    app.post('/api/workspaces', async (req: FastifyRequest<{ Body: { name: string; description?: string } }>, reply) => {
+    app.post('/api/workspaces', async (req: FastifyRequest<{ Body: { name: string; description?: string; isPersonal?: boolean } }>, reply) => {
         const user = ensureUser(req);
-        const { name, description } = req.body;
+        const { name, description, isPersonal } = req.body;
 
         if (!name?.trim()) return reply.code(400).send({ error: 'name required' });
 
@@ -53,6 +54,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
             data: {
                 name: name.trim(),
                 description: description ?? null,
+                isPersonal: !!isPersonal,
             },
         });
 

@@ -1,0 +1,60 @@
+<div class="rounded-xl border border-slate-200 bg-white p-5">
+    <div *ngIf="loading" class="text-sm text-slate-500">{{ tLoading }}</div>
+
+    <div *ngIf="!loading && report" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tCreated }}</div>
+                <div class="text-2xl font-semibold text-slate-900">{{ report.created }}</div>
+                <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div class="h-full bg-slate-600" [style.width]="barWidth(report.created)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-emerald-700">{{ tClosed }}</div>
+                <div class="text-2xl font-semibold text-emerald-900">{{ report.closed }}</div>
+                <div class="h-2 rounded-full bg-emerald-100 overflow-hidden">
+                    <div class="h-full bg-emerald-600" [style.width]="barWidth(report.closed)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-amber-700">{{ tOverdue }}</div>
+                <div class="text-2xl font-semibold text-amber-900">{{ report.overdue }}</div>
+                <div class="h-2 rounded-full bg-amber-100 overflow-hidden">
+                    <div class="h-full bg-amber-600" [style.width]="barWidth(report.overdue)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tBacklog }}</div>
+                <div class="text-2xl font-semibold text-slate-900">{{ report.backlog }}</div>
+                <div class="text-xs text-slate-400">Open now</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tAvgResolution }}</div>
+                <div class="text-2xl font-semibold text-slate-900">
+                    {{ report.avgResolutionHours === null ? '—' : report.avgResolutionHours }}
+                </div>
+                <div class="text-xs text-slate-400">Closed cards</div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="text-xs uppercase text-slate-500 mb-2">Volume mix</div>
+            <div class="flex h-3 rounded-full overflow-hidden">
+                <div class="bg-slate-600" [style.width]="barWidth(report.created)"></div>
+                <div class="bg-emerald-600" [style.width]="barWidth(report.closed)"></div>
+                <div class="bg-amber-600" [style.width]="barWidth(report.overdue)"></div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="text-xs uppercase text-slate-500 mb-2">Weekly trend</div>
+            <service-desk-weekly-report-chart
+                [created]="report.daily.created"
+                [closed]="report.daily.closed">
+            </service-desk-weekly-report-chart>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && !report" class="text-sm text-slate-500">{{ tEmpty }}</div>
+</div>

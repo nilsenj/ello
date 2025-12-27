@@ -54,6 +54,8 @@ model Workspace {
   members     WorkspaceMember[]
   pendingInvitations PendingInvitation[]
   boards      Board[]
+  entitlements WorkspaceEntitlement[]
+  integrations WorkspaceIntegration[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
@@ -124,6 +126,7 @@ model Board {
   notifications Notification[]
   watchedBy   WatchedBoard[]
   pendingInvitations PendingInvitation[]
+  slaRules    BoardSlaRule[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -157,6 +160,7 @@ model List {
   boardId  String
   wipLimit Int?
   cards    Card[]
+  slaRules BoardSlaRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -199,6 +203,15 @@ model Card {
   watchedBy   WatchedCard[]
   isDone      Boolean      @default(false)
 
+  // Service Desk fields (optional)
+  customerName  String?
+  customerPhone String?
+  address       String?
+  serviceType   String?
+  scheduledAt   DateTime?
+  lastStatusChangedAt DateTime @default(now())
+  serviceDeskOverdueNotifiedAt DateTime?
+
   // Card relations for diagram visualization
   sourceRelations CardRelation[] @relation("sourceRelations")
   targetRelations CardRelation[] @relation("targetRelations")
@@ -207,6 +220,54 @@ model Card {
   updatedAt DateTime @updatedAt
 
   @@index([listId, rank])
+}
+
+// ===== Service Desk =====
+
+model WorkspaceEntitlement {
+  id          String   @id @default(cuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+  moduleKey   String
+  status      String
+  validUntil  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, moduleKey])
+}
+
+model BoardSlaRule {
+  id        String   @id @default(cuid())
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId    String
+  slaHours  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([boardId, listId])
+}
+
+enum IntegrationType {
+  telegram
+  webhook
+}
+
+model WorkspaceIntegration {
+  id              String   @id @default(cuid())
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId     String
+  type            IntegrationType
+  botTokenEncrypted String?
+  chatId          String?
+  webhookSecretEncrypted String?
+  webhookNotifyUrlEncrypted String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([workspaceId, type])
 }
 
 // Card-to-card relations for diagram visualization

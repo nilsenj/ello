@@ -26,6 +26,7 @@ import { TemplatesModalComponent } from '../../components/templates-modal/templa
 import { TemplatesModalService } from '../../components/templates-modal/templates-modal.service';
 import { UserHeaderComponent } from '../../ui/user-header/user-header.component';
 import { WorkspaceSidebarComponent } from '../../ui/workspace-sidebar/workspace-sidebar.component';
+import { ServiceDeskService } from '../../data/service-desk.service';
 
 @Component({
     standalone: true,
@@ -54,12 +55,16 @@ export class HomePageComponent implements OnInit {
     private settingsWorkspaceModal = inject(WorkspaceSettingsModalService);
     private membersWorkspaceModal = inject(WorkspaceMembersModalService);
     private templatesModal = inject(TemplatesModalService);
+    private serviceDeskApi = inject(ServiceDeskService);
 
     // State
     workspaces = signal<WorkspaceLite[]>([]);
+    moduleWorkspaces = signal<WorkspaceLite[]>([]);
     boards = this.store.boards; // Signal<Board[]>
     loading = signal<boolean>(true);
     sidebarOpen = signal<boolean>(false);
+    modulesModalOpen = signal<boolean>(false);
+    buyingModule = signal<boolean>(false);
 
     toggleSidebar() {
         this.sidebarOpen.update(v => !v);
@@ -102,6 +107,11 @@ export class HomePageComponent implements OnInit {
     readonly tArchiveHint = $localize`:@@home.archiveHint:You can restore it later from the archive view.`;
     readonly tCancel = $localize`:@@home.cancel:Cancel`;
     readonly tArchiveConfirm = $localize`:@@home.archiveConfirm:Archive`;
+    readonly tServiceDesk = $localize`:@@home.serviceDesk:Service Desk`;
+    readonly tModulesTitle = $localize`:@@home.modulesTitle:Available modules`;
+    readonly tBuyServiceDesk = $localize`:@@home.buyServiceDesk:Buy Service Desk`;
+    readonly tModulesHint = $localize`:@@home.modulesHint:Create a dedicated workspace for each module.`;
+    readonly tPurchased = $localize`:@@home.modulePurchased:Purchased`;
 
     async ngOnInit() {
         this.loadRecentIds();
@@ -176,10 +186,62 @@ export class HomePageComponent implements OnInit {
     async loadWorkspaces() {
         const list = await this.workspacesApi.list();
         this.workspaces.set(list);
+        await this.loadModuleWorkspaces(list);
+        if (!this.selectedWorkspaceId() && list.length) {
+            this.selectedWorkspaceId.set(list[0].id);
+        }
     }
 
     onWorkspaceSelected(id: string) {
         this.router.navigate(['/w', id]);
+    }
+
+    openServiceDesk(ws: WorkspaceLite) {
+        if (!ws?.id) return;
+        this.router.navigate(['/w', ws.id, 'service-desk']);
+    }
+
+    openModulesModal() {
+        this.modulesModalOpen.set(true);
+    }
+
+    closeModulesModal() {
+        this.modulesModalOpen.set(false);
+    }
+
+    async loadModuleWorkspaces(list: WorkspaceLite[]) {
+        const checks = await Promise.all(list.map(async ws => {
+            const res = await this.serviceDeskApi.getEntitlement(ws.id).catch(() => ({ entitled: false }));
+            return { ws, entitled: !!res?.entitled };
+        }));
+        const moduleWorkspaces = checks
+            .filter(r => r.entitled && r.ws.isPersonal)
+            .map(r => r.ws);
+        this.moduleWorkspaces.set(moduleWorkspaces);
+    }
+
+    hasServiceDeskModule() {
+        return this.moduleWorkspaces().some(ws => (ws.name || '').toLowerCase().includes('service desk'));
+    }
+
+    async buyServiceDeskModule() {
+        if (this.buyingModule()) return;
+        this.buyingModule.set(true);
+        try {
+            const workspace = await this.workspacesApi.create({
+                name: 'Service Desk',
+                description: 'Service Desk workspace',
+                isPersonal: true,
+            });
+            await this.serviceDeskApi.activateEntitlementMock(workspace.id);
+            await this.serviceDeskApi.bootstrap(workspace.id);
+            await this.boardsApi.loadBoards();
+            await this.loadWorkspaces();
+            this.closeModulesModal();
+            this.router.navigate(['/w', workspace.id, 'service-desk', 'overview']);
+        } finally {
+            this.buyingModule.set(false);
+        }
     }
 
     getBoardsForWorkspace(workspaceId: string) {

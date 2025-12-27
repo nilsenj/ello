@@ -28,11 +28,14 @@
                     class="h-full w-64"
                     [workspaces]="workspaces()"
                     [selectedWorkspaceId]="selectedWorkspaceId()"
+                    [moduleWorkspaces]="moduleWorkspaces()"
                     (workspaceSelected)="onWorkspaceSelected($event); toggleSidebar()"
                     (createWorkspace)="openCreateWorkspace()"
                     (openSettings)="openWorkspaceSettings($event)"
                     (openMembers)="openWorkspaceMembers($event)"
                     (openTemplates)="openTemplates()"
+                    (openServiceDesk)="openServiceDesk($event)"
+                    (openModulesModal)="openModulesModal()"
             ></workspace-sidebar>
         </div>
 
@@ -267,5 +270,33 @@
                 <span>{{ tArchiveConfirm }}</span>
             </button>
         </footer>
+    </div>
+</section>
+
+<!-- Modules modal -->
+<section *ngIf="modulesModalOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/40"
+         (mousedown)="closeModulesModal()">
+    <div class="w-[min(94vw,640px)] rounded-xl bg-white p-6 shadow-xl space-y-4"
+         (mousedown)="$event.stopPropagation()">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900">{{ tModulesTitle }}</h2>
+            <button class="text-slate-400 hover:text-slate-600" (click)="closeModulesModal()">✕</button>
+        </div>
+        <p class="text-sm text-slate-500">{{ tModulesHint }}</p>
+
+        <div class="rounded-lg border border-slate-200 p-4 flex items-center justify-between">
+            <div>
+                <div class="text-sm font-semibold text-slate-900">{{ tServiceDesk }}</div>
+                <div class="text-xs text-slate-500">Requests • SLA • Alerts</div>
+            </div>
+            <button *ngIf="!hasServiceDeskModule()"
+                    class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                    (click)="buyServiceDeskModule()" [disabled]="buyingModule()">
+                {{ tBuyServiceDesk }}
+            </button>
+            <span *ngIf="hasServiceDeskModule()" class="text-xs font-semibold text-emerald-600">
+                {{ tPurchased }}
+            </span>
+        </div>
     </div>
 </section>

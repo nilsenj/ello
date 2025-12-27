@@ -27,6 +27,7 @@ import { BoardCalendarViewComponent } from "../../components/board-calendar-view
 import { LucideAngularModule, FilterIcon, SearchIcon, UserIcon, TagIcon } from 'lucide-angular';
 import { WorkspacesService } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
+import { ServiceDeskService } from '../../data/service-desk.service';
 
 @Component({
     selector: 'kanban-board',
@@ -46,6 +47,7 @@ export class KanbanBoardComponent implements OnInit {
     modal = inject(CardModalService);
     workspacesApi = inject(WorkspacesService);
     authService = inject(AuthService);
+    serviceDeskApi = inject(ServiceDeskService);
     route = inject(ActivatedRoute);
     router = inject(Router);
 
@@ -73,6 +75,7 @@ export class KanbanBoardComponent implements OnInit {
     readonly tLabel = $localize`:@@kanban.label:Label`;
     readonly tMember = $localize`:@@kanban.member:Member`;
     readonly tClearFilters = $localize`:@@kanban.clearFilters:Clear all filters`;
+    readonly tOverdueFilter = $localize`:@@kanban.overdueFilter:Overdue`;
     readonly tView = $localize`:@@kanban.view:View`;
     readonly tBoardView = $localize`:@@kanban.boardView:Board view`;
     readonly tTableView = $localize`:@@kanban.tableView:Table view`;
@@ -154,11 +157,13 @@ export class KanbanBoardComponent implements OnInit {
     filter = '';
     activeLabel = ''; // used by header label filter
     activeMemberId = ''; // used by header member filter
+    activeOverdue = false;
     editingCard: Record<string, boolean> = {};
     cardTitles: Record<string, string> = {};
     trackList = (_: number, l: ListDto) => l.id;
 
     workspaces = signal<any[]>([]);
+    slaRules = signal<Map<string, number>>(new Map());
 
     canEditBoard = computed(() => {
         const uid = this.authService.user()?.id;
@@ -216,6 +221,21 @@ export class KanbanBoardComponent implements OnInit {
                 this.socket.subscribeToBoard(boardId);
             }
         });
+
+        effect(() => {
+            const boardId = this.store.currentBoardId();
+            if (!boardId) {
+                this.slaRules.set(new Map());
+                return;
+            }
+            this.serviceDeskApi.getSlaRules(boardId)
+                .then(res => {
+                    const map = new Map<string, number>();
+                    for (const r of res?.rules ?? []) map.set(r.listId, r.slaHours);
+                    this.slaRules.set(map);
+                })
+                .catch(() => this.slaRules.set(new Map()));
+        }, { allowSignalWrites: true });
 
         // Listen for new cards
         this.socket.on('card:created', (card: Card) => {
@@ -412,8 +432,47 @@ export class KanbanBoardComponent implements OnInit {
             if (!memberIds.includes(this.activeMemberId)) return false;
         }
 
+        if (this.activeOverdue && !this.isOverdue(c)) return false;
+
         return true;
     }
+
+    private listNameById(listId: string) {
+        const list = this.store.lists().find(l => l.id === listId);
+        return (list?.title ?? list?.name ?? '').trim();
+    }
+
+    isOverdue(c: Card): boolean {
+        const rules = this.slaRules();
+        if (!rules.size) return false;
+        const hours = rules.get(c.listId);
+        if (!hours) return false;
+        const listName = this.listNameById(c.listId);
+        if (listName === 'Done' || listName === 'Canceled') return false;
+        const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
+        if (!changed || isNaN(changed.getTime())) return false;
+        const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
+        return overdueAt < Date.now();
+    }
+
+    overdueMap = computed(() => {
+        const map: Record<string, boolean> = {};
+        const rules = this.slaRules();
+        if (!rules.size) return map;
+        const lists = this.store.lists();
+        for (const l of lists) {
+            const listName = (l.title ?? l.name ?? '').trim();
+            for (const c of l.cards ?? []) {
+                const hours = rules.get(l.id);
+                if (!hours || listName === 'Done' || listName === 'Canceled') continue;
+                const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
+                if (!changed || isNaN(changed.getTime())) continue;
+                const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
+                map[c.id] = overdueAt < Date.now();
+            }
+        }
+        return map;
+    });
 
     getAllFilteredCards(): Card[] {
         const lists = this.store.lists();

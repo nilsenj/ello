@@ -37,6 +37,7 @@ export class ListColumnComponent {
 
     @Input() filtered: Card[] | null = null;
     @Input() canEdit = true;
+    @Input() overdueMap: Record<string, boolean> | null = null;
 
     store = inject(BoardStore);
     cardsApi = inject(CardsService);

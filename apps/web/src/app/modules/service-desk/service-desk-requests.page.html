@@ -1,0 +1,104 @@
+<div class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
+            <select
+                class="ui-select"
+                [ngModel]="selectedBoardId()"
+                (ngModelChange)="selectedBoardId.set($event); loadBoardLists($event)"
+            >
+                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
+            </select>
+            <div class="flex items-center rounded-md border border-slate-200 bg-white text-xs">
+                <button class="px-2 py-1 font-semibold"
+                        [class.text-slate-900]="!showAll()" [class.text-slate-400]="showAll()"
+                        (click)="showAll.set(false)">
+                    {{ tInboxOnly }}
+                </button>
+                <button class="px-2 py-1 font-semibold border-l border-slate-200"
+                        [class.text-slate-900]="showAll()" [class.text-slate-400]="!showAll()"
+                        (click)="showAll.set(true)">
+                    {{ tAll }}
+                </button>
+            </div>
+            <button class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                    (click)="openModal()">{{ tNewRequest }}</button>
+        </div>
+    </div>
+
+    <div *ngIf="loading()" class="text-sm text-slate-500">Loading requests…</div>
+
+    <div *ngIf="!loading()" class="overflow-x-auto">
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                    <th class="text-left px-3 py-2">Customer</th>
+                    <th class="text-left px-3 py-2">Phone</th>
+                    <th class="text-left px-3 py-2">Service</th>
+                    <th class="text-left px-3 py-2">Notes</th>
+                    <th *ngIf="showAll()" class="text-left px-3 py-2">{{ tStatus }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let c of cards()" class="border-t">
+                    <td class="px-3 py-2 font-medium text-slate-900">{{ c.customerName || c.title }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ c.customerPhone || '—' }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ c.serviceType || '—' }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ c.description || '—' }}</td>
+                    <td *ngIf="showAll()" class="px-3 py-2 text-slate-600">{{ c.listName }}</td>
+                </tr>
+                <tr *ngIf="cards().length === 0">
+                    <td colspan="4" class="px-3 py-6 text-center text-slate-500">No requests yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <section *ngIf="modalOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/40"
+             (mousedown)="closeModal()">
+        <div class="w-[min(92vw,520px)] rounded-xl bg-white shadow-xl p-6 space-y-4"
+             (mousedown)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">{{ tNewRequest }}</h3>
+                <button class="text-slate-400 hover:text-slate-600" (click)="closeModal()">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCustomerName }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="request.customerName" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCustomerPhone }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="request.customerPhone" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tAddress }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="request.address" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tServiceType }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="request.serviceType" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tNotes }}</span>
+                    <textarea class="ui-textarea w-full" rows="3" [(ngModel)]="request.notes"></textarea>
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tScheduledAt }}</span>
+                    <input type="datetime-local" class="ui-input w-full" [(ngModel)]="request.scheduledAt" />
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button class="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-slate-100"
+                        (click)="closeModal()">{{ tCancel }}</button>
+                <button class="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                        (click)="submitRequest()" [disabled]="submitting()">
+                    {{ tSubmit }}
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,47 @@
+<div class="space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
+            <select
+                class="ui-select"
+                [ngModel]="selectedBoardId()"
+                (ngModelChange)="selectedBoardId.set($event); loadBoard($event)"
+            >
+                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-slate-500 border-b">
+                    <th class="py-2">List</th>
+                    <th class="py-2">{{ tSlaHours }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let l of lists()" class="border-b last:border-b-0">
+                    <td class="py-2">{{ l.title || l.name }}</td>
+                    <td class="py-2">
+                        <input
+                            type="number"
+                            min="1"
+                            class="ui-input w-28"
+                            [ngModel]="rules()[l.id] || ''"
+                            (ngModelChange)="setRule(l.id, $event)"
+                        />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button
+        class="px-4 py-2 rounded-md bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+        (click)="save()" [disabled]="saving()"
+    >
+        {{ tSave }}
+    </button>
+</div>

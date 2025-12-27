@@ -22,7 +22,7 @@
         <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c"
             [cdkDragDisabled]="!canEdit" [card]="c"
             [listId]="list.id" (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
-            [disableClick]="disableCardClick()">
+            [disableClick]="disableCardClick()" [overdue]="overdueMap?.[c.id]">
         </trello-card>
     </div>
 

@@ -17,12 +17,15 @@ export class WorkspaceSidebarComponent {
     readonly PlusIcon = Plus;
     readonly tBoards = $localize`:@@sidebar.boards:Boards`;
     readonly tTemplates = $localize`:@@sidebar.templates:Templates`;
+    readonly tModules = $localize`:@@sidebar.modules:Modules`;
+    readonly tServiceDesk = $localize`:@@sidebar.serviceDesk:Service Desk`;
     readonly tWorkspaces = $localize`:@@sidebar.workspaces:Workspaces`;
     readonly tCreateWorkspace = $localize`:@@sidebar.createWorkspace:Create workspace`;
 
     // Inputs
     workspaces = input<WorkspaceLite[]>([]);
     selectedWorkspaceId = input<string | null>(null);
+    moduleWorkspaces = input<WorkspaceLite[]>([]);
 
     // Outputs
     workspaceSelected = output<string>();
@@ -30,4 +33,6 @@ export class WorkspaceSidebarComponent {
     openSettings = output<WorkspaceLite>();
     openMembers = output<WorkspaceLite>();
     openTemplates = output<void>();
+    openServiceDesk = output<WorkspaceLite>();
+    openModulesModal = output<void>();
 }
