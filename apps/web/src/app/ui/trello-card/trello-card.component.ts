@@ -87,7 +87,7 @@ export class TrelloCardComponent {
         return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
     });
 
-    openModal(ev: MouseEvent) {
+    openModal(ev: Event) {
         if (this.disableClick) return;
         const target = ev.target as HTMLElement;
         if (target.closest('button, a, input, textarea, [data-stop-open]')) return;

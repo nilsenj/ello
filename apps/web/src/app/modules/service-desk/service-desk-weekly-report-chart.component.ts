@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as d3 from 'd3';
 
@@ -10,34 +10,77 @@ type DailyPoint = { date: string; count: number };
     imports: [CommonModule],
     templateUrl: './service-desk-weekly-report-chart.component.html',
 })
-export class ServiceDeskWeeklyReportChartComponent implements OnChanges, AfterViewInit {
+export class ServiceDeskWeeklyReportChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     @Input() created: DailyPoint[] = [];
     @Input() closed: DailyPoint[] = [];
 
     @ViewChild('chart') chartRef!: ElementRef<SVGSVGElement>;
     private viewReady = false;
+    private isVisible = false;
+    private pendingRender = false;
+    private intersectionObserver?: IntersectionObserver;
+    private resizeObserver?: ResizeObserver;
 
     readonly tCreated = $localize`:@@serviceDesk.reports.created:Created`;
     readonly tClosed = $localize`:@@serviceDesk.reports.closed:Closed`;
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes['created'] || changes['closed']) {
-            if (this.viewReady) {
+            if (this.viewReady && this.isVisible) {
                 this.renderChart();
+            } else {
+                this.pendingRender = true;
             }
         }
     }
 
     ngAfterViewInit() {
         this.viewReady = true;
-        this.renderChart();
+        this.setupObservers();
+        if (this.isVisible) {
+            this.renderChart();
+        }
+    }
+
+    ngOnDestroy() {
+        this.intersectionObserver?.disconnect();
+        this.resizeObserver?.disconnect();
+    }
+
+    private setupObservers() {
+        const el = this.chartRef?.nativeElement;
+        if (!el) return;
+
+        if ('IntersectionObserver' in window) {
+            this.intersectionObserver = new IntersectionObserver(entries => {
+                const visible = entries.some(entry => entry.isIntersecting);
+                this.isVisible = visible;
+                if (visible && this.pendingRender) {
+                    this.pendingRender = false;
+                    this.renderChart();
+                }
+            }, { threshold: 0.1 });
+            this.intersectionObserver.observe(el);
+        } else {
+            this.isVisible = true;
+        }
+
+        if ('ResizeObserver' in window) {
+            this.resizeObserver = new ResizeObserver(() => {
+                if (this.isVisible) {
+                    this.renderChart();
+                }
+            });
+            this.resizeObserver.observe(el);
+        }
     }
 
     private renderChart() {
         if (!this.chartRef) return;
         const svg = d3.select(this.chartRef.nativeElement);
-        const width = 640;
-        const height = 220;
+        const rect = this.chartRef.nativeElement.getBoundingClientRect();
+        const width = Math.max(320, Math.floor(rect.width || 640));
+        const height = width < 480 ? 180 : 220;
         const margin = { top: 20, right: 20, bottom: 30, left: 36 };
 
         svg.selectAll('*').remove();
@@ -73,9 +116,11 @@ export class ServiceDeskWeeklyReportChartComponent implements OnChanges, AfterVi
             .y(d => y(d.count))
             .curve(d3.curveMonotoneX);
 
+        const tickCount = width < 480 ? 4 : 6;
+
         svg.append('g')
             .attr('transform', `translate(0,${height - margin.bottom})`)
-            .call(d3.axisBottom(x).ticks(6).tickSizeOuter(0))
+            .call(d3.axisBottom(x).ticks(tickCount).tickSizeOuter(0))
             .call(g => g.selectAll('text').attr('font-size', 10).attr('fill', '#64748b'));
 
         svg.append('g')

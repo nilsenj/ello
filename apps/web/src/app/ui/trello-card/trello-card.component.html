@@ -1,5 +1,5 @@
 <div class="relative isolate overflow-visible bg-card-bg rounded-md px-3 py-2 mt-1 text-sm shadow-card border border-black/0 hover:border-black/5"
-    [attr.aria-label]="tCardAriaLabel" (click)="openModal($event)">
+    [attr.aria-label]="tCardAriaLabel" (pointerup)="openModal($event)">
 
     <!-- Cover Image -->
     <div *ngIf="card.coverAttachment"
@@ -12,21 +12,6 @@
     <!-- left priority stripe -->
     <span *ngIf="priority() as p" class="absolute left-0 top-0 bottom-0 w-1 rounded-l" [style.backgroundColor]="p.dot"
         aria-hidden="true"></span>
-    <!-- hover checkbox -->
-    <button class="absolute -left-2 -top-2 opacity-0 group-hover:opacity-100 transition-opacity"
-        (click)="toggleDone($event)" [attr.title]="tMarkComplete" data-stop-open>
-        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full border bg-white shadow"
-            [class.bg-emerald-500]="cardDone()" [class.border-emerald-500]="cardDone()" [class.text-white]="cardDone()">
-            <svg *ngIf="cardDone()" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-7.5 7.5a1 1 0 01-1.414 0L3.293 9.207a1 1 0 011.414-1.414L8.5 11.586l6.793-6.793a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
-            </svg>
-            <svg *ngIf="!cardDone()" width="16" height="16" viewBox="0 0 24 24" class="text-gray-400">
-                <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2" />
-            </svg>
-        </span>
-    </button>
     <!-- Labels row -->
     <div class="mb-2 flex flex-wrap gap-1" *ngIf="labelIds(card).length > 0">
         <span *ngFor="let lid of labelIds(card)" class="inline-block h-2 w-10 rounded"

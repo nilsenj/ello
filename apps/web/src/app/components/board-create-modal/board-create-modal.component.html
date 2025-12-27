@@ -1,6 +1,6 @@
 <section
         *ngIf="modal.isOpen()"
-        class="fixed inset-0 z-[1000]
+        class="bcm-backdrop fixed inset-0 z-[1000]
          flex sm:grid sm:place-items-center
          bg-black/50 backdrop-blur-sm"
         (mousedown)="onBackdrop($event)"
@@ -10,6 +10,7 @@
     <!-- Modal -->
     <div
             class="
+      bcm-panel
       relative bg-white shadow-2xl flex flex-col
       w-full sm:w-[min(92vw,760px)]
       max-w-[760px]
@@ -22,6 +23,7 @@
         <!-- header -->
         <header
                 class="relative
+             bcm-header
              px-4 sm:px-6
              py-3 sm:py-4
              border-b border-slate-100
@@ -42,7 +44,7 @@
         </header>
 
         <!-- body -->
-        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div class="bcm-body flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
             <div class="grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-8">
                 <!-- Preview -->
                 <div class="order-2 lg:order-1">

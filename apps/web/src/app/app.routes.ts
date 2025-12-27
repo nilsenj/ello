@@ -1,11 +1,9 @@
 // apps/web/src/app/app.routes.ts
 import {Router, Routes, UrlMatchResult, UrlSegment} from '@angular/router';
 import {inject} from '@angular/core';
-import {BoardPageComponent} from './pages/board-page.component';
 import {AuthService} from './auth/auth.service';
 import {BoardsService} from './data/boards.service';
 import {UploadsBypassComponent} from "./shared/uploads-bypass.component";
-import {BoardTableViewComponent} from "./components/board-table-view/board-table-view.component";
 
 /** Guard: block private area when not authenticated (await bootstrap on first run) */
 const authGuard = async () => {
@@ -101,9 +99,15 @@ export const routes: Routes = [
             },
             {
                 path: 'b/:boardId/table',
-                component: BoardTableViewComponent
+                loadComponent: () => import('./components/board-table-view/board-table-view.component')
+                    .then(m => m.BoardTableViewComponent),
+                title: 'Board Table'
             },
-            {path: 'b/:boardId', component: BoardPageComponent, title: 'Board'},
+            {
+                path: 'b/:boardId',
+                loadComponent: () => import('./pages/board-page.component').then(m => m.BoardPageComponent),
+                title: 'Board'
+            },
             {
                 path: 'w/:workspaceId/service-desk',
                 loadComponent: () => import('./modules/service-desk/service-desk.page').then(m => m.ServiceDeskPageComponent),

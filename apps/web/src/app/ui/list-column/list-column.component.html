@@ -20,7 +20,7 @@
 
         <!-- Render filtered if provided, otherwise full -->
         <trello-card *ngFor="let c of (filtered ?? cards()); trackBy: trackCard" cdkDrag [cdkDragData]="c"
-            [cdkDragDisabled]="!canEdit" [card]="c"
+            [cdkDragDisabled]="!canEdit" [cdkDragStartDelay]="{ mouse: 0, touch: 200 }" [card]="c"
             [listId]="list.id" (cdkDragStarted)="onDragStart()" (cdkDragEnded)="onDragEnd()"
             [disableClick]="disableCardClick()" [overdue]="overdueMap?.[c.id]">
         </trello-card>

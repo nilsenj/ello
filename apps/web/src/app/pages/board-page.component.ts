@@ -16,10 +16,10 @@ import { UserHeaderComponent } from '../ui/user-header/user-header.component';
     imports: [CommonModule, FormsModule, KanbanBoardComponent, CardModalComponent, UserHeaderComponent],
     template: `
         <user-header></user-header>
+        <card-modal></card-modal>
 
         <main class="h-[calc(100vh-56px)] bg-[#0079bf] bg-cover bg-center overflow-auto">
             <kanban-board class="block"></kanban-board>
-            <card-modal></card-modal>
         </main>
     `
 })

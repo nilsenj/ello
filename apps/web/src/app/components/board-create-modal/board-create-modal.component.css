@@ -1,2 +1,42 @@
 /* optional: nothing required anymore, but keep if you want a body scroll lock */
 body.overflow-hidden { overflow: hidden; }
+
+.bcm-backdrop {
+    z-index: 2000;
+}
+
+.bcm-panel {
+    z-index: 2001;
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+    .bcm-panel {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+:host-context(.native-safe-area) .bcm-panel {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+:host-context(.native-safe-area) .bcm-panel input,
+:host-context(.native-safe-area) .bcm-panel textarea,
+:host-context(.native-safe-area) .bcm-panel select {
+    font-size: 16px;
+}
+
+:host-context(.native-safe-area) .bcm-header {
+    padding-top: calc(12px + env(safe-area-inset-top));
+}
+
+:host-context(.native-safe-area) .bcm-body {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}

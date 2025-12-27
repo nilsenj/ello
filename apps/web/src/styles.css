@@ -18,6 +18,27 @@
 html, body {
     height: 100%;
     background: #f1f2f4;
+    overflow-x: hidden;
+}
+
+html {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+.native-safe-area body {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+.ios-safe-area body {
+    -webkit-overflow-scrolling: touch;
+}
+
+.ios-safe-area input,
+.ios-safe-area textarea,
+.ios-safe-area select {
+    font-size: 16px;
 }
 
 .native-safe-area .native-safe-header {
@@ -26,6 +47,10 @@ html, body {
 
 .native-safe-area .native-safe-top {
     padding-top: env(safe-area-inset-top);
+}
+
+.native-safe-area .native-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .native-safe-area .native-hide {

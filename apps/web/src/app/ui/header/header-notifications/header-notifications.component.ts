@@ -2,11 +2,12 @@ import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule, BellIcon, CheckIcon, Trash2Icon } from 'lucide-angular';
+import { ClickOutsideDirective } from '../../click-outside.directive';
 
 @Component({
     standalone: true,
     selector: 'header-notifications',
-    imports: [CommonModule, RouterLink, LucideAngularModule],
+    imports: [CommonModule, RouterLink, LucideAngularModule, ClickOutsideDirective],
     templateUrl: './header-notifications.component.html',
     styles: [`
         .pill {
@@ -25,6 +26,16 @@ import { LucideAngularModule, BellIcon, CheckIcon, Trash2Icon } from 'lucide-ang
             box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
             padding: .5rem;
             z-index: 100;
+        }
+        @media (max-width: 640px) {
+            .menu-content {
+                position: fixed;
+                left: 50%;
+                right: auto;
+                top: calc(56px + env(safe-area-inset-top));
+                transform: translateX(-50%);
+                width: min(92vw, 22rem);
+            }
         }
     `]
 })

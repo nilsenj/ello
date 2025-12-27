@@ -1,5 +1,5 @@
-<div class="relative" (focusout)="onBlur($event)">
-    <button class="pill p-2 hover:bg-white/30 transition-colors relative" [attr.title]="tNotifications" (click)="toggle()">
+<div class="relative" (focusout)="onBlur($event)" clickOutside (clickOutside)="close()">
+    <button class="h-8 w-8 p-0 flex items-center justify-center hover:bg-white/30 transition-colors relative" [attr.title]="tNotifications" (click)="toggle()">
         <lucide-icon [img]="BellIcon" [size]="20" [strokeWidth]="2" class="text-white"></lucide-icon>
         <span *ngIf="unreadCount() > 0"
             class="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border border-white text-[10px] font-bold flex items-center justify-center px-1">

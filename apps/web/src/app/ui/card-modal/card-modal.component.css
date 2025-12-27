@@ -4,13 +4,13 @@
     inset: 0;
     background: color-mix(in oklab, black 50%, transparent);
     backdrop-filter: blur(2px);
-    z-index: 50;
+    z-index: 1999;
 }
 
 /* Panel */
 .cm-panel {
     position: fixed;
-    z-index: 51;
+    z-index: 2000;
     inset: 24px;
     margin: 0 auto;
     background: #fff;
@@ -55,10 +55,11 @@
 
 @media (max-width: 1024px) {
     .cm-panel {
-        inset: 12px;
-        width: auto;
+        inset: 0;
+        width: 100vw;
         max-width: none;
-        border-radius: 10px;
+        border-radius: 0;
+        min-height: 100vh;
     }
 }
 
@@ -75,27 +76,31 @@
     box-shadow: 0 4px 14px color-mix(in oklab, var(--pri-dot, transparent), transparent 88%);
 }
 
+:host-context(.native-safe-area) .cm-header {
+    padding-top: calc(16px + env(safe-area-inset-top));
+}
+
 :host-context(.native-safe-area) .cm-panel {
-    top: env(safe-area-inset-top);
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     width: 100vw;
     max-width: none;
     border-radius: 0;
-    min-height: calc(100vh - env(safe-area-inset-top));
+    min-height: 100vh;
 }
 
 @media (max-width: 1024px) {
     :host-context(.native-safe-area) .cm-panel {
-        top: env(safe-area-inset-top);
+        top: 0;
         left: 0;
         right: 0;
         bottom: 0;
         width: 100vw;
         max-width: none;
         border-radius: 0;
-        min-height: calc(100vh - env(safe-area-inset-top));
+        min-height: 100vh;
     }
 }
 
