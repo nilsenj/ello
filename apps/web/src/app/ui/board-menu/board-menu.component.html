@@ -1,11 +1,11 @@
-<div *ngIf="isOpen()" class="fixed inset-0 z-40 bg-black/20" (click)="close()"></div>
+<div *ngIf="isOpen()" class="fixed inset-0 z-[1999] bg-black/20" (click)="close()"></div>
 
 <div *ngIf="isOpen()"
-    class="fixed top-0 right-0 bottom-0 w-80 bg-[#f4f5f7] shadow-xl z-50 flex flex-col transform transition-transform duration-200"
+    class="fixed top-0 right-0 bottom-0 w-80 bg-[#f4f5f7] shadow-xl z-[2000] flex flex-col transform transition-transform duration-200"
     [class.translate-x-0]="isOpen()" [class.translate-x-full]="!isOpen()">
 
     <!-- Header -->
-    <div class="native-safe-top bg-[var(--board-header,#026AA7)]"></div>
+    <div class="board-menu-safe-top bg-[var(--board-header,#026AA7)]"></div>
     <div class="min-h-12 px-4 border-b flex items-center justify-between bg-white shrink-0">
         <button *ngIf="view() !== 'main'" (click)="view.set('main')"
             class="text-gray-500 hover:text-gray-800 flex items-center gap-1">

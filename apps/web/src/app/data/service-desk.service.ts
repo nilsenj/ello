@@ -20,6 +20,17 @@ export class ServiceDeskService {
         return this.api.get(`/api/modules/service-desk/workspaces/${workspaceId}/boards`).catch(() => []);
     }
 
+    async ensureBoards(workspaceId: string): Promise<ServiceDeskBoardLite[]> {
+        const boards = await this.listBoards(workspaceId);
+        if (boards.length) return boards;
+        try {
+            await this.bootstrap(workspaceId);
+        } catch {
+            return boards;
+        }
+        return this.listBoards(workspaceId);
+    }
+
     bootstrap(workspaceId: string, name?: string): Promise<{ boardId: string }> {
         return this.api.post(`/api/modules/service-desk/bootstrap`, { workspaceId, name });
     }

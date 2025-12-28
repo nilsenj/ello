@@ -11,15 +11,21 @@ const RT_COOKIE = 'rt';
 export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaClient) {
     const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
     const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 12);
+    const IS_PROD = process.env.NODE_ENV === 'production';
 
     const signAccess = (u: { id: string; email: string }) =>
         jwt.sign({ sub: u.id, email: u.email } as JwtPayload, JWT_SECRET, { expiresIn: ACCESS_TTL_SEC });
 
     function setRefreshCookie(reply: any, token: string, maxAgeMs: number) {
+        const cookieSameSite = (process.env.COOKIE_SAMESITE as 'lax' | 'strict' | 'none' | undefined)
+            ?? (IS_PROD ? 'none' : 'lax');
+        const cookieSecure = process.env.COOKIE_SECURE
+            ? process.env.COOKIE_SECURE === 'true'
+            : IS_PROD;
         reply.setCookie(RT_COOKIE, token, {
             httpOnly: true,
-            sameSite: 'lax',
-            secure: false, // set true in prod with HTTPS
+            sameSite: cookieSameSite,
+            secure: cookieSecure,
             path: '/api/auth',
             maxAge: Math.floor(maxAgeMs / 1000),
         });
@@ -114,7 +120,7 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } });
         setRefreshCookie(reply, refreshToken, REFRESH_TTL_MS);
 
-        return { accessToken, user: { id: user.id, email: user.email, name: user.name ?? undefined } };
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name ?? undefined } };
     });
 
     // POST /api/auth/login
@@ -131,20 +137,24 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } });
         setRefreshCookie(reply, refreshToken, REFRESH_TTL_MS);
 
-        return { accessToken, user: { id: user.id, email: user.email, name: user.name ?? undefined, avatar: user.avatar ?? undefined } };
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name ?? undefined, avatar: user.avatar ?? undefined } };
     });
 
     // POST /api/auth/logout
-    app.post('/api/auth/logout', async (req, reply) => {
-        const rt = (req.cookies?.[RT_COOKIE] as string | undefined) ?? '';
+    app.post('/api/auth/logout', async (req: FastifyRequest<{ Body?: { refreshToken?: string } }>, reply) => {
+        const rt = (req.cookies?.[RT_COOKIE] as string | undefined)
+            ?? (req.body?.refreshToken as string | undefined)
+            ?? '';
         if (rt) await prisma.refreshToken.deleteMany({ where: { token: rt } });
         reply.clearCookie(RT_COOKIE, { path: '/api/auth' });
         return { ok: true };
     });
 
     // POST /api/auth/refresh  → reads httpOnly cookie, returns new accessToken
-    app.post('/api/auth/refresh', async (req, reply) => {
-        const rt = (req.cookies?.[RT_COOKIE] as string | undefined) ?? '';
+    app.post('/api/auth/refresh', async (req: FastifyRequest<{ Body?: { refreshToken?: string } }>, reply) => {
+        const rt = (req.cookies?.[RT_COOKIE] as string | undefined)
+            ?? (req.body?.refreshToken as string | undefined)
+            ?? '';
         if (!rt) return reply.code(400).send({ error: 'No refresh token' });
 
         const row = await prisma.refreshToken.findUnique({ where: { token: rt }, include: { user: true } });

@@ -58,7 +58,7 @@ export class ServiceDeskRequestsPageComponent implements OnInit {
         if (!workspaceId) return;
 
         try {
-            const boards = await this.serviceDeskApi.listBoards(workspaceId);
+            const boards = await this.serviceDeskApi.ensureBoards(workspaceId);
             this.boards.set(boards);
             if (boards.length) {
                 this.selectedBoardId.set(boards[0].id);

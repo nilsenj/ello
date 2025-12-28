@@ -1,270 +1,31 @@
 <!-- Board header -->
 <div class="flex items-center justify-between gap-3 px-4 py-3 bg-[color:var(--board-bg,#0f6ad4)] text-white relative">
     <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-        <!-- Desktop Filters (Large screens only) -->
-        <div class="hidden lg:flex items-center gap-3">
-            <!-- Quick filter -->
-            <div class="flex items-center gap-2 rounded-md bg-white/15 px-2 py-1">
-                <lucide-icon [img]="SearchIcon" class="w-4 h-4 opacity-80"></lucide-icon>
-                <input
-                        class="bg-transparent text-white/95 placeholder-white/70 outline-none border-none text-sm w-48 xl:w-64"
-                        type="search" [placeholder]="tFilterPlaceholder" [(ngModel)]="filter"/>
-            </div>
-
-            <!-- Label filter -->
-            <div class="relative">
-                <button
-                        class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
-                        (click)="toggleLabelDropdown()"
-                >
-                    <lucide-icon [img]="TagIcon" class="w-4 h-4"></lucide-icon>
-
-                    <span
-                            *ngIf="activeLabel"
-                            class="w-2.5 h-2.5 rounded-sm shadow-sm"
-                            [style.background]="colorOf(activeLabel)"
-                    ></span>
-                    <span>{{ activeLabelName() }}</span>
-
-                    <svg class="w-3 h-3 opacity-80" viewBox="0 0 20 20" fill="currentColor">
-                        <path
-                                fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                        />
-                    </svg>
-                </button>
-
-                <!-- backdrop -->
-                <div
-                        *ngIf="showLabelDropdown"
-                        class="fixed inset-0 z-20"
-                        (click)="closeAllDropdowns()"
-                ></div>
-
-                <!-- dropdown -->
-                <div
-                        *ngIf="showLabelDropdown"
-                        class="absolute top-full left-0 mt-2 w-56
-         bg-white text-gray-800
-         rounded-md shadow-lg z-30
-         border border-gray-200"
-                >
-                    <button
-                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
-                            [class.bg-slate-100]="!activeLabel"
-                            [class.font-semibold]="!activeLabel"
-                            (click)="updateActiveLabel(''); closeAllDropdowns()"
-                    >
-                        <span class="w-3 h-3 rounded-sm bg-slate-200"></span>
-                        <span class="flex-1">{{ tAllLabels }}</span>
-                        <span *ngIf="!activeLabel" class="text-emerald-600">
-                            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                    </button>
-
-                    <button
-                            *ngFor="let lb of store.labels()"
-                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
-                            (click)="updateActiveLabel(lb.id); closeAllDropdowns()"
-                            [class.bg-slate-100]="activeLabel === lb.id"
-                            [class.font-semibold]="activeLabel === lb.id"
-                    >
-                      <span
-                              class="w-3 h-3 rounded-sm"
-                              [style.background]="lb.color"
-                      ></span>
-                        <span class="flex-1">{{ lb.name }}</span>
-                        <span *ngIf="activeLabel === lb.id" class="text-emerald-600">
-                            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Member filter -->
-            <div class="relative">
-                <button
-                        class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
-                        (click)="toggleMemberDropdown()"
-                >
-                    <lucide-icon [img]="UserIcon" class="w-4 h-4"></lucide-icon>
-
-                    <span
-                            *ngIf="activeMemberId"
-                            class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/80 text-[10px] font-bold text-slate-700"
-                    >
-                        {{ activeMemberInitials() }}
-                    </span>
-                    <span>{{ activeMemberName() }}</span>
-
-                    <svg class="w-3 h-3 opacity-80" viewBox="0 0 20 20" fill="currentColor">
-                        <path
-                                fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                        />
-                    </svg>
-                </button>
-
-                <!-- backdrop -->
-                <div
-                        *ngIf="showMemberDropdown"
-                        class="fixed inset-0 z-20"
-                        (click)="closeAllDropdowns()"
-                ></div>
-
-                <!-- dropdown -->
-                <div
-                        *ngIf="showMemberDropdown"
-                        class="absolute top-full left-0 mt-2 w-56
-         bg-white text-gray-800
-         rounded-md shadow-lg z-30
-         border border-gray-200"
-                >
-                    <button
-                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
-                            [class.bg-slate-100]="!activeMemberId"
-                            [class.font-semibold]="!activeMemberId"
-                            (click)="updateActiveMember(''); closeAllDropdowns()"
-                    >
-                        <span class="flex-1">{{ tAllMembers }}</span>
-                        <span *ngIf="!activeMemberId" class="text-emerald-600">
-                            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                    </button>
-
-                    <button
-                            *ngFor="let m of store.members()"
-                            class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2"
-                            (click)="updateActiveMember(m.id); closeAllDropdowns()"
-                            [class.bg-slate-100]="activeMemberId === m.id"
-                            [class.font-semibold]="activeMemberId === m.id"
-                    >
-                        <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">
-                            {{ (m.name || m.email || 'M').slice(0, 2).toUpperCase() }}
-                        </span>
-                        <span class="flex-1">{{ m.name || m.email }}</span>
-                        <span *ngIf="activeMemberId === m.id" class="text-emerald-600">
-                            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.1a1 1 0 0 1-1.421 0l-3.02-3.04a1 1 0 1 1 1.42-1.41l2.31 2.33 6.36-6.39a1 1 0 0 1 1.415-.014z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Overdue filter -->
-            <button
-                    class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm font-medium transition"
-                    [ngClass]="activeOverdue ? 'bg-white/40' : ''"
-                    (click)="activeOverdue = !activeOverdue"
-            >
-                <span class="inline-block w-2 h-2 rounded-full"
-                      [ngClass]="activeOverdue ? 'bg-red-300' : 'bg-white/60'"></span>
-                <span>{{ tOverdueFilter }}</span>
-            </button>
-        </div>
-
-        <!-- Filter Button (Mobile/Tablet) -->
-        <div class="relative lg:hidden">
-            <button
-                    class="flex bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded items-center gap-2 transition font-medium text-sm"
-                    (click)="toggleFilterMenu()">
-                <lucide-icon [img]="FilterIcon" class="w-4 h-4"></lucide-icon>
-                <span class="hidden sm:inline">{{ tFilters }}</span>
-                <span *ngIf="filter || activeLabel || activeMemberId || activeOverdue" class="w-2 h-2 bg-blue-400 rounded-full"></span>
-            </button>
-
-            <!-- Filter Setup Popup -->
-            <div *ngIf="showFilterMenu" class="fixed inset-0 z-20 cursor-default" (click)="closeFilterMenu()"></div>
-            <div *ngIf="showFilterMenu"
-                 class="absolute top-full left-0 mt-2 w-[280px] bg-white rounded-lg shadow-xl py-4 px-4 z-30 border border-gray-200 text-gray-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-tight">{{ tFilters }}</h3>
-                    <button (click)="closeFilterMenu()" class="text-gray-400 hover:text-gray-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Card Search -->
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tSearchCards }}</label>
-                    <div
-                            class="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1.5 border border-gray-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
-                        <lucide-icon [img]="SearchIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
-                        <input
-                                class="bg-transparent text-gray-800 placeholder-gray-400 outline-none border-none text-sm w-full"
-                                type="search" [placeholder]="tSearchPlaceholder" [(ngModel)]="filter"/>
-                    </div>
-                </div>
-
-                <!-- Labels -->
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tLabel }}</label>
-                    <div class="relative">
-                        <lucide-icon [img]="TagIcon"
-                                     class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
-                        <select
-                                class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
-                                [(ngModel)]="activeLabel" (ngModelChange)="updateActiveLabel($event)">
-                            <option value="">{{ tAllLabels }}</option>
-                            <option *ngFor="let lb of store.labels()" [value]="lb.id">{{ lb.name }}</option>
-                        </select>
-                        <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-                             viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Members -->
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tMember }}</label>
-                    <div class="relative">
-                        <lucide-icon [img]="UserIcon"
-                                     class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"></lucide-icon>
-                        <select
-                                class="ui-select w-full bg-gray-100 border border-gray-200 rounded-md py-1.5 pl-9 pr-8 text-sm outline-none focus:border-blue-400 transition-all"
-                                [(ngModel)]="activeMemberId" (ngModelChange)="updateActiveMember($event)">
-                            <option value="">{{ tAllMembers }}</option>
-                            <option *ngFor="let m of store.members()" [value]="m.id">{{ m.name || m.email }}</option>
-                        </select>
-                        <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-                             viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z"
-                                  clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Overdue -->
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-gray-500 uppercase">{{ tOverdueFilter }}</label>
-                    <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" [(ngModel)]="activeOverdue" />
-                        <span>{{ tOverdueFilter }}</span>
-                    </label>
-                </div>
-
-                <div class="pt-2 border-t border-gray-100">
-                    <button (click)="filter=''; activeLabel=''; activeMemberId=''; activeOverdue=false"
-                            class="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
-                        {{ tClearFilters }}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <kanban-filters
+                [filter]="filter"
+                (filterChange)="filter = $event"
+                [activeLabel]="activeLabel"
+                (activeLabelChange)="updateActiveLabel($event)"
+                [activeMemberId]="activeMemberId"
+                (activeMemberIdChange)="updateActiveMember($event)"
+                [activeOverdue]="activeOverdue"
+                (activeOverdueChange)="activeOverdue = $event"
+                [labels]="store.labels()"
+                [members]="store.members()"
+                [tFilterPlaceholder]="tFilterPlaceholder"
+                [tAllLabels]="tAllLabels"
+                [tLabelDefault]="tLabelDefault"
+                [tAllMembers]="tAllMembers"
+                [tMemberDefault]="tMemberDefault"
+                [tFilters]="tFilters"
+                [tSearchCards]="tSearchCards"
+                [tSearchPlaceholder]="tSearchPlaceholder"
+                [tLabel]="tLabel"
+                [tMember]="tMember"
+                [tClearFilters]="tClearFilters"
+                [tOverdueFilter]="tOverdueFilter"
+                (menuOpened)="onFiltersOpened()">
+        </kanban-filters>
     </div>
 
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">

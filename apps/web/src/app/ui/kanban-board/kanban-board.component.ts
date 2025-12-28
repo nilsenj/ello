@@ -24,15 +24,16 @@ import { CardModalComponent } from "../card-modal/card-modal.component";
 import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
 import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
-import { LucideAngularModule, FilterIcon, SearchIcon, UserIcon, TagIcon } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 import { WorkspacesService } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
 import { ServiceDeskService } from '../../data/service-desk.service';
+import { KanbanFiltersComponent } from '../kanban-filters/kanban-filters.component';
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, LucideAngularModule], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, LucideAngularModule, KanbanFiltersComponent], // ⬅️ include group
 
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
@@ -57,13 +58,6 @@ export class KanbanBoardComponent implements OnInit {
 
     // popovers per card
     showLabels: Record<string, boolean> = {};
-    showLabelDropdown = false;
-    showMemberDropdown = false;
-
-    readonly FilterIcon = FilterIcon;
-    readonly SearchIcon = SearchIcon;
-    readonly UserIcon = UserIcon;
-    readonly TagIcon = TagIcon;
     readonly tFilterPlaceholder = $localize`:@@kanban.filterPlaceholder:Filter cards...`;
     readonly tAllLabels = $localize`:@@kanban.allLabels:All labels`;
     readonly tLabelDefault = $localize`:@@kanban.labelDefault:Label`;
@@ -91,6 +85,7 @@ export class KanbanBoardComponent implements OnInit {
     readonly tNewList = $localize`:@@kanban.newList:New list`;
 
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
+    @ViewChild(KanbanFiltersComponent) filters?: KanbanFiltersComponent;
 
     focusNewList() {
         // scroll to rightmost
@@ -108,42 +103,14 @@ export class KanbanBoardComponent implements OnInit {
 
     // ui state
     showViewMenu = false;
-    showFilterMenu = false;
 
     toggleViewMenu() {
         this.showViewMenu = !this.showViewMenu;
-        if (this.showViewMenu) this.showFilterMenu = false;
+        if (this.showViewMenu) this.filters?.closeFilterMenu();
     }
 
     closeViewMenu() {
         this.showViewMenu = false;
-    }
-
-    toggleFilterMenu() {
-        this.showFilterMenu = !this.showFilterMenu;
-        if (this.showFilterMenu) this.showViewMenu = false;
-    }
-
-    closeFilterMenu() {
-        this.showFilterMenu = false;
-    }
-
-    activeLabelName() {
-        if (!this.activeLabel) return this.tAllLabels;
-        return this.store.labels().find(l => l.id === this.activeLabel)?.name || this.tLabelDefault;
-    }
-
-    activeMemberName() {
-        if (!this.activeMemberId) return this.tAllMembers;
-        const m = this.store.members().find(m => m.id === this.activeMemberId);
-        return m?.name || m?.email || this.tMemberDefault;
-    }
-
-    activeMemberInitials() {
-        if (!this.activeMemberId) return '';
-        const m = this.store.members().find(m => m.id === this.activeMemberId);
-        const name = (m?.name || m?.email || 'M').trim();
-        return name.slice(0, 2).toUpperCase();
     }
 
 
@@ -655,18 +622,7 @@ export class KanbanBoardComponent implements OnInit {
         }
     }
 
-    toggleLabelDropdown() {
-        this.showLabelDropdown = !this.showLabelDropdown;
-        this.showMemberDropdown = false;
-    }
-
-    toggleMemberDropdown() {
-        this.showMemberDropdown = !this.showMemberDropdown;
-        this.showLabelDropdown = false;
-    }
-
-    closeAllDropdowns() {
-        this.showLabelDropdown = false;
-        this.showMemberDropdown = false;
+    onFiltersOpened() {
+        this.closeViewMenu();
     }
 }

@@ -41,12 +41,49 @@ export class ServiceDeskPageComponent implements OnInit {
         if (!workspaceId) return;
 
         try {
-            const [ws, entitlement] = await Promise.all([
-                this.workspacesApi.list().then(list => list.find(w => w.id === workspaceId) ?? null),
-                this.serviceDeskApi.getEntitlement(workspaceId),
-            ]);
+            const list = await this.workspacesApi.list();
+            const ws = list.find(w => w.id === workspaceId) ?? null;
+
+            if (!ws) {
+                const existingServiceDesk = list.find(w =>
+                    (w.name || '').toLowerCase().includes('service desk')
+                );
+                if (existingServiceDesk) {
+                    await this.router.navigate(
+                        ['/w', existingServiceDesk.id, 'service-desk', 'overview'],
+                        { replaceUrl: true }
+                    );
+                    return;
+                }
+
+                const created = await this.workspacesApi.create({
+                    name: 'Service Desk',
+                    description: 'Service Desk workspace',
+                    isPersonal: true,
+                });
+                await this.serviceDeskApi.activateEntitlementMock(created.id).catch(() => null);
+                await this.serviceDeskApi.bootstrap(created.id).catch(() => null);
+                await this.boardsApi.loadBoards();
+                await this.router.navigate(
+                    ['/w', created.id, 'service-desk', 'overview'],
+                    { replaceUrl: true }
+                );
+                return;
+            }
+
+            let entitlement = await this.serviceDeskApi.getEntitlement(workspaceId);
             this.workspace.set(ws);
             this.entitled.set(!!entitlement?.entitled);
+
+            if (!entitlement?.entitled) {
+                await this.serviceDeskApi.activateEntitlementMock(workspaceId).catch(() => null);
+                entitlement = await this.serviceDeskApi.getEntitlement(workspaceId).catch(() => entitlement);
+                this.entitled.set(!!entitlement?.entitled);
+            }
+
+            if (this.entitled()) {
+                await this.serviceDeskApi.ensureBoards(workspaceId);
+            }
         } finally {
             this.loading.set(false);
         }

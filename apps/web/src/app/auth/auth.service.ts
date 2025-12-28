@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiBaseService } from '../data/api-base.service';
 import { SocketService } from '../data/socket.service';
 import { NotificationsStore } from '../data/notifications-store.service';
+import { Capacitor } from '@capacitor/core';
 
 type User = { id: string; email: string; name?: string; avatar?: string };
 
@@ -16,13 +17,32 @@ export class AuthService {
     private _user = signal<User | null>(null);
     private _access = signal<string | null>(localStorage.getItem('accessToken'));
     private _bootstrapped = signal(false);
+    private isNative = Capacitor.getPlatform() !== 'web';
+
+    private getStoredRefresh(): string | null {
+        return localStorage.getItem('refreshToken');
+    }
+
+    private setStoredRefresh(token: string | null) {
+        if (!token) {
+            localStorage.removeItem('refreshToken');
+            return;
+        }
+        localStorage.setItem('refreshToken', token);
+    }
 
     user = computed(() => this._user());
     isAuthed = computed(() => !!this._access() && !!this._user());
 
     /** Call once in app bootstrap or AppComponent */
     async bootstrap() {
-        if (!this._access()) { this._bootstrapped.set(true); return; }
+        if (!this._access()) {
+            if (this.isNative && this.getStoredRefresh()) {
+                await this.tryRefresh();
+            }
+            this._bootstrapped.set(true);
+            return;
+        }
         try {
             const me = await this.api.get<User>('/api/auth/me');
             this._user.set(me ?? null);
@@ -58,6 +78,9 @@ export class AuthService {
             this._access.set(res.accessToken);
             localStorage.setItem('accessToken', res.accessToken);
         }
+        if (res?.refreshToken && this.isNative) {
+            this.setStoredRefresh(res.refreshToken);
+        }
         this._user.set(res?.user ?? null);
 
         // Connect Socket.IO and load notifications after login
@@ -70,10 +93,14 @@ export class AuthService {
     }
 
     async logout() {
-        try { await this.api.post('/api/auth/logout', {}); } catch { }
+        const refreshToken = this.getStoredRefresh();
+        try {
+            await this.api.post('/api/auth/logout', refreshToken ? { refreshToken } : {});
+        } catch { }
         this._user.set(null);
         this._access.set(null);
         localStorage.removeItem('accessToken');
+        this.setStoredRefresh(null);
 
         // Disconnect Socket.IO
         this.socketService.disconnect();
@@ -83,15 +110,19 @@ export class AuthService {
     // ⬇️ add withCredentials: true on refresh
     async tryRefresh(): Promise<boolean> {
         try {
+            const refreshToken = this.isNative ? this.getStoredRefresh() : null;
             const res = await this.api
-                .post<{ accessToken: string }>(
+                .post<{ accessToken: string; refreshToken?: string }>(
                     '/api/auth/refresh',
-                    {}
+                    refreshToken ? { refreshToken } : {}
                 );
 
             if (res?.accessToken) {
                 this._access.set(res.accessToken);
                 localStorage.setItem('accessToken', res.accessToken);
+                if (res?.refreshToken && this.isNative) {
+                    this.setStoredRefresh(res.refreshToken);
+                }
 
                 const me = await this.api.get<User>('/api/auth/me');
                 this._user.set(me || null);
@@ -110,6 +141,7 @@ export class AuthService {
         this._access.set(null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
+        this.setStoredRefresh(null);
         return false;
     }
 

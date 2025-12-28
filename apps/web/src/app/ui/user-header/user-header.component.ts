@@ -5,7 +5,7 @@ import { UserSettingsModalService } from '../../components/user-settings-modal/u
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
 import { BoardsService } from '../../data/boards.service';
@@ -213,19 +213,26 @@ export class UserHeaderComponent {
         return this.store.boards().find(b => b.id === id)?.name || fallback;
     });
 
-    // Group boards by workspace
+    private routeUrl = signal(this.router.url);
+
+    // Group boards by workspace (show Service Desk boards only within Service Desk module)
     boardsByWorkspace = computed(() => {
         const boards = this.store.boards().filter(b => !b.isArchived);
         const workspaces = this.workspaces();
+        const isServiceDeskView = this.isServiceDeskRoute();
+        const serviceDeskBoards = boards.filter(b => (b.name || '').toLowerCase().includes('service desk'));
+        const visibleBoards = isServiceDeskView
+            ? (serviceDeskBoards.length ? serviceDeskBoards : boards)
+            : boards;
 
         const groups = workspaces.map(ws => ({
             workspaceId: ws.id,
             workspaceName: ws.name,
-            boards: boards.filter(b => b.workspaceId === ws.id)
+            boards: visibleBoards.filter(b => b.workspaceId === ws.id)
         }));
 
         // Add boards with no workspace or unknown workspace
-        const otherBoards = boards.filter(b => !workspaces.find(w => w.id === b.workspaceId));
+        const otherBoards = visibleBoards.filter(b => !workspaces.find(w => w.id === b.workspaceId));
         if (otherBoards.length > 0) {
             groups.push({
                 workspaceId: 'other',
@@ -239,9 +246,17 @@ export class UserHeaderComponent {
 
     constructor() {
         this.loadWorkspaces();
+        this.router.events.subscribe(event => {
+            if (event instanceof NavigationEnd) {
+                this.routeUrl.set(event.urlAfterRedirects);
+            }
+        });
         effect(() => {
             this.auth.isAuthed();
             this.store.currentBoardId();
+            if (this.auth.isAuthed() && this.store.boards().length === 0) {
+                void this.boardsApi.loadBoards().catch(() => null);
+            }
         });
     }
 
@@ -318,6 +333,10 @@ export class UserHeaderComponent {
             'grey': '#838C91',
         };
         return colors[bg] || '#838C91';
+    }
+
+    private isServiceDeskRoute(): boolean {
+        return /\/service-desk(\/|$)/.test(this.routeUrl());
     }
 
     // OPEN MODALS instead of prompt()

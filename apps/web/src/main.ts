@@ -33,11 +33,10 @@ const locale = applyLocale(getStoredLocale());
 registerSW({ immediate: true });
 
 const platform = Capacitor.getPlatform();
-const isIOS = platform === 'ios'
-    || /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isNative = platform !== 'web';
+const isIOS = platform === 'ios';
 const isAndroid = platform === 'android';
-if (isIOS || isAndroid) {
+if (isNative) {
     document.documentElement.classList.add('native-safe-area');
 }
 if (isIOS) {

@@ -1,1 +1,8 @@
 /* Tailwind used */
+.board-menu-safe-top {
+    height: 0;
+}
+
+:host-context(.ios-safe-area) .board-menu-safe-top {
+    height: calc(env(safe-area-inset-top) + 56px);
+}
