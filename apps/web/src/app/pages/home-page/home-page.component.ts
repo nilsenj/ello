@@ -27,6 +27,7 @@ import { TemplatesModalService } from '../../components/templates-modal/template
 import { UserHeaderComponent } from '../../ui/user-header/user-header.component';
 import { WorkspaceSidebarComponent } from '../../ui/workspace-sidebar/workspace-sidebar.component';
 import { ServiceDeskService } from '../../data/service-desk.service';
+import { UserSettingsModalService } from '../../components/user-settings-modal/user-settings-modal.service';
 
 @Component({
     standalone: true,
@@ -56,6 +57,7 @@ export class HomePageComponent implements OnInit {
     private membersWorkspaceModal = inject(WorkspaceMembersModalService);
     private templatesModal = inject(TemplatesModalService);
     private serviceDeskApi = inject(ServiceDeskService);
+    private userSettingsModal = inject(UserSettingsModalService);
 
     // State
     workspaces = signal<WorkspaceLite[]>([]);
@@ -65,6 +67,7 @@ export class HomePageComponent implements OnInit {
     sidebarOpen = signal<boolean>(false);
     modulesModalOpen = signal<boolean>(false);
     buyingModule = signal<boolean>(false);
+    memberCounts = signal<Record<string, number | null>>({});
 
     toggleSidebar() {
         this.sidebarOpen.update(v => !v);
@@ -112,6 +115,19 @@ export class HomePageComponent implements OnInit {
     readonly tBuyServiceDesk = $localize`:@@home.buyServiceDesk:Buy Service Desk`;
     readonly tModulesHint = $localize`:@@home.modulesHint:Create a dedicated workspace for each module.`;
     readonly tPurchased = $localize`:@@home.modulePurchased:Purchased`;
+    readonly tPlanLabel = $localize`:@@home.planLabel:Plan`;
+    readonly tPlanCoreFree = $localize`:@@home.planCoreFree:Core Free`;
+    readonly tPlanBoards = $localize`:@@home.planBoards:Boards`;
+    readonly tPlanMembers = $localize`:@@home.planMembers:Members`;
+    readonly tPlanLimitReached = $localize`:@@home.planLimitReached:You reached a core plan limit. Upgrade to add more.`;
+    readonly tManagePlan = $localize`:@@home.managePlan:Manage plan`;
+    readonly tViewModules = $localize`:@@home.viewModules:View modules`;
+    readonly tModulesActive = $localize`:@@home.modulesActive:Modules active`;
+    readonly tPlanUnlimited = $localize`:@@home.planUnlimited:Unlimited`;
+
+    readonly corePlanLimits: Record<string, { maxBoards?: number; maxMembers?: number; label: string }> = {
+        core_free: { maxBoards: 3, maxMembers: 5, label: this.tPlanCoreFree },
+    };
 
     async ngOnInit() {
         this.loadRecentIds();
@@ -132,6 +148,7 @@ export class HomePageComponent implements OnInit {
             const wsId = params.get('workspaceId');
             if (wsId) {
                 this.selectedWorkspaceId.set(wsId);
+                void this.ensureMemberCount(wsId);
             } else if (this.workspaces().length > 0 && !this.selectedWorkspaceId()) {
                 // If no param but we have workspaces, default to first (and maybe redirect?)
                 // For now, just set it locally or redirect to /w/:id
@@ -190,6 +207,10 @@ export class HomePageComponent implements OnInit {
         if (!this.selectedWorkspaceId() && list.length) {
             this.selectedWorkspaceId.set(list[0].id);
         }
+        const currentId = this.selectedWorkspaceId();
+        if (currentId) {
+            void this.ensureMemberCount(currentId);
+        }
     }
 
     onWorkspaceSelected(id: string) {
@@ -246,6 +267,60 @@ export class HomePageComponent implements OnInit {
 
     getBoardsForWorkspace(workspaceId: string) {
         return this.boards().filter(b => b.workspaceId === workspaceId && !b.isArchived);
+    }
+
+    getMemberCount(workspaceId: string) {
+        return this.memberCounts()[workspaceId] ?? null;
+    }
+
+    async ensureMemberCount(workspaceId: string) {
+        if (!workspaceId) return;
+        const existing = this.memberCounts()[workspaceId];
+        if (existing !== undefined && existing !== null) return;
+        try {
+            const members = await this.workspacesApi.searchMembers(workspaceId);
+            const activeCount = members.filter(m => m.status !== 'pending').length;
+            this.memberCounts.set({ ...this.memberCounts(), [workspaceId]: activeCount });
+        } catch {
+            this.memberCounts.set({ ...this.memberCounts(), [workspaceId]: 0 });
+        }
+    }
+
+    isModuleWorkspace(ws: WorkspaceLite) {
+        return this.moduleWorkspaces().some(m => m.id === ws.id);
+    }
+
+    getPlanLabel(ws: WorkspaceLite) {
+        const key = ws.planKey || 'core_free';
+        return this.corePlanLimits[key]?.label ?? this.tPlanCoreFree;
+    }
+
+    getPlanLimits(ws: WorkspaceLite) {
+        const key = ws.planKey || 'core_free';
+        const base = this.corePlanLimits[key] ?? this.corePlanLimits.core_free;
+        if (this.isModuleWorkspace(ws)) {
+            return { ...base, maxBoards: undefined, maxMembers: undefined };
+        }
+        return base;
+    }
+
+    planUsageText(ws: WorkspaceLite) {
+        const limits = this.getPlanLimits(ws);
+        const boardsUsed = this.getBoardsForWorkspace(ws.id).length;
+        const membersUsed = this.getMemberCount(ws.id);
+        const boardsText = limits.maxBoards ? `${boardsUsed}/${limits.maxBoards}` : this.tPlanUnlimited;
+        const membersText = membersUsed === null ? '—' : String(membersUsed);
+        return `${this.tPlanBoards}: ${boardsText} · ${this.tPlanMembers}: ${membersText}`;
+    }
+
+    isPlanAtLimit(ws: WorkspaceLite) {
+        if (this.isModuleWorkspace(ws)) return false;
+        const limits = this.getPlanLimits(ws);
+        const boardsUsed = this.getBoardsForWorkspace(ws.id).length;
+        const membersUsed = this.getMemberCount(ws.id);
+        const boardsHit = limits.maxBoards ? boardsUsed >= limits.maxBoards : false;
+        const membersHit = limits.maxMembers && membersUsed !== null ? membersUsed >= limits.maxMembers : false;
+        return boardsHit || membersHit;
     }
 
     getBoardBackground(board: any): string {
@@ -316,6 +391,10 @@ export class HomePageComponent implements OnInit {
 
     openTemplates() {
         this.templatesModal.open();
+    }
+
+    openAccountSettings() {
+        this.userSettingsModal.open();
     }
 
     canArchiveBoard(ws: WorkspaceLite): boolean {

@@ -22,6 +22,7 @@ import { NotificationService } from '../services/notification-service.js';
 import { emitToBoard } from '../socket.js';
 import { EmailService } from '../services/email.js';
 import { ensureBoardAccess } from '../utils/permissions.js';
+import { enforceCorePlanBoardLimit, enforceCorePlanMemberLimit } from '../utils/core-plan.js';
 import { mid } from '../utils/rank.js';
 
 export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaClient) {
@@ -145,6 +146,13 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         const user = ensureUser(req);
         const { id: boardId } = req.params;
 
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true },
+        });
+        if (!board) return reply.code(404).send({ error: 'Board not found' });
+        await enforceCorePlanMemberLimit(prisma, board.workspaceId);
+
         // You may also check workspace membership here if you want to restrict who can join.
         // For now, just upsert a member row.
         await prisma.boardMember.upsert({
@@ -157,9 +165,13 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
     });
 
     // Create board
-    app.post('/api/boards', async (req: FastifyRequest<{ Body: CreateBoardBody }>) => {
+    app.post('/api/boards', async (req: FastifyRequest<{ Body: CreateBoardBody }>, reply) => {
         const { workspaceId, name, description } = req.body;
-        return prisma.board.create({ data: { workspaceId, name, description } });
+        if (!workspaceId || !name?.trim()) {
+            return reply.code(400).send({ error: 'workspaceId and name required' });
+        }
+        await enforceCorePlanBoardLimit(prisma, workspaceId);
+        return prisma.board.create({ data: { workspaceId, name: name.trim(), description } });
     });
 
     // Export board as JSON
@@ -328,6 +340,8 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         if (!isWorkspaceAdmin) {
             return reply.code(403).send({ error: 'Only admins can import boards' });
         }
+
+        await enforceCorePlanBoardLimit(prisma, workspaceId);
 
         const baseName = board?.name?.trim() || 'Imported Board';
         const name = await uniqueBoardName(workspaceId, baseName);
@@ -599,18 +613,18 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         const { boardId } = req.params;
         const { email, role } = req.body;
 
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { id: true, name: true, workspaceId: true, workspace: true },
+        });
+        if (!board) return reply.code(404).send({ error: 'Board not found' });
+
         // TODO auth: ensure caller can add board members
 
         const targetUser = await prisma.user.findUnique({ where: { email } });
 
         // If user not found, create pending invitation
         if (!targetUser) {
-            const board = await prisma.board.findUnique({
-                where: { id: boardId },
-                include: { workspace: true }
-            });
-            if (!board) return reply.code(404).send({ error: 'Board not found' });
-
             // Check if already invited
             const existing = await prisma.pendingInvitation.findFirst({
                 where: {
@@ -623,6 +637,8 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
             if (existing) {
                 return reply.code(400).send({ error: 'User already invited to this board' });
             }
+
+            await enforceCorePlanMemberLimit(prisma, board.workspaceId);
 
             await prisma.pendingInvitation.create({
                 data: {
@@ -656,6 +672,8 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         if (existingMember) {
             return reply.code(400).send({ error: 'User is already a member of this board' });
         }
+
+        await enforceCorePlanMemberLimit(prisma, board.workspaceId);
 
         const member = await prisma.boardMember.create({
             data: {

@@ -12,6 +12,7 @@ export type WorkspaceLite = {
     isPersonal?: boolean;
     whoCanCreateBoards?: 'admins' | 'members';
     whoCanInviteMembers?: 'admins' | 'members';
+    planKey?: string;
     role?: 'owner' | 'admin' | 'member' | 'viewer';
 };
 
@@ -56,6 +57,7 @@ export type WorkspaceSettings = {
     whoCanInviteMembers: 'admins' | 'members';
     allowedEmailDomains?: string | null;
     defaultBoardVisibility: 'private' | 'workspace' | 'public';
+    planKey?: string;
 };
 
 export type WorkspaceSettingsUpdate = {
@@ -73,24 +75,62 @@ export class WorkspacesService {
         private http: HttpClient
     ) { }
 
+    private listCache: WorkspaceLite[] | null = null;
+    private listPromise: Promise<WorkspaceLite[]> | null = null;
+    private listFetchedAt = 0;
+    private readonly listTtlMs = 5000;
+
+    private setListCache(list: WorkspaceLite[]) {
+        this.listCache = list;
+        this.listFetchedAt = Date.now();
+    }
+
+    private clearListCache() {
+        this.listCache = null;
+        this.listFetchedAt = 0;
+    }
+
     /** GET /api/workspaces → list of { id, name } */
-    async list(): Promise<WorkspaceLite[]> {
-        return this.api.get<WorkspaceLite[]>('/api/workspaces');
+    async list(opts: { force?: boolean } = {}): Promise<WorkspaceLite[]> {
+        const { force = false } = opts;
+        if (!force && this.listCache && Date.now() - this.listFetchedAt < this.listTtlMs) {
+            return this.listCache;
+        }
+        if (this.listPromise) return this.listPromise;
+        this.listPromise = this.api.get<WorkspaceLite[]>('/api/workspaces')
+            .then(list => {
+                const safe = list ?? [];
+                this.setListCache(safe);
+                return safe;
+            })
+            .catch(err => {
+                if (this.listCache) return this.listCache;
+                throw err;
+            })
+            .finally(() => {
+                this.listPromise = null;
+            });
+        return this.listPromise;
     }
 
     /** POST /api/workspaces */
     async create(body: { name: string; description?: string; isPersonal?: boolean }): Promise<WorkspaceLite> {
-        return this.api.post<WorkspaceLite>('/api/workspaces', body);
+        const created = await this.api.post<WorkspaceLite>('/api/workspaces', body);
+        this.clearListCache();
+        return created;
     }
 
     /** PUT /api/workspaces/:id */
     async update(id: string, body: { name?: string; description?: string }): Promise<WorkspaceLite> {
-        return this.api.put<WorkspaceLite>(`/api/workspaces/${id}`, body);
+        const updated = await this.api.put<WorkspaceLite>(`/api/workspaces/${id}`, body);
+        this.clearListCache();
+        return updated;
     }
 
     /** DELETE /api/workspaces/:id */
     async delete(id: string): Promise<void> {
-        return this.api.delete<void>(`/api/workspaces/${id}`);
+        await this.api.delete<void>(`/api/workspaces/${id}`);
+        this.clearListCache();
     }
 
     /** POST /api/workspaces/:id/members */

@@ -51,6 +51,9 @@ model Workspace {
   
   // Default settings for new boards
   defaultBoardVisibility Visibility @default(workspace)
+
+  // Core plan (non-module) billing tier
+  planKey    String   @default("core_free")
   
   members     WorkspaceMember[]
   pendingInvitations PendingInvitation[]

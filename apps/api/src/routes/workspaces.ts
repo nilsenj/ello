@@ -3,6 +3,7 @@ import { PrismaClient, Role } from '@prisma/client';
 import { ensureUser } from '../utils/ensure-user.js';
 import { mid } from '../utils/rank.js';
 import { canCreateBoards, canEditSettings, canInviteMembers, isEmailDomainAllowed } from '../utils/workspace-permissions.js';
+import { enforceCorePlanBoardLimit, enforceCorePlanMemberLimit } from '../utils/core-plan.js';
 import { EmailService } from '../services/email.js';
 import { NotificationService } from '../services/notification-service.js';
 
@@ -30,6 +31,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                         isPersonal: true,
                         whoCanCreateBoards: true,
                         whoCanInviteMembers: true,
+                        planKey: true,
                     }
                 }
             },
@@ -99,6 +101,7 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 whoCanInviteMembers: true,
                 allowedEmailDomains: true,
                 defaultBoardVisibility: true,
+                planKey: true,
             },
         });
 
@@ -247,6 +250,8 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                 return { ...updated, status: 'pending' };
             }
 
+            await enforceCorePlanMemberLimit(prisma, workspaceId);
+
             const invite = await prisma.pendingInvitation.create({
                 data: {
                     workspaceId,
@@ -280,6 +285,8 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         if (existingMember) {
             return reply.code(409).send({ error: 'User is already a member of this workspace' });
         }
+
+        await enforceCorePlanMemberLimit(prisma, workspaceId);
 
         const member = await prisma.workspaceMember.create({
             data: {
@@ -336,6 +343,8 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
         if (!canCreateBoards(member.workspace, member)) {
             return reply.code(403).send({ error: 'You do not have permission to create boards in this workspace' });
         }
+
+        await enforceCorePlanBoardLimit(prisma, workspaceId);
 
         // 1) create the board
         const board = await prisma.board.create({

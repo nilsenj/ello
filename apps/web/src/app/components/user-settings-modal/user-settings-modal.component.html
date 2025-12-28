@@ -61,6 +61,24 @@
                         <lucide-icon [img]="LockIcon" class="w-4 h-4"></lucide-icon>
                         <span class="hidden sm:inline">{{ tSecurity }}</span>
                     </button>
+
+                    <button
+                            (click)="activeTab.set('plan')"
+                            class="flex-1 sm:flex-none
+             flex items-center justify-center sm:justify-start gap-2
+             px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                            [class.bg-blue-50]="activeTab() === 'plan'"
+                            [class.text-blue-700]="activeTab() === 'plan'"
+                            [class.text-gray-600]="activeTab() !== 'plan'"
+                            [class.hover:bg-gray-100]="activeTab() !== 'plan'"
+                    >
+                        <lucide-icon [img]="PlanIcon" class="w-4 h-4"></lucide-icon>
+                        <span class="hidden sm:inline">{{ tPlanTab }}</span>
+                        <span *ngIf="isPlanAtLimit()"
+                              class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold">
+                            !
+                        </span>
+                    </button>
                 </nav>
             </div>
 
@@ -188,6 +206,54 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Plan Tab -->
+                <div *ngIf="activeTab() === 'plan'" class="space-y-4">
+                    <div class="rounded-md border border-slate-200 bg-slate-50 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="space-y-1">
+                                <div class="text-sm font-semibold text-slate-900">{{ tPlanTitle }}</div>
+                                <div class="text-xs text-slate-500">
+                                    {{ tPlanWorkspace }}:
+                                    {{ currentWorkspace()?.name || '-' }}
+                                </div>
+                                <div class="text-sm font-semibold text-slate-900">
+                                    {{ currentPlan().label }}
+                                </div>
+                                <div class="text-xs text-slate-600" [class.text-amber-700]="isPlanAtLimit()">
+                                    {{ planUsageText() }}
+                                </div>
+                            </div>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                {{ tPlanCurrent }}
+                            </span>
+                        </div>
+                    </div>
+                    <div *ngIf="isPlanAtLimit()"
+                         class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+                        {{ tPlanLimitReached }}
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold text-slate-900">{{ tPlanAvailable }}</div>
+                        <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                            <div *ngFor="let plan of availablePlans"
+                                 class="rounded-md border border-slate-200 bg-white p-3">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="text-sm font-semibold text-slate-900">{{ plan.label }}</div>
+                                    <span class="text-xs px-2 py-0.5 rounded-full"
+                                          [ngClass]="plan.key === currentPlanKey() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'">
+                                        {{ plan.key === currentPlanKey() ? tPlanCurrent : tPlanComingSoon }}
+                                    </span>
+                                </div>
+                                <div class="mt-1 text-xs text-slate-600">
+                                    {{ tPlanBoards }}: {{ plan.maxBoards }} · {{ tPlanMembers }}: {{ plan.maxMembers }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-500">{{ tPlanServiceDesk }}</div>
                     </div>
                 </div>
             </div>
