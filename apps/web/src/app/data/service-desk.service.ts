@@ -3,6 +3,18 @@ import { ApiBaseService } from './api-base.service';
 
 export type ServiceDeskBoardLite = { id: string; name: string; workspaceId: string };
 export type ServiceDeskSlaRule = { listId: string; slaHours: number };
+export type ServiceDeskIntegrationSource = 'workspace' | 'board' | 'none';
+export type ServiceDeskTelegramStatus = {
+    configured: boolean;
+    chatId: string | null;
+    hasBotToken: boolean;
+    source?: ServiceDeskIntegrationSource;
+};
+export type ServiceDeskWebhookStatus = {
+    configured: boolean;
+    url: string | null;
+    source?: ServiceDeskIntegrationSource;
+};
 
 @Injectable({ providedIn: 'root' })
 export class ServiceDeskService {
@@ -59,20 +71,36 @@ export class ServiceDeskService {
         return this.api.put(`/api/modules/service-desk/workspaces/${workspaceId}/telegram`, { botToken, chatId });
     }
 
-    getTelegram(workspaceId: string): Promise<{ configured: boolean; chatId: string | null; hasBotToken: boolean }> {
+    getTelegram(workspaceId: string): Promise<ServiceDeskTelegramStatus> {
         return this.api.get(`/api/modules/service-desk/workspaces/${workspaceId}/telegram`);
+    }
+
+    updateBoardTelegram(boardId: string, botToken: string, chatId: string): Promise<{ ok: true }> {
+        return this.api.put(`/api/modules/service-desk/boards/${boardId}/telegram`, { botToken, chatId });
+    }
+
+    getBoardTelegram(boardId: string): Promise<ServiceDeskTelegramStatus> {
+        return this.api.get(`/api/modules/service-desk/boards/${boardId}/telegram`);
     }
 
     createWebhook(workspaceId: string): Promise<{ url: string; path: string }> {
         return this.api.post(`/api/modules/service-desk/workspaces/${workspaceId}/webhook`, {});
     }
 
-    getWebhookNotify(workspaceId: string): Promise<{ configured: boolean; url: string | null }> {
+    getWebhookNotify(workspaceId: string): Promise<ServiceDeskWebhookStatus> {
         return this.api.get(`/api/modules/service-desk/workspaces/${workspaceId}/webhook/notify`);
     }
 
     updateWebhookNotify(workspaceId: string, url: string): Promise<{ ok: true }> {
         return this.api.put(`/api/modules/service-desk/workspaces/${workspaceId}/webhook/notify`, { url });
+    }
+
+    getBoardWebhookNotify(boardId: string): Promise<ServiceDeskWebhookStatus> {
+        return this.api.get(`/api/modules/service-desk/boards/${boardId}/webhook/notify`);
+    }
+
+    updateBoardWebhookNotify(boardId: string, url: string): Promise<{ ok: true }> {
+        return this.api.put(`/api/modules/service-desk/boards/${boardId}/webhook/notify`, { url });
     }
 
     getWeeklyReport(boardId: string, from: string, to: string): Promise<{

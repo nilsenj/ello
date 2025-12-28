@@ -5,17 +5,15 @@ import { canCreateBoards, canEditSettings } from '../utils/workspace-permissions
 import { ensureBoardAccess } from '../utils/permissions.js';
 import { mid } from '../utils/rank.js';
 import { encryptSecret, decryptSecret } from '../utils/integrations.js';
-import { SERVICE_DESK_MODULE_KEY, isWorkspaceEntitled } from '../utils/service-desk.js';
+import {
+    SERVICE_DESK_MODULE_KEY,
+    isWorkspaceEntitled,
+    SERVICE_DESK_LIST_DEFS,
+    getServiceDeskTelegramIntegration,
+    getServiceDeskWebhookNotifyIntegration,
+} from '../utils/service-desk.js';
 import { randomBytes } from 'node:crypto';
 
-const SERVICE_DESK_LISTS = [
-    'Inbox',
-    'Scheduled',
-    'In Progress',
-    'Waiting Client',
-    'Done',
-    'Canceled',
-];
 
 type BootstrapBody = { workspaceId: string; name?: string };
 type RequestBody = {
@@ -131,17 +129,11 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
         await ensureEntitled(prisma, workspaceId);
 
         const boards = await prisma.board.findMany({
-            where: { workspaceId, isArchived: false },
-            include: { lists: { select: { name: true } } },
+            where: { workspaceId, isArchived: false, type: 'service_desk' },
             orderBy: { createdAt: 'desc' },
         });
 
-        const isServiceDesk = (names: string[]) =>
-            SERVICE_DESK_LISTS.every(name => names.includes(name));
-
-        return boards
-            .filter(b => isServiceDesk(b.lists.map(l => l.name)))
-            .map(b => ({ id: b.id, name: b.name, workspaceId: b.workspaceId }));
+        return boards.map(b => ({ id: b.id, name: b.name, workspaceId: b.workspaceId }));
     });
 
     app.post('/api/modules/service-desk/bootstrap', async (
@@ -193,15 +185,22 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
                     name: boardName,
                     description: 'Service desk workflow',
                     visibility: workspace.defaultBoardVisibility ?? 'workspace',
+                    type: 'service_desk',
                     members: { create: { userId: user.id, role: member.role } },
                 },
             });
 
             let prevRank: string | null = null;
-            for (const listName of SERVICE_DESK_LISTS) {
+            for (const def of SERVICE_DESK_LIST_DEFS) {
                 const rank = mid(prevRank ?? null);
                 await tx.list.create({
-                    data: { boardId: created.id, name: listName, rank },
+                    data: {
+                        boardId: created.id,
+                        name: def.name,
+                        rank,
+                        statusKey: def.key,
+                        isSystem: true,
+                    },
                 });
                 prevRank = rank;
             }
@@ -263,6 +262,7 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             url: integration?.webhookNotifyUrlEncrypted
                 ? decryptSecret(integration.webhookNotifyUrlEncrypted)
                 : null,
+            source: 'workspace',
         };
     });
 
@@ -285,6 +285,86 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             where: { workspaceId_type: { workspaceId, type: 'webhook' } },
             update: { webhookNotifyUrlEncrypted: encrypted },
             create: { workspaceId, type: 'webhook', webhookNotifyUrlEncrypted: encrypted },
+        });
+
+        return { ok: true };
+    });
+
+    app.get('/api/modules/service-desk/boards/:boardId/webhook/notify', async (
+        req: FastifyRequest<{ Params: { boardId: string } }>
+    ) => {
+        const user = ensureUser(req);
+        const { boardId } = req.params;
+        await ensureBoardAccess(prisma, boardId, user.id);
+
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true, type: true },
+        });
+        if (!board) {
+            const err: any = new Error('Board not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
+        await ensureEntitled(prisma, board.workspaceId);
+
+        const integration = await getServiceDeskWebhookNotifyIntegration(prisma, boardId, board.workspaceId);
+        return {
+            configured: !!integration?.webhookNotifyUrlEncrypted,
+            url: integration?.webhookNotifyUrlEncrypted
+                ? decryptSecret(integration.webhookNotifyUrlEncrypted)
+                : null,
+            source: integration?.source ?? 'none',
+        };
+    });
+
+    app.put('/api/modules/service-desk/boards/:boardId/webhook/notify', async (
+        req: FastifyRequest<{ Params: { boardId: string }; Body: { url: string } }>
+    ) => {
+        const user = ensureUser(req);
+        const { boardId } = req.params;
+        const { url } = req.body ?? {};
+        await ensureBoardAccess(prisma, boardId, user.id);
+
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true, type: true },
+        });
+        if (!board) {
+            const err: any = new Error('Board not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
+        const member = await ensureWorkspaceMember(prisma, board.workspaceId, user.id);
+        if (!canEditSettings(member)) {
+            const err: any = new Error('Forbidden');
+            err.statusCode = 403;
+            throw err;
+        }
+        await ensureEntitled(prisma, board.workspaceId);
+
+        const boardClient = (prisma as any).boardIntegration;
+        if (!boardClient?.upsert) {
+            const err: any = new Error('BoardIntegration not available. Run migrations and regenerate Prisma client.');
+            err.statusCode = 500;
+            throw err;
+        }
+
+        const encrypted = url?.trim() ? encryptSecret(url.trim()) : null;
+        await boardClient.upsert({
+            where: { boardId_type: { boardId, type: 'webhook' } },
+            update: { webhookNotifyUrlEncrypted: encrypted },
+            create: { boardId, type: 'webhook', webhookNotifyUrlEncrypted: encrypted },
         });
 
         return { ok: true };
@@ -339,7 +419,7 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
         let boardId = body.boardId || '';
         if (!boardId) {
             const inbox = await prisma.list.findFirst({
-                where: { board: { workspaceId }, name: 'Inbox' },
+                where: { board: { workspaceId, type: 'service_desk' }, statusKey: 'inbox', isSystem: true },
                 select: { boardId: true },
                 orderBy: { createdAt: 'asc' },
             });
@@ -350,10 +430,24 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             err.statusCode = 404;
             throw err;
         }
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true, type: true },
+        });
+        if (!board || board.workspaceId !== workspaceId) {
+            const err: any = new Error('Board not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
 
         const inboxList = await prisma.list.findFirst({
-            where: { boardId, name: 'Inbox' },
-            select: { id: true },
+            where: { boardId, statusKey: 'inbox', isSystem: true },
+            select: { id: true, statusKey: true, isSystem: true },
         });
         if (!inboxList) {
             const err: any = new Error('Inbox list not found');
@@ -390,22 +484,18 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             },
         });
 
-        const integration = await prisma.workspaceIntegration.findUnique({
-            where: { workspaceId_type: { workspaceId, type: 'telegram' } },
-        });
-        if (integration) {
+        const integration = await getServiceDeskTelegramIntegration(prisma, boardId, workspaceId);
+        if (integration?.botTokenEncrypted && integration.chatId) {
             try {
-                if (integration.botTokenEncrypted && integration.chatId) {
-                    const token = decryptSecret(integration.botTokenEncrypted);
-                    const text = formatTelegramRequest({
-                        customerName: created.customerName,
-                        customerPhone: created.customerPhone,
-                        address: created.address,
-                        serviceType: created.serviceType,
-                        notes: created.description,
-                    });
-                    await sendTelegram(token, integration.chatId, text);
-                }
+                const token = decryptSecret(integration.botTokenEncrypted);
+                const text = formatTelegramRequest({
+                    customerName: created.customerName,
+                    customerPhone: created.customerPhone,
+                    address: created.address,
+                    serviceType: created.serviceType,
+                    notes: created.description,
+                });
+                await sendTelegram(token, integration.chatId, text);
             } catch (err) {
                 console.error('[ServiceDesk] Telegram send failed', err);
             }
@@ -428,18 +518,23 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
 
         const board = await prisma.board.findUnique({
             where: { id: boardId },
-            select: { workspaceId: true },
+            select: { workspaceId: true, type: true },
         });
         if (!board) {
             const err: any = new Error('Board not found');
             err.statusCode = 404;
             throw err;
         }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
         await ensureEntitled(prisma, board.workspaceId);
         await ensureBoardAccess(prisma, boardId, user.id);
 
         const inbox = await prisma.list.findFirst({
-            where: { boardId, name: 'Inbox' },
+            where: { boardId, statusKey: 'inbox', isSystem: true },
             select: { id: true },
         });
         if (!inbox) {
@@ -477,22 +572,18 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             },
         });
 
-        const integration = await prisma.workspaceIntegration.findUnique({
-            where: { workspaceId_type: { workspaceId: board.workspaceId, type: 'telegram' } },
-        });
-        if (integration) {
+        const integration = await getServiceDeskTelegramIntegration(prisma, boardId, board.workspaceId);
+        if (integration?.botTokenEncrypted && integration.chatId) {
             try {
-                if (integration.botTokenEncrypted && integration.chatId) {
-                    const token = decryptSecret(integration.botTokenEncrypted);
-                    const text = formatTelegramRequest({
-                        customerName: created.customerName,
-                        customerPhone: created.customerPhone,
-                        address: created.address,
-                        serviceType: created.serviceType,
-                        notes: created.description,
-                    });
-                    await sendTelegram(token, integration.chatId, text);
-                }
+                const token = decryptSecret(integration.botTokenEncrypted);
+                const text = formatTelegramRequest({
+                    customerName: created.customerName,
+                    customerPhone: created.customerPhone,
+                    address: created.address,
+                    serviceType: created.serviceType,
+                    notes: created.description,
+                });
+                await sendTelegram(token, integration.chatId, text);
             } catch (err) {
                 console.error('[ServiceDesk] Telegram send failed', err);
             }
@@ -510,11 +601,16 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
 
         const board = await prisma.board.findUnique({
             where: { id: boardId },
-            select: { workspaceId: true },
+            select: { workspaceId: true, type: true },
         });
         if (!board) {
             const err: any = new Error('Board not found');
             err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
             throw err;
         }
         await ensureEntitled(prisma, board.workspaceId);
@@ -535,11 +631,16 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
 
         const board = await prisma.board.findUnique({
             where: { id: boardId },
-            select: { workspaceId: true },
+            select: { workspaceId: true, type: true },
         });
         if (!board) {
             const err: any = new Error('Board not found');
             err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
             throw err;
         }
         await ensureEntitled(prisma, board.workspaceId);
@@ -591,24 +692,29 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
         await ensureBoardAccess(prisma, boardId, user.id);
         const board = await prisma.board.findUnique({
             where: { id: boardId },
-            select: { workspaceId: true },
+            select: { workspaceId: true, type: true },
         });
         if (!board) {
             const err: any = new Error('Board not found');
             err.statusCode = 404;
             throw err;
         }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
         await ensureEntitled(prisma, board.workspaceId);
 
         const lists = await prisma.list.findMany({
             where: { boardId },
-            select: { id: true, name: true },
+            select: { id: true, statusKey: true },
         });
         const doneListIds = new Set(
-            lists.filter(l => l.name === 'Done').map(l => l.id)
+            lists.filter(l => l.statusKey === 'done').map(l => l.id)
         );
         const canceledListIds = new Set(
-            lists.filter(l => l.name === 'Canceled').map(l => l.id)
+            lists.filter(l => l.statusKey === 'canceled').map(l => l.id)
         );
 
         const createdCount = await prisma.card.count({
@@ -730,6 +836,90 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
         };
     });
 
+    app.get('/api/modules/service-desk/boards/:boardId/telegram', async (
+        req: FastifyRequest<{ Params: { boardId: string } }>
+    ) => {
+        const user = ensureUser(req);
+        const { boardId } = req.params;
+        await ensureBoardAccess(prisma, boardId, user.id);
+
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true, type: true },
+        });
+        if (!board) {
+            const err: any = new Error('Board not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
+        await ensureEntitled(prisma, board.workspaceId);
+
+        const integration = await getServiceDeskTelegramIntegration(prisma, boardId, board.workspaceId);
+        return {
+            configured: !!integration?.botTokenEncrypted && !!integration?.chatId,
+            chatId: integration?.chatId ?? null,
+            hasBotToken: !!integration?.botTokenEncrypted,
+            source: integration?.source ?? 'none',
+        };
+    });
+
+    app.put('/api/modules/service-desk/boards/:boardId/telegram', async (
+        req: FastifyRequest<{ Params: { boardId: string }; Body: { botToken: string; chatId: string } }>
+    ) => {
+        const user = ensureUser(req);
+        const { boardId } = req.params;
+        const { botToken, chatId } = req.body ?? {};
+        if (!botToken?.trim() || !chatId?.trim()) {
+            const err: any = new Error('botToken and chatId required');
+            err.statusCode = 400;
+            throw err;
+        }
+        await ensureBoardAccess(prisma, boardId, user.id);
+
+        const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { workspaceId: true, type: true },
+        });
+        if (!board) {
+            const err: any = new Error('Board not found');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (board.type !== 'service_desk') {
+            const err: any = new Error('Board is not a Service Desk board');
+            err.statusCode = 400;
+            throw err;
+        }
+        const member = await ensureWorkspaceMember(prisma, board.workspaceId, user.id);
+        if (!canEditSettings(member)) {
+            const err: any = new Error('Forbidden');
+            err.statusCode = 403;
+            throw err;
+        }
+        await ensureEntitled(prisma, board.workspaceId);
+
+        const boardClient = (prisma as any).boardIntegration;
+        if (!boardClient?.upsert) {
+            const err: any = new Error('BoardIntegration not available. Run migrations and regenerate Prisma client.');
+            err.statusCode = 500;
+            throw err;
+        }
+
+        const encrypted = encryptSecret(botToken.trim());
+        await boardClient.upsert({
+            where: { boardId_type: { boardId, type: 'telegram' } },
+            update: { botTokenEncrypted: encrypted, chatId: chatId.trim() },
+            create: { boardId, type: 'telegram', botTokenEncrypted: encrypted, chatId: chatId.trim() },
+        });
+
+        return { ok: true };
+    });
+
     app.put('/api/modules/service-desk/workspaces/:workspaceId/telegram', async (
         req: FastifyRequest<{ Params: { workspaceId: string }; Body: { botToken: string; chatId: string } }>
     ) => {
@@ -772,6 +962,7 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
             configured: !!integration?.botTokenEncrypted && !!integration?.chatId,
             chatId: integration?.chatId ?? null,
             hasBotToken: !!integration?.botTokenEncrypted,
+            source: 'workspace',
         };
     });
 }

@@ -1,7 +1,14 @@
 <div class="w-[272px] shrink-0 bg-list-bg rounded-md p-2 shadow-card group/list relative">
     <div class="px-2 py-1 font-semibold text-ink-base flex justify-between items-start" cdkDragHandle>
-        <span>{{ title() }}</span>
-        <button *ngIf="canEdit" class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <span>{{ title() }}</span>
+            <lucide-icon *ngIf="isSystemList()" [img]="LockIcon" class="h-3.5 w-3.5 text-slate-400"
+                [attr.title]="tSystemListHint"></lucide-icon>
+            <span *ngIf="statusBadge()" class="rounded-full bg-slate-100 text-[10px] font-semibold text-slate-600 px-2 py-0.5 uppercase tracking-wide">
+                {{ statusBadge() }}
+            </span>
+        </div>
+        <button *ngIf="canArchiveList()" class="text-gray-400 hover:text-gray-700 opacity-0 group-hover/list:opacity-100 transition-opacity px-1"
             (click)="requestArchive()" [attr.title]="tArchiveListTitle">
             <lucide-icon [img]="ArchiveIcon" class="h-4 w-4"></lucide-icon>
         </button>

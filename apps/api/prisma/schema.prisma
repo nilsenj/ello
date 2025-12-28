@@ -110,6 +110,11 @@ enum Visibility {
   public
 }
 
+enum BoardType {
+  generic
+  service_desk
+}
+
 model Board {
   id          String        @id @default(cuid())
   name        String
@@ -117,6 +122,7 @@ model Board {
   isArchived  Boolean       @default(false)
   background  String?
   visibility  Visibility    @default(private)
+  type        BoardType     @default(generic)
 
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String
@@ -128,6 +134,7 @@ model Board {
   watchedBy   WatchedBoard[]
   pendingInvitations PendingInvitation[]
   slaRules    BoardSlaRule[]
+  integrations BoardIntegration[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -156,6 +163,8 @@ model List {
   // New: string rank for O(1) reorder
   rank String @default("n")
   isArchived Boolean @default(false)
+  statusKey ListStatusKey?
+  isSystem Boolean @default(false)
 
   board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId  String
@@ -167,6 +176,16 @@ model List {
   updatedAt DateTime @updatedAt
 
   @@index([boardId, rank])
+  @@index([boardId, statusKey])
+}
+
+enum ListStatusKey {
+  inbox
+  scheduled
+  in_progress
+  waiting_client
+  done
+  canceled
 }
 
 enum Risk {
@@ -269,6 +288,20 @@ model WorkspaceIntegration {
   updatedAt       DateTime @updatedAt
 
   @@unique([workspaceId, type])
+}
+
+model BoardIntegration {
+  id              String   @id @default(cuid())
+  board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId         String
+  type            IntegrationType
+  botTokenEncrypted String?
+  chatId          String?
+  webhookNotifyUrlEncrypted String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([boardId, type])
 }
 
 model PushDeviceToken {

@@ -4,6 +4,7 @@ export type Board = {
     description?: string,
     isArchived: boolean,
     background?: string,
+    type?: 'generic' | 'service_desk';
     members: BoardMember[],
     activities: Activity[],
     workspaceId: string;
@@ -92,6 +93,8 @@ export type ListDto = {
     labels?: any[];
     cardLabels?: any[];
     isArchived?: boolean;
+    statusKey?: 'inbox' | 'scheduled' | 'in_progress' | 'waiting_client' | 'done' | 'canceled';
+    isSystem?: boolean;
 };
 export type Label = { id: string; name: string; color: string; rank?: string; boardId: string };
 

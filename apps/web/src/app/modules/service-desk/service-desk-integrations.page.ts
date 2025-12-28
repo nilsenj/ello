@@ -2,7 +2,13 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { ServiceDeskService } from '../../data/service-desk.service';
+import {
+    ServiceDeskService,
+    ServiceDeskBoardLite,
+    ServiceDeskIntegrationSource,
+    ServiceDeskTelegramStatus,
+    ServiceDeskWebhookStatus,
+} from '../../data/service-desk.service';
 
 @Component({
     standalone: true,
@@ -14,6 +20,8 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private serviceDeskApi = inject(ServiceDeskService);
 
+    boards = signal<ServiceDeskBoardLite[]>([]);
+    selectedBoardId = signal('');
     telegram = { botToken: '', chatId: '' };
     saving = signal(false);
     webhookModal = signal(false);
@@ -22,17 +30,25 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
     webhookCopied = signal(false);
     webhookNotifyUrl = signal('');
     webhookNotifySaving = signal(false);
-    webhookNotifyStatus = signal<{ configured: boolean; url: string | null }>({
+    webhookNotifyStatus = signal<ServiceDeskWebhookStatus>({
         configured: false,
         url: null,
+        source: 'none',
     });
-    telegramStatus = signal<{ configured: boolean; chatId: string | null; hasBotToken: boolean }>({
+    telegramStatus = signal<ServiceDeskTelegramStatus>({
         configured: false,
         chatId: null,
         hasBotToken: false,
+        source: 'none',
     });
 
     readonly tTitle = $localize`:@@serviceDesk.integrations.title:Integrations`;
+    readonly tBoardLabel = $localize`:@@serviceDesk.boardLabel:Board`;
+    readonly tAllBoards = $localize`:@@serviceDesk.integrations.allBoards:All boards`;
+    readonly tScopeAllBoards = $localize`:@@serviceDesk.integrations.scopeAllBoards:Applies to all Service Desk boards.`;
+    readonly tScopeBoardOverride = $localize`:@@serviceDesk.integrations.scopeBoardOverride:Board override active.`;
+    readonly tScopeUsingWorkspace = $localize`:@@serviceDesk.integrations.scopeUsingWorkspace:Using workspace default.`;
+    readonly tScopeNotConfigured = $localize`:@@serviceDesk.integrations.scopeNotConfigured:Not configured.`;
     readonly tTelegramTitle = $localize`:@@serviceDesk.telegramTitle:Telegram alerts`;
     readonly tTelegramToken = $localize`:@@serviceDesk.telegramToken:Bot token`;
     readonly tTelegramChat = $localize`:@@serviceDesk.telegramChat:Chat ID`;
@@ -48,14 +64,6 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
     readonly tWebhookNotifySave = $localize`:@@serviceDesk.integrations.webhookNotifySave:Save webhook URL`;
     readonly tWebhookNotifyConfigured = $localize`:@@serviceDesk.integrations.webhookNotifyConfigured:Webhook notifications enabled`;
     readonly tWebhookNotifyNotConfigured = $localize`:@@serviceDesk.integrations.webhookNotifyNotConfigured:Webhook notifications not configured`;
-    readonly webhookPayload = `{
-  "customerName": "Jane Doe",
-  "customerPhone": "+1 555 0100",
-  "address": "123 Main St",
-  "serviceType": "AC repair",
-  "notes": "Unit is not cooling",
-  "scheduledAt": "2025-01-25T10:30:00Z"
-}`;
     readonly tTelegramConfigured = $localize`:@@serviceDesk.integrations.telegramConfigured:Telegram connected`;
     readonly tTelegramNotConfigured = $localize`:@@serviceDesk.integrations.telegramNotConfigured:Telegram not configured`;
     readonly tTelegramChatId = $localize`:@@serviceDesk.integrations.telegramChatId:Chat ID`;
@@ -66,19 +74,20 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
     readonly tCalendarHint = $localize`:@@serviceDesk.integrations.calendarHint:Push scheduled requests to calendar.`;
     readonly tComingSoon = $localize`:@@serviceDesk.integrations.comingSoon:Coming soon`;
 
+    readonly webhookPayload = computed(() => {
+        const boardId = this.selectedBoardId();
+        const boardLine = boardId ? `  "boardId": "${boardId}",\n` : '';
+        return `{\n${boardLine}  "customerName": "Jane Doe",\n  "customerPhone": "+1 555 0100",\n  "address": "123 Main St",\n  "serviceType": "AC repair",\n  "notes": "Unit is not cooling",\n  "scheduledAt": "2025-01-25T10:30:00Z"\n}`;
+    });
+
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();
-        if (workspaceId) {
-            const status = await this.serviceDeskApi.getTelegram(workspaceId).catch(() => null);
-            if (status) this.telegramStatus.set(status);
-            const notify = await this.serviceDeskApi.getWebhookNotify(workspaceId).catch(() => null);
-            if (notify) {
-                this.webhookNotifyStatus.set(notify);
-                this.webhookNotifyUrl.set(notify.url || '');
-            }
-        }
+        if (!workspaceId) return;
+        const boards = await this.serviceDeskApi.ensureBoards(workspaceId).catch(() => []);
+        this.boards.set(boards);
+        await this.loadSettings();
     }
 
     async saveTelegram() {
@@ -87,10 +96,14 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
         if (!this.telegram.botToken.trim() || !this.telegram.chatId.trim()) return;
         this.saving.set(true);
         try {
-            await this.serviceDeskApi.updateTelegram(workspaceId, this.telegram.botToken.trim(), this.telegram.chatId.trim());
+            const boardId = this.selectedBoardId();
+            if (boardId) {
+                await this.serviceDeskApi.updateBoardTelegram(boardId, this.telegram.botToken.trim(), this.telegram.chatId.trim());
+            } else {
+                await this.serviceDeskApi.updateTelegram(workspaceId, this.telegram.botToken.trim(), this.telegram.chatId.trim());
+            }
             this.telegram.botToken = '';
-            const status = await this.serviceDeskApi.getTelegram(workspaceId).catch(() => null);
-            if (status) this.telegramStatus.set(status);
+            await this.loadSettings();
         } finally {
             this.saving.set(false);
         }
@@ -127,14 +140,66 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
         if (!workspaceId || this.webhookNotifySaving()) return;
         this.webhookNotifySaving.set(true);
         try {
-            await this.serviceDeskApi.updateWebhookNotify(workspaceId, this.webhookNotifyUrl().trim());
-            const notify = await this.serviceDeskApi.getWebhookNotify(workspaceId).catch(() => null);
+            const boardId = this.selectedBoardId();
+            if (boardId) {
+                await this.serviceDeskApi.updateBoardWebhookNotify(boardId, this.webhookNotifyUrl().trim());
+            } else {
+                await this.serviceDeskApi.updateWebhookNotify(workspaceId, this.webhookNotifyUrl().trim());
+            }
+            await this.loadSettings();
+        } finally {
+            this.webhookNotifySaving.set(false);
+        }
+    }
+
+    async loadSettings() {
+        const workspaceId = this.workspaceId();
+        if (!workspaceId) return;
+        const boardId = this.selectedBoardId();
+        this.telegramStatus.set({
+            configured: false,
+            chatId: null,
+            hasBotToken: false,
+            source: boardId ? 'none' : 'workspace',
+        });
+        this.webhookNotifyStatus.set({
+            configured: false,
+            url: null,
+            source: boardId ? 'none' : 'workspace',
+        });
+        this.webhookNotifyUrl.set('');
+
+        if (boardId) {
+            const status = await this.serviceDeskApi.getBoardTelegram(boardId).catch(() => null);
+            if (status) this.telegramStatus.set(status);
+            const notify = await this.serviceDeskApi.getBoardWebhookNotify(boardId).catch(() => null);
             if (notify) {
                 this.webhookNotifyStatus.set(notify);
                 this.webhookNotifyUrl.set(notify.url || '');
             }
-        } finally {
-            this.webhookNotifySaving.set(false);
+            return;
         }
+
+        const status = await this.serviceDeskApi.getTelegram(workspaceId).catch(() => null);
+        if (status) {
+            this.telegramStatus.set({ ...status, source: status.source ?? 'workspace' });
+        }
+        const notify = await this.serviceDeskApi.getWebhookNotify(workspaceId).catch(() => null);
+        if (notify) {
+            this.webhookNotifyStatus.set({ ...notify, source: notify.source ?? 'workspace' });
+            this.webhookNotifyUrl.set(notify.url || '');
+        }
+    }
+
+    updateBoardSelection(value: string) {
+        this.selectedBoardId.set(value);
+        this.loadSettings();
+    }
+
+    scopeLabel(source?: ServiceDeskIntegrationSource) {
+        if (!this.selectedBoardId()) return this.tScopeAllBoards;
+        if (source === 'board') return this.tScopeBoardOverride;
+        if (source === 'workspace') return this.tScopeUsingWorkspace;
+        return this.tScopeNotConfigured;
     }
 }

@@ -34,7 +34,7 @@
                         <button
                                 *ngIf="entitled()"
                                 class="w-full sm:w-auto px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
-                                (click)="createBoard()"
+                                (click)="openCreateBoardModal()"
                                 [disabled]="creatingBoard()"
                         >
                             {{ tCreateBoard }}
@@ -76,3 +76,32 @@
         </div>
     </div>
 </main>
+
+<section *ngIf="createModalOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/40"
+         (mousedown)="closeCreateBoardModal()">
+    <div class="w-[min(92vw,420px)] rounded-xl bg-white shadow-xl p-6 space-y-4"
+         (mousedown)="$event.stopPropagation()">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-slate-900">{{ tCreateBoardTitle }}</h3>
+            <button class="text-slate-400 hover:text-slate-600" (click)="closeCreateBoardModal()">✕</button>
+        </div>
+
+        <label class="space-y-1 text-sm text-slate-700 block">
+            <span>{{ tBoardNameLabel }}</span>
+            <input class="ui-input w-full"
+                   [placeholder]="tBoardNamePlaceholder"
+                   [ngModel]="boardName()"
+                   (ngModelChange)="boardName.set($event)" />
+        </label>
+
+        <div class="flex items-center justify-end gap-2">
+            <button class="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-slate-100"
+                    (click)="closeCreateBoardModal()">{{ tCancel }}</button>
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                    (click)="createBoard()"
+                    [disabled]="creatingBoard() || !boardName().trim()">
+                {{ tCreate }}
+            </button>
+        </div>
+    </div>
+</section>

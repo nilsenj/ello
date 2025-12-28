@@ -48,7 +48,7 @@ export class ListsService {
         this.store.renameListLocally(listId, name);
     }
 
-    async updateList(listId: string, patch: Partial<{ name: string; isArchived: boolean }>) {
+    async updateList(listId: string, patch: Partial<{ name: string; isArchived: boolean; statusKey: string }>) {
         const updated = await this.api.patch<ListDto>(`/api/lists/${listId}`, patch);
         // Update store
         const lists = this.store.lists();
@@ -58,10 +58,13 @@ export class ListsService {
         this.store.setLists(next);
     }
 
-    async createList(name: string) {
+    async createList(name: string, statusKey?: string) {
         const boardId = this.store.currentBoardId();
         if (!boardId) return;
-        const created = await this.api.post<ListDto>(`/api/boards/${boardId}/lists`, { name });
+        const created = await this.api.post<ListDto>(`/api/boards/${boardId}/lists`, {
+            name,
+            statusKey,
+        });
         const normalized = this.normalizeList(created);
         this.store.setLists([...this.store.lists(), normalized]);
     }

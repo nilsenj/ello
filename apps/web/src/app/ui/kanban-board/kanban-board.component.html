@@ -101,7 +101,20 @@
             </div>
         </div>
 
-        <!-- Board Menu Button -->
+        <!-- Service Desk Settings + Board Menu Button -->
+        <a *ngIf="isServiceDeskBoard() && currentBoardWorkspaceId()"
+           [routerLink]="['/w', currentBoardWorkspaceId(), 'service-desk', 'overview']"
+           class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium"
+           [attr.aria-label]="tServiceDeskSettings">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.01A1.65 1.65 0 009.5 3.6V3a2 2 0 014 0v.09c0 .66.38 1.26.97 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.01c.25.6.85.97 1.51.97H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            <span class="hidden md:inline">{{ tServiceDeskSettings }}</span>
+        </a>
         <button
                 class="text-sm bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded flex items-center gap-2 transition font-medium"
                 (click)="menu.open()">
@@ -185,9 +198,21 @@
                 <input #newListInput
                        class="w-full rounded-md bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:ring"
                        [(ngModel)]="newListTitle" (keydown.enter)="addList()" [placeholder]="tListTitlePlaceholder"/>
+                <div *ngIf="isServiceDeskBoard()" class="space-y-1">
+                    <label class="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">{{ tListStatusLabel }}</label>
+                    <select
+                            class="ui-select w-full rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:border-blue-400"
+                            [(ngModel)]="newListStatusKey">
+                        <option value="">{{ tSelectStatus }}</option>
+                        <option *ngFor="let opt of serviceDeskStatusOptions" [value]="opt.key">
+                            {{ opt.label }}
+                        </option>
+                    </select>
+                </div>
                 <div class="flex gap-2">
                     <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-sm"
-                            [disabled]="!newListTitle.trim()" (click)="addList()">{{ tAddList }}
+                            [disabled]="!newListTitle.trim() || (isServiceDeskBoard() && !newListStatusKey)"
+                            (click)="addList()">{{ tAddList }}
                     </button>
                     <button class="rounded-md bg-transparent px-3 py-1 text-sm hover:underline"
                             [class.text-gray-700]="isLightBoard()" (click)="newListTitle = ''">{{ tCancel }}

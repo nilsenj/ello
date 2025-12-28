@@ -1,8 +1,8 @@
 import type { PrismaClient } from '@prisma/client';
 import { decryptSecret } from '../utils/integrations.js';
-import { isWorkspaceEntitled } from '../utils/service-desk.js';
+import { isWorkspaceEntitled, getServiceDeskTelegramIntegration } from '../utils/service-desk.js';
 
-const DONE_LISTS = new Set(['Done', 'Canceled']);
+const DONE_STATUS_KEYS = new Set(['done', 'canceled']);
 
 async function sendTelegram(botToken: string, chatId: string, text: string) {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -23,7 +23,8 @@ export function startServiceDeskSlaScanner(prisma: PrismaClient, intervalMs = 5 
                     list: {
                         select: {
                             name: true,
-                            board: { select: { id: true, name: true, workspaceId: true } },
+                            statusKey: true,
+                            board: { select: { id: true, name: true, workspaceId: true, type: true } },
                         },
                     },
                 },
@@ -37,7 +38,10 @@ export function startServiceDeskSlaScanner(prisma: PrismaClient, intervalMs = 5 
                 where: {
                     listId: { in: listIds },
                     serviceDeskOverdueNotifiedAt: null,
-                    list: { name: { notIn: Array.from(DONE_LISTS) } },
+                    list: {
+                        statusKey: { notIn: Array.from(DONE_STATUS_KEYS) },
+                        board: { type: 'service_desk' },
+                    },
                 },
                 select: {
                     id: true,
@@ -59,20 +63,19 @@ export function startServiceDeskSlaScanner(prisma: PrismaClient, intervalMs = 5 
                 overdueAt.setHours(overdueAt.getHours() + rule.slaHours);
                 if (overdueAt > new Date()) continue;
 
+                if (rule.list.board.type !== 'service_desk') continue;
+                const boardId = rule.list.board.id;
                 const workspaceId = rule.list.board.workspaceId;
                 if (!entitlements.has(workspaceId)) {
                     entitlements.set(workspaceId, await isWorkspaceEntitled(prisma, workspaceId));
                 }
                 if (!entitlements.get(workspaceId)) continue;
 
-                if (!integrations.has(workspaceId)) {
-                    const integ = await prisma.workspaceIntegration.findUnique({
-                        where: { workspaceId_type: { workspaceId, type: 'telegram' } },
-                        select: { botTokenEncrypted: true, chatId: true },
-                    });
-                    if (integ) integrations.set(workspaceId, integ);
+                if (!integrations.has(boardId)) {
+                    const integ = await getServiceDeskTelegramIntegration(prisma, boardId, workspaceId);
+                    if (integ) integrations.set(boardId, integ);
                 }
-                const integration = integrations.get(workspaceId);
+                const integration = integrations.get(boardId);
                 if (!integration) continue;
 
                 try {

@@ -81,8 +81,8 @@ export class ServiceDeskOverviewPageComponent implements OnInit {
         return this.allCards().filter(c => {
             const hours = rules[c.listId];
             if (!hours) return false;
-            const listName = this.lists().find(l => l.id === c.listId)?.name ?? '';
-            if (listName === 'Done' || listName === 'Canceled') return false;
+            const statusKey = this.lists().find(l => l.id === c.listId)?.statusKey ?? null;
+            if (statusKey === 'done' || statusKey === 'canceled') return false;
             const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
             if (!changed || isNaN(changed.getTime())) return false;
             return changed.getTime() + hours * 3600000 < now;
@@ -91,15 +91,15 @@ export class ServiceDeskOverviewPageComponent implements OnInit {
 
     doneCount(): number {
         return this.allCards().filter(c => {
-            const listName = this.lists().find(l => l.id === c.listId)?.name ?? '';
-            return listName === 'Done';
+            const statusKey = this.lists().find(l => l.id === c.listId)?.statusKey ?? null;
+            return statusKey === 'done';
         }).length;
     }
 
     requestCount(): number {
         return this.allCards().filter(c => {
-            const listName = this.lists().find(l => l.id === c.listId)?.name ?? '';
-            return listName !== 'Done' && listName !== 'Canceled';
+            const statusKey = this.lists().find(l => l.id === c.listId)?.statusKey ?? null;
+            return statusKey !== 'done' && statusKey !== 'canceled';
         }).length;
     }
 }

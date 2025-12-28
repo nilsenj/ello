@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -22,11 +22,39 @@ export class ServiceDeskSlaPageComponent implements OnInit {
     lists = signal<ListDto[]>([]);
     rules = signal<Record<string, number>>({});
     saving = signal(false);
+    statusMap = signal<Record<string, string>>({});
+    mappingSaving = signal(false);
+    whyOpen = signal(false);
 
     readonly tTitle = $localize`:@@serviceDesk.sla.title:SLA rules`;
     readonly tBoardLabel = $localize`:@@serviceDesk.boardLabel:Board`;
     readonly tSlaHours = $localize`:@@serviceDesk.slaHours:SLA hours`;
     readonly tSave = $localize`:@@serviceDesk.save:Save`;
+    readonly tStatusMappingTitle = $localize`:@@serviceDesk.statusMapping.title:Status mapping`;
+    readonly tStatusMappingHint = $localize`:@@serviceDesk.statusMapping.hint:Map custom lists to a Service Desk status so SLA and alerts work correctly.`;
+    readonly tStatusMappingHelper = $localize`:@@serviceDesk.statusMapping.helper:Unmapped lists are excluded from SLA timers and notifications.`;
+    readonly tStatusMappingWhy = $localize`:@@serviceDesk.statusMapping.why:Why this matters`;
+    readonly tStatusMappingWhyTooltip = $localize`:@@serviceDesk.statusMapping.whyTooltip:SLA and alerts rely on status keys to know when requests start, pause, and finish.`;
+    readonly tStatusMappingSave = $localize`:@@serviceDesk.statusMapping.save:Save mapping`;
+    readonly tStatusMappingEmpty = $localize`:@@serviceDesk.statusMapping.empty:No custom lists to map.`;
+    readonly tStatusMappingRequired = $localize`:@@serviceDesk.statusMapping.required:Status required`;
+    readonly tStatusLabel = $localize`:@@serviceDesk.statusMapping.status:Status`;
+    readonly tSelectStatus = $localize`:@@serviceDesk.statusMapping.select:Select status`;
+    readonly tStatusInbox = $localize`:@@serviceDesk.statusInbox:Inbox`;
+    readonly tStatusScheduled = $localize`:@@serviceDesk.statusScheduled:Scheduled`;
+    readonly tStatusInProgress = $localize`:@@serviceDesk.statusInProgress:In Progress`;
+    readonly tStatusWaitingClient = $localize`:@@serviceDesk.statusWaitingClient:Waiting Client`;
+    readonly tStatusDone = $localize`:@@serviceDesk.statusDone:Done`;
+    readonly tStatusCanceled = $localize`:@@serviceDesk.statusCanceled:Canceled`;
+
+    readonly statusOptions = [
+        { key: 'inbox', label: this.tStatusInbox },
+        { key: 'scheduled', label: this.tStatusScheduled },
+        { key: 'in_progress', label: this.tStatusInProgress },
+        { key: 'waiting_client', label: this.tStatusWaitingClient },
+        { key: 'done', label: this.tStatusDone },
+        { key: 'canceled', label: this.tStatusCanceled },
+    ] as const;
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
 
@@ -49,8 +77,11 @@ export class ServiceDeskSlaPageComponent implements OnInit {
         ]);
         const map: Record<string, number> = {};
         for (const r of rules.rules ?? []) map[r.listId] = r.slaHours;
+        const statusMap: Record<string, string> = {};
+        for (const l of lists) statusMap[l.id] = l.statusKey ?? '';
         this.lists.set(lists);
         this.rules.set(map);
+        this.statusMap.set(statusMap);
     }
 
     setRule(listId: string, value: number | string) {
@@ -77,5 +108,47 @@ export class ServiceDeskSlaPageComponent implements OnInit {
         } finally {
             this.saving.set(false);
         }
+    }
+
+    customLists = computed(() => this.lists().filter(l => !l.isSystem));
+
+    hasUnmappedCustomLists = computed(() =>
+        this.customLists().some(l => !(this.statusMap()[l.id] || '').trim())
+    );
+
+    setStatus(listId: string, statusKey: string) {
+        const next = { ...this.statusMap() };
+        next[listId] = statusKey;
+        this.statusMap.set(next);
+    }
+
+    async saveStatusMapping() {
+        const boardId = this.selectedBoardId();
+        if (!boardId || this.mappingSaving()) return;
+        if (this.hasUnmappedCustomLists()) return;
+        const lists = this.customLists();
+        if (!lists.length) return;
+        this.mappingSaving.set(true);
+        try {
+            const updates = lists
+                .filter(l => (this.statusMap()[l.id] || '') !== (l.statusKey || ''))
+                .map(l => this.listsApi.updateList(l.id, { statusKey: this.statusMap()[l.id] }));
+            if (updates.length) {
+                await Promise.all(updates);
+            }
+            await this.loadBoard(boardId);
+        } finally {
+            this.mappingSaving.set(false);
+        }
+    }
+
+    toggleWhy(event: MouseEvent) {
+        event.stopPropagation();
+        this.whyOpen.set(!this.whyOpen());
+    }
+
+    @HostListener('document:click')
+    closeWhy() {
+        if (this.whyOpen()) this.whyOpen.set(false);
     }
 }

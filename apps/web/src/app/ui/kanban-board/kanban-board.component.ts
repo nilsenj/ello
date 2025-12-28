@@ -24,7 +24,6 @@ import { CardModalComponent } from "../card-modal/card-modal.component";
 import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
 import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
-import { LucideAngularModule } from 'lucide-angular';
 import { WorkspacesService } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
 import { ServiceDeskService } from '../../data/service-desk.service';
@@ -33,7 +32,7 @@ import { KanbanFiltersComponent } from '../kanban-filters/kanban-filters.compone
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, LucideAngularModule, KanbanFiltersComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, KanbanFiltersComponent], // ⬅️ include group
 
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
@@ -76,6 +75,7 @@ export class KanbanBoardComponent implements OnInit {
     readonly tCalendarView = $localize`:@@kanban.calendarView:Calendar`;
     readonly tMenu = $localize`:@@kanban.menu:Menu`;
     readonly tShowMenu = $localize`:@@kanban.showMenu:Show menu`;
+    readonly tServiceDeskSettings = $localize`:@@kanban.serviceDeskSettings:Service Desk`;
     readonly tViewOnlyBanner = $localize`:@@kanban.viewOnlyBanner:You have view-only access to this board. Ask a board admin to add you as a member to edit.`;
     readonly tAddListMobile = $localize`:@@kanban.addListMobile:+ Add list`;
     readonly tAddAnotherList = $localize`:@@kanban.addAnotherList:+ Add another list`;
@@ -83,6 +83,23 @@ export class KanbanBoardComponent implements OnInit {
     readonly tAddList = $localize`:@@kanban.addList:Add list`;
     readonly tCancel = $localize`:@@kanban.cancel:Cancel`;
     readonly tNewList = $localize`:@@kanban.newList:New list`;
+    readonly tListStatusLabel = $localize`:@@kanban.listStatusLabel:Status`;
+    readonly tSelectStatus = $localize`:@@kanban.selectStatus:Select status`;
+    readonly tStatusInbox = $localize`:@@kanban.statusInbox:Inbox`;
+    readonly tStatusScheduled = $localize`:@@kanban.statusScheduled:Scheduled`;
+    readonly tStatusInProgress = $localize`:@@kanban.statusInProgress:In Progress`;
+    readonly tStatusWaitingClient = $localize`:@@kanban.statusWaitingClient:Waiting Client`;
+    readonly tStatusDone = $localize`:@@kanban.statusDone:Done`;
+    readonly tStatusCanceled = $localize`:@@kanban.statusCanceled:Canceled`;
+
+    readonly serviceDeskStatusOptions = [
+        { key: 'inbox', label: this.tStatusInbox },
+        { key: 'scheduled', label: this.tStatusScheduled },
+        { key: 'in_progress', label: this.tStatusInProgress },
+        { key: 'waiting_client', label: this.tStatusWaitingClient },
+        { key: 'done', label: this.tStatusDone },
+        { key: 'canceled', label: this.tStatusCanceled },
+    ] as const;
 
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
     @ViewChild(KanbanFiltersComponent) filters?: KanbanFiltersComponent;
@@ -116,6 +133,7 @@ export class KanbanBoardComponent implements OnInit {
 
     // ui state
     newListTitle = '';
+    newListStatusKey = '';
     newCard: Record<string, string> = {};
     titles: Record<string, string> = {};
     showNewCard: Record<string, boolean> = {};
@@ -137,6 +155,17 @@ export class KanbanBoardComponent implements OnInit {
         if (!uid) return false;
         const me = this.store.members().find(m => m.id === uid || m.userId === uid);
         return me?.role === 'owner' || me?.role === 'admin' || me?.role === 'member';
+    });
+
+    isServiceDeskBoard = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        return this.store.boards().find(b => b.id === boardId)?.type === 'service_desk';
+    });
+    currentBoardWorkspaceId = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return null;
+        return this.store.boards().find(b => b.id === boardId)?.workspaceId ?? null;
     });
 
 
@@ -404,9 +433,9 @@ export class KanbanBoardComponent implements OnInit {
         return true;
     }
 
-    private listNameById(listId: string) {
+    private listStatusKeyById(listId: string) {
         const list = this.store.lists().find(l => l.id === listId);
-        return (list?.title ?? list?.name ?? '').trim();
+        return list?.statusKey ?? null;
     }
 
     isOverdue(c: Card): boolean {
@@ -414,8 +443,8 @@ export class KanbanBoardComponent implements OnInit {
         if (!rules.size) return false;
         const hours = rules.get(c.listId);
         if (!hours) return false;
-        const listName = this.listNameById(c.listId);
-        if (listName === 'Done' || listName === 'Canceled') return false;
+        const statusKey = this.listStatusKeyById(c.listId);
+        if (statusKey === 'done' || statusKey === 'canceled') return false;
         const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
         if (!changed || isNaN(changed.getTime())) return false;
         const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
@@ -428,10 +457,10 @@ export class KanbanBoardComponent implements OnInit {
         if (!rules.size) return map;
         const lists = this.store.lists();
         for (const l of lists) {
-            const listName = (l.title ?? l.name ?? '').trim();
+            const statusKey = l.statusKey ?? null;
             for (const c of l.cards ?? []) {
                 const hours = rules.get(l.id);
-                if (!hours || listName === 'Done' || listName === 'Canceled') continue;
+                if (!hours || statusKey === 'done' || statusKey === 'canceled') continue;
                 const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
                 if (!changed || isNaN(changed.getTime())) continue;
                 const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
@@ -483,8 +512,11 @@ export class KanbanBoardComponent implements OnInit {
     async addList() {
         const name = this.newListTitle?.trim();
         if (!name) return;
-        await this.listsApi.createList(name);
+        if (this.isServiceDeskBoard() && !this.newListStatusKey) return;
+        const statusKey = this.isServiceDeskBoard() ? this.newListStatusKey : undefined;
+        await this.listsApi.createList(name, statusKey);
         this.newListTitle = '';
+        this.newListStatusKey = '';
     }
 
     async renameList(l: ListDto) {

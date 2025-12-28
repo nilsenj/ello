@@ -75,6 +75,10 @@ export class ServiceDeskRequestsPageComponent implements OnInit {
         this.lists.set(lists);
     }
 
+    async loadInbox(boardId: string) {
+        await this.loadBoardLists(boardId);
+    }
+
     cards(): Array<Card & { listName: string }> {
         const lists = this.lists();
         if (!lists.length) return [];
@@ -85,7 +89,7 @@ export class ServiceDeskRequestsPageComponent implements OnInit {
                 listName: list.name,
             })));
         }
-        const inbox = lists.find(l => l.name === 'Inbox');
+        const inbox = lists.find(l => l.statusKey === 'inbox');
         if (!inbox?.cards) return [];
         return inbox.cards.map(c => ({ ...c, listId: inbox.id, listName: inbox.name }));
     }

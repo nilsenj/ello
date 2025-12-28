@@ -16,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { between } from '../../utils/rank';
 import { TrelloCardComponent } from "../trello-card/trello-card.component";
 
-import { LucideAngularModule, Archive, X } from 'lucide-angular';
+import { LucideAngularModule, Archive, Lock, X } from 'lucide-angular';
 
 @Component({
     standalone: true,
@@ -45,8 +45,16 @@ export class ListColumnComponent {
 
     // Icons
     readonly ArchiveIcon = Archive;
+    readonly LockIcon = Lock;
     readonly XIcon = X;
     readonly tArchiveListTitle = $localize`:@@listColumn.archiveListTitle:Archive list`;
+    readonly tSystemListHint = $localize`:@@listColumn.systemListHint:System list (cannot be archived)`;
+    readonly tStatusInbox = $localize`:@@serviceDesk.statusInbox:Inbox`;
+    readonly tStatusScheduled = $localize`:@@serviceDesk.statusScheduled:Scheduled`;
+    readonly tStatusInProgress = $localize`:@@serviceDesk.statusInProgress:In Progress`;
+    readonly tStatusWaitingClient = $localize`:@@serviceDesk.statusWaitingClient:Waiting Client`;
+    readonly tStatusDone = $localize`:@@serviceDesk.statusDone:Done`;
+    readonly tStatusCanceled = $localize`:@@serviceDesk.statusCanceled:Canceled`;
     readonly tDropCardsHere = $localize`:@@listColumn.dropCardsHere:Drop cards here`;
     readonly tAddCard = $localize`:@@listColumn.addCard:+ Add a card`;
     readonly tCardTitlePlaceholder = $localize`:@@listColumn.cardTitlePlaceholder:Enter a title for this card...`;
@@ -67,6 +75,29 @@ export class ListColumnComponent {
     title = computed(() => {
         const l = this._list();
         return l.title ?? l.name ?? '';
+    });
+    isServiceDeskBoard = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        return this.store.boards().find(b => b.id === boardId)?.type === 'service_desk';
+    });
+    isSystemList = computed(() => {
+        const l = this._list();
+        return this.isServiceDeskBoard() && !!l.isSystem;
+    });
+    canArchiveList = computed(() => this.canEdit && !this.isSystemList());
+    statusBadge = computed(() => {
+        const l = this._list();
+        if (!this.isServiceDeskBoard() || this.isSystemList() || !l.statusKey) return '';
+        const map: Record<string, string> = {
+            inbox: this.tStatusInbox,
+            scheduled: this.tStatusScheduled,
+            in_progress: this.tStatusInProgress,
+            waiting_client: this.tStatusWaitingClient,
+            done: this.tStatusDone,
+            canceled: this.tStatusCanceled,
+        };
+        return map[l.statusKey] ?? l.statusKey;
     });
     // Only show active cards in the column
     cards = computed<Card[]>(() => {
@@ -112,6 +143,10 @@ export class ListColumnComponent {
     }
 
     async confirmArchive() {
+        if (this.isSystemList()) {
+            this.showArchiveModal.set(false);
+            return;
+        }
         this.showArchiveModal.set(false);
         await this.listsApi.updateList(this.list.id, { isArchived: true });
         // Update store to reflect archived state (KanbanBoardComponent will filter it out)

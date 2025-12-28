@@ -9,7 +9,11 @@ import { ensureUser } from '../utils/ensure-user.js';
 import { ensureBoardAccess } from '../utils/permissions.js';
 import { NotificationService } from '../services/notification-service.js';
 import { decryptSecret } from '../utils/integrations.js';
-import { isWorkspaceEntitled } from '../utils/service-desk.js';
+import {
+    isWorkspaceEntitled,
+    getServiceDeskTelegramIntegration,
+    getServiceDeskWebhookNotifyIntegration,
+} from '../utils/service-desk.js';
 import { emitToBoard } from '../socket.js';
 
 type ListParams = { listId: string };
@@ -292,9 +296,9 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
             const board = await prisma.board.findUnique({
                 where: { id: srcBoardId },
-                select: { workspaceId: true },
+                select: { workspaceId: true, type: true },
             });
-            if (board?.workspaceId) {
+            if (board?.workspaceId && board.type === 'service_desk') {
                 const entitled = await isWorkspaceEntitled(prisma, board.workspaceId).catch(() => false);
                 if (entitled) {
                     const cardDetails = await prisma.card.findUnique({
@@ -309,57 +313,48 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
                         },
                     });
 
-                    const integrationsClient = (prisma as any).workspaceIntegration;
-                    if (integrationsClient?.findUnique) {
-                        const telegram = await integrationsClient.findUnique({
-                            where: { workspaceId_type: { workspaceId: board.workspaceId, type: 'telegram' } },
-                            select: { botTokenEncrypted: true, chatId: true },
-                        });
-                        if (telegram?.botTokenEncrypted && telegram?.chatId) {
-                            try {
-                                const token = decryptSecret(telegram.botTokenEncrypted);
-                                const text = formatMoveMessage({
-                                    title: cardDetails?.title || currentCard?.title || 'Card',
-                                    fromList: fromList?.name,
-                                    toList: toList?.name,
-                                    customerName: cardDetails?.customerName,
-                                    customerPhone: cardDetails?.customerPhone,
-                                    address: cardDetails?.address,
-                                    serviceType: cardDetails?.serviceType,
-                                    notes: cardDetails?.description,
-                                });
-                                await sendTelegram(token, telegram.chatId, text);
-                            } catch (err) {
-                                console.error('[CardsRoute] Telegram move alert failed', err);
-                            }
+                    const telegram = await getServiceDeskTelegramIntegration(prisma, srcBoardId, board.workspaceId);
+                    if (telegram?.botTokenEncrypted && telegram.chatId) {
+                        try {
+                            const token = decryptSecret(telegram.botTokenEncrypted);
+                            const text = formatMoveMessage({
+                                title: cardDetails?.title || currentCard?.title || 'Card',
+                                fromList: fromList?.name,
+                                toList: toList?.name,
+                                customerName: cardDetails?.customerName,
+                                customerPhone: cardDetails?.customerPhone,
+                                address: cardDetails?.address,
+                                serviceType: cardDetails?.serviceType,
+                                notes: cardDetails?.description,
+                            });
+                            await sendTelegram(token, telegram.chatId, text);
+                        } catch (err) {
+                            console.error('[CardsRoute] Telegram move alert failed', err);
                         }
+                    }
 
-                        const webhook = await integrationsClient.findUnique({
-                            where: { workspaceId_type: { workspaceId: board.workspaceId, type: 'webhook' } },
-                            select: { webhookNotifyUrlEncrypted: true },
-                        });
-                        if (webhook?.webhookNotifyUrlEncrypted) {
-                            try {
-                                const url = decryptSecret(webhook.webhookNotifyUrlEncrypted);
-                                await sendWebhookNotify(url, {
-                                    event: 'card.moved',
-                                    cardId: id,
-                                    boardId: srcBoardId,
-                                    fromListId: currentCard?.listId,
-                                    toListId,
-                                    fromListName: fromList?.name,
-                                    toListName: toList?.name,
-                                    title: cardDetails?.title || currentCard?.title || 'Card',
-                                    customerName: cardDetails?.customerName ?? null,
-                                    customerPhone: cardDetails?.customerPhone ?? null,
-                                    address: cardDetails?.address ?? null,
-                                    serviceType: cardDetails?.serviceType ?? null,
-                                    notes: cardDetails?.description ?? null,
-                                    movedAt: new Date().toISOString(),
-                                });
-                            } catch (err) {
-                                console.error('[CardsRoute] Webhook move alert failed', err);
-                            }
+                    const webhook = await getServiceDeskWebhookNotifyIntegration(prisma, srcBoardId, board.workspaceId);
+                    if (webhook?.webhookNotifyUrlEncrypted) {
+                        try {
+                            const url = decryptSecret(webhook.webhookNotifyUrlEncrypted);
+                            await sendWebhookNotify(url, {
+                                event: 'card.moved',
+                                cardId: id,
+                                boardId: srcBoardId,
+                                fromListId: currentCard?.listId,
+                                toListId,
+                                fromListName: fromList?.name,
+                                toListName: toList?.name,
+                                title: cardDetails?.title || currentCard?.title || 'Card',
+                                customerName: cardDetails?.customerName ?? null,
+                                customerPhone: cardDetails?.customerPhone ?? null,
+                                address: cardDetails?.address ?? null,
+                                serviceType: cardDetails?.serviceType ?? null,
+                                notes: cardDetails?.description ?? null,
+                                movedAt: new Date().toISOString(),
+                            });
+                        } catch (err) {
+                            console.error('[CardsRoute] Webhook move alert failed', err);
                         }
                     }
                 }

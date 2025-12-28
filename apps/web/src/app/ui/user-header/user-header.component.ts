@@ -220,7 +220,7 @@ export class UserHeaderComponent {
         const boards = this.store.boards().filter(b => !b.isArchived);
         const workspaces = this.workspaces();
         const isServiceDeskView = this.isServiceDeskRoute();
-        const serviceDeskBoards = boards.filter(b => (b.name || '').toLowerCase().includes('service desk'));
+        const serviceDeskBoards = boards.filter(b => b.type === 'service_desk');
         const visibleBoards = isServiceDeskView
             ? (serviceDeskBoards.length ? serviceDeskBoards : boards)
             : boards;
