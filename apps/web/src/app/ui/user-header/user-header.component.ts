@@ -164,7 +164,8 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                         [user]="user()"
                         [initials]="initials()"
                         (logout)="logout()"
-                        (goProfile)="goProfile()">
+                        (goProfile)="goProfile()"
+                        (goAdmin)="goAdmin()">
                     </header-user-menu>
                 </div>
             </div>
@@ -215,15 +216,19 @@ export class UserHeaderComponent {
 
     private routeUrl = signal(this.router.url);
 
-    // Group boards by workspace (show Service Desk boards only within Service Desk module)
+    // Group boards by workspace (show module boards only within module routes)
     boardsByWorkspace = computed(() => {
         const boards = this.store.boards().filter(b => !b.isArchived);
         const workspaces = this.workspaces();
         const isServiceDeskView = this.isServiceDeskRoute();
+        const isFulfillmentView = this.isFulfillmentRoute();
         const serviceDeskBoards = boards.filter(b => b.type === 'service_desk');
+        const fulfillmentBoards = boards.filter(b => b.type === 'ecommerce_fulfillment');
         const visibleBoards = isServiceDeskView
             ? (serviceDeskBoards.length ? serviceDeskBoards : boards)
-            : boards;
+            : isFulfillmentView
+                ? (fulfillmentBoards.length ? fulfillmentBoards : boards)
+                : boards;
 
         const groups = workspaces.map(ws => ({
             workspaceId: ws.id,
@@ -339,6 +344,10 @@ export class UserHeaderComponent {
         return /\/service-desk(\/|$)/.test(this.routeUrl());
     }
 
+    private isFulfillmentRoute(): boolean {
+        return /\/ecommerce-fulfillment(\/|$)/.test(this.routeUrl());
+    }
+
     // OPEN MODALS instead of prompt()
     onCreateBoardClick() {
         this.boardModal.open();
@@ -352,6 +361,10 @@ export class UserHeaderComponent {
     goProfile() {
         console.log('Opening user settings modal');
         this.userSettingsModal.open();
+    }
+
+    goAdmin() {
+        this.router.navigate(['/admin']);
     }
 
     // Notification actions

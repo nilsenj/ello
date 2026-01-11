@@ -4,7 +4,7 @@ export type Board = {
     description?: string,
     isArchived: boolean,
     background?: string,
-    type?: 'generic' | 'service_desk';
+    type?: 'generic' | 'service_desk' | 'ecommerce_fulfillment';
     members: BoardMember[],
     activities: Activity[],
     workspaceId: string;
@@ -48,8 +48,17 @@ export type Card = {
     lastStatusChangedAt?: string | null;
     customerName?: string | null;
     customerPhone?: string | null;
+    customerEmail?: string | null;
     address?: string | null;
     serviceType?: string | null;
+    itemsSummary?: string | null;
+    orderNumber?: string | null;
+    orderTotal?: number | null;
+    orderCurrency?: string | null;
+    paidAt?: string | null;
+    shippingCarrier?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
     assignees?: AssigneeDto[];
     checklists?: Checklist[];
     comments?: CommentDto[];
@@ -72,8 +81,17 @@ export type ModalCard = Card & {
     lastStatusChangedAt?: string | null;
     customerName?: string | null;
     customerPhone?: string | null;
+    customerEmail?: string | null;
     address?: string | null;
     serviceType?: string | null;
+    itemsSummary?: string | null;
+    orderNumber?: string | null;
+    orderTotal?: number | null;
+    orderCurrency?: string | null;
+    paidAt?: string | null;
+    shippingCarrier?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
     // if backend also returns labels via junction:
     labels?: any[];
     cardLabels?: any[];
@@ -93,7 +111,7 @@ export type ListDto = {
     labels?: any[];
     cardLabels?: any[];
     isArchived?: boolean;
-    statusKey?: 'inbox' | 'scheduled' | 'in_progress' | 'waiting_client' | 'done' | 'canceled';
+    statusKey?: 'inbox' | 'scheduled' | 'in_progress' | 'waiting_client' | 'done' | 'canceled' | 'order' | 'packing' | 'shipped' | 'delivered' | 'returned';
     isSystem?: boolean;
 };
 export type Label = { id: string; name: string; color: string; rank?: string; boardId: string };

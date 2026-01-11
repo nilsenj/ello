@@ -5,7 +5,7 @@ import { SocketService } from '../data/socket.service';
 import { NotificationsStore } from '../data/notifications-store.service';
 import { Capacitor } from '@capacitor/core';
 
-type User = { id: string; email: string; name?: string; avatar?: string };
+type User = { id: string; email: string; name?: string; avatar?: string; isSuperAdmin?: boolean };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

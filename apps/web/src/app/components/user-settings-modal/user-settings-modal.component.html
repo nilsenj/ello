@@ -211,6 +211,23 @@
 
                 <!-- Plan Tab -->
                 <div *ngIf="activeTab() === 'plan'" class="space-y-4">
+                    <div class="space-y-1">
+                        <div class="text-xs text-slate-500">{{ tPlanAppliesTo }}</div>
+                        <div *ngIf="workspaces().length > 1; else singleWorkspace">
+                            <select
+                                    class="w-full sm:w-72 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    [ngModel]="planWorkspaceId()"
+                                    (ngModelChange)="planWorkspaceId.set($event)"
+                            >
+                                <option *ngFor="let ws of workspaces()" [value]="ws.id">{{ ws.name }}</option>
+                            </select>
+                        </div>
+                        <ng-template #singleWorkspace>
+                            <div class="text-sm font-semibold text-slate-900">
+                                {{ currentWorkspace()?.name || '-' }}
+                            </div>
+                        </ng-template>
+                    </div>
                     <div class="rounded-md border border-slate-200 bg-slate-50 p-4">
                         <div class="flex items-start justify-between gap-3">
                             <div class="space-y-1">
@@ -219,11 +236,28 @@
                                     {{ tPlanWorkspace }}:
                                     {{ currentWorkspace()?.name || '-' }}
                                 </div>
-                                <div class="text-sm font-semibold text-slate-900">
-                                    {{ currentPlan().label }}
+                                <div class="text-sm font-semibold text-slate-900" *ngIf="!isModuleWorkspace(); else modulePlanTitle">
+                                    {{ currentPlan().name }}
+                                </div>
+                                <ng-template #modulePlanTitle>
+                                    <div class="text-sm font-semibold text-slate-900">
+                                        {{ moduleTitle() }}
+                                    </div>
+                                </ng-template>
+                                <div class="text-xs text-slate-600">
+                                    {{ planPriceText(isModuleWorkspace() ? (modulePlan() || currentPlan()) : currentPlan()) }}
+                                </div>
+                                <div *ngIf="corePlanEndText()" class="text-xs text-slate-500">
+                                    {{ corePlanEndText() }}
+                                </div>
+                                <div *ngIf="modulePlanEndText()" class="text-xs text-slate-500">
+                                    {{ modulePlanEndText() }}
                                 </div>
                                 <div class="text-xs text-slate-600" [class.text-amber-700]="isPlanAtLimit()">
                                     {{ planUsageText() }}
+                                </div>
+                                <div *ngIf="isModuleWorkspace()" class="text-xs text-indigo-700">
+                                    {{ tPlanModuleNote }}
                                 </div>
                             </div>
                             <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
@@ -235,25 +269,65 @@
                          class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
                         {{ tPlanLimitReached }}
                     </div>
+                    <div *ngIf="planError()"
+                         class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                        {{ planError() }}
+                    </div>
+                    <div *ngIf="planSuccess()"
+                         class="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700">
+                        {{ planSuccess() }}
+                    </div>
+                    <div *ngIf="plansLoading()" class="text-xs text-slate-500">
+                        {{ tPlanLoading }}
+                    </div>
 
-                    <div>
+                    <div *ngIf="!isModuleWorkspace()">
                         <div class="text-sm font-semibold text-slate-900">{{ tPlanAvailable }}</div>
                         <div class="mt-2 grid gap-3 sm:grid-cols-2">
-                            <div *ngFor="let plan of availablePlans"
+                            <div *ngFor="let plan of availablePlans()"
                                  class="rounded-md border border-slate-200 bg-white p-3">
                                 <div class="flex items-center justify-between gap-2">
-                                    <div class="text-sm font-semibold text-slate-900">{{ plan.label }}</div>
-                                    <span class="text-xs px-2 py-0.5 rounded-full"
-                                          [ngClass]="plan.key === currentPlanKey() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'">
-                                        {{ plan.key === currentPlanKey() ? tPlanCurrent : tPlanComingSoon }}
+                                    <div class="text-sm font-semibold text-slate-900">{{ plan.name }}</div>
+                                    <span *ngIf="plan.key === currentPlanKey()"
+                                          class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                                        {{ tPlanCurrent }}
+                                    </span>
+                                    <span *ngIf="plan.key !== currentPlanKey() && !plan.purchasable"
+                                          class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                        {{ tPlanComingSoon }}
                                     </span>
                                 </div>
                                 <div class="mt-1 text-xs text-slate-600">
-                                    {{ tPlanBoards }}: {{ plan.maxBoards }} · {{ tPlanMembers }}: {{ plan.maxMembers }}
+                                    {{ planPriceText(plan) }}
+                                </div>
+                                <div class="mt-1 text-xs text-slate-600">
+                                    {{ tPlanBoards }}: {{ plan.limits.maxBoards ? plan.limits.maxBoards : tPlanUnlimited }}
+                                    ·
+                                    {{ tPlanMembers }}: {{ plan.limits.maxMembers ? plan.limits.maxMembers : tPlanUnlimited }}
+                                </div>
+                                <div *ngIf="plan.iapProductIds?.ios || plan.iapProductIds?.android"
+                                     class="mt-2 text-[10px] text-slate-500">
+                                    {{ tPlanIapIds }}:
+                                    iOS {{ plan.iapProductIds?.ios || 'N/A' }} · Android {{ plan.iapProductIds?.android || 'N/A' }}
+                                </div>
+                                <div class="mt-3 flex items-center justify-end">
+                                    <button
+                                            *ngIf="plan.purchasable && plan.key !== currentPlanKey()"
+                                            (click)="buyPlan(plan)"
+                                            [disabled]="purchasingPlan() === plan.key || !canPurchasePlan()"
+                                            [attr.title]="!canPurchasePlan() ? tPlanAdminOnly : null"
+                                            class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {{ purchasingPlan() === plan.key ? tPlanProcessing : tPlanBuy }}
+                                    </button>
+                                </div>
+                                <div *ngIf="plan.purchasable && plan.key !== currentPlanKey() && !canPurchasePlan()"
+                                     class="mt-2 text-[11px] font-semibold text-amber-700">
+                                    {{ tPlanAdminOnly }}
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-2 text-xs text-slate-500">{{ tPlanServiceDesk }}</div>
+                        <div class="mt-2 text-xs text-slate-500">{{ tPlanModulesBilling }}</div>
                     </div>
                 </div>
             </div>

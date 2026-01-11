@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 
-export type CorePlanKey = 'core_free';
+export type CorePlanKey = 'core_free' | 'core_team' | 'core_business';
 
 export type CorePlanLimits = {
     maxBoards?: number;
@@ -20,6 +20,22 @@ export const CORE_PLANS: Record<CorePlanKey, CorePlanDefinition> = {
         limits: {
             maxBoards: 3,
             maxMembers: 5,
+        },
+    },
+    core_team: {
+        key: 'core_team',
+        name: 'Core Team',
+        limits: {
+            maxBoards: 10,
+            maxMembers: 10,
+        },
+    },
+    core_business: {
+        key: 'core_business',
+        name: 'Core Business',
+        limits: {
+            maxBoards: 50,
+            maxMembers: 50,
         },
     },
 };

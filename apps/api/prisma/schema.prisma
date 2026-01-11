@@ -15,6 +15,10 @@ model User {
   avatar    String?
   password  String
   isPending Boolean  @default(false)
+  isSuperAdmin Boolean @default(false)
+  isBanned Boolean @default(false)
+  bannedAt DateTime?
+  banReason String?
   createdAt DateTime @default(now())
 
   workspaces    WorkspaceMember[]
@@ -31,6 +35,7 @@ model User {
   watchedBoards         WatchedBoard[]
   sentInvitations       PendingInvitation[]
   pushTokens            PushDeviceToken[]
+  billingTransactions   BillingTransaction[]
 }
 
 model Workspace {
@@ -60,6 +65,8 @@ model Workspace {
   boards      Board[]
   entitlements WorkspaceEntitlement[]
   integrations WorkspaceIntegration[]
+  subscription WorkspaceSubscription?
+  billingTransactions BillingTransaction[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
@@ -116,6 +123,7 @@ enum Visibility {
 enum BoardType {
   generic
   service_desk
+  ecommerce_fulfillment
 }
 
 model Board {
@@ -189,6 +197,11 @@ enum ListStatusKey {
   waiting_client
   done
   canceled
+  order
+  packing
+  shipped
+  delivered
+  returned
 }
 
 enum Risk {
@@ -235,6 +248,18 @@ model Card {
   lastStatusChangedAt DateTime @default(now())
   serviceDeskOverdueNotifiedAt DateTime?
 
+  // Fulfillment fields (optional)
+  orderNumber String?
+  customerEmail String?
+  itemsSummary String?
+  orderTotal Float?
+  orderCurrency String?
+  paidAt DateTime?
+  shippingCarrier String?
+  trackingNumber String?
+  trackingUrl String?
+  fulfillmentOverdueNotifiedAt DateTime?
+
   // Card relations for diagram visualization
   sourceRelations CardRelation[] @relation("sourceRelations")
   targetRelations CardRelation[] @relation("targetRelations")
@@ -276,6 +301,56 @@ model BoardSlaRule {
 enum IntegrationType {
   telegram
   webhook
+}
+
+enum BillingProvider {
+  fondy
+  apple_iap
+  google_iap
+  mock
+}
+
+enum BillingStatus {
+  pending
+  paid
+  failed
+  canceled
+  refunded
+}
+
+model WorkspaceSubscription {
+  id                String   @id @default(cuid())
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId       String   @unique
+  planKey           String
+  provider          BillingProvider
+  status            BillingStatus
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  autoRenew         Boolean  @default(true)
+  externalId        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model BillingTransaction {
+  id          String   @id @default(cuid())
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+  planKey     String
+  provider    BillingProvider
+  status      BillingStatus
+  amount      Int
+  currency    String
+  orderId     String?  @unique
+  raw         Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId, provider])
+  @@index([userId])
 }
 
 model WorkspaceIntegration {

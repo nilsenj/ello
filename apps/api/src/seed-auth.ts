@@ -15,12 +15,14 @@ async function main() {
             name: 'Admin',
             password: 'admin123', // dev only
             role: 'owner' as const,
+            isSuperAdmin: true,
         },
         {
             email: 'user@ello.dev',
             name: 'Demo User',
             password: 'user123',  // dev only
             role: 'member' as const,
+            isSuperAdmin: false,
         },
     ];
 
@@ -30,8 +32,8 @@ async function main() {
         // upsert user
         const user = await prisma.user.upsert({
             where: { email: u.email },
-            update: { name: u.name, password: hash },
-            create: { email: u.email, name: u.name, password: hash },
+            update: { name: u.name, password: hash, isSuperAdmin: u.isSuperAdmin },
+            create: { email: u.email, name: u.name, password: hash, isSuperAdmin: u.isSuperAdmin },
         });
 
         // Optionally: ensure they belong to the demo workspace/board later in seed.ts

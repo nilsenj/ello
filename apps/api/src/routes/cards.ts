@@ -14,6 +14,12 @@ import {
     getServiceDeskTelegramIntegration,
     getServiceDeskWebhookNotifyIntegration,
 } from '../utils/service-desk.js';
+import {
+    buildTrackingUrl,
+    isFulfillmentEntitled,
+    getFulfillmentTelegramIntegration,
+    getFulfillmentWebhookNotifyIntegration,
+} from '../utils/fulfillment.js';
 import { emitToBoard } from '../socket.js';
 
 type ListParams = { listId: string };
@@ -31,6 +37,19 @@ type PatchCardBody = Partial<{
     estimate: number | null;
     isArchived: boolean;
     isDone: boolean;
+    customerName: string | null;
+    customerPhone: string | null;
+    customerEmail: string | null;
+    address: string | null;
+    serviceType: string | null;
+    orderNumber: string | null;
+    itemsSummary: string | null;
+    orderTotal: number | string | null;
+    orderCurrency: string | null;
+    paidAt: string | null;
+    shippingCarrier: string | null;
+    trackingNumber: string | null;
+    trackingUrl: string | null;
 }>;
 
 // --- helpers ---------------------------------------------------------------
@@ -53,8 +72,17 @@ const shapeCard = (c: any) => ({
     lastStatusChangedAt: c.lastStatusChangedAt,
     customerName: c.customerName,
     customerPhone: c.customerPhone,
+    customerEmail: (c as any).customerEmail ?? null,
     address: c.address,
     serviceType: c.serviceType,
+    orderNumber: (c as any).orderNumber ?? null,
+    itemsSummary: (c as any).itemsSummary ?? null,
+    orderTotal: (c as any).orderTotal ?? null,
+    orderCurrency: (c as any).orderCurrency ?? null,
+    paidAt: (c as any).paidAt ?? null,
+    shippingCarrier: (c as any).shippingCarrier ?? null,
+    trackingNumber: (c as any).trackingNumber ?? null,
+    trackingUrl: (c as any).trackingUrl ?? null,
     isArchived: c.isArchived,
     isDone: c.isDone,
 });
@@ -122,6 +150,36 @@ function formatMoveMessage(payload: {
         payload.customerPhone ? `Phone: ${payload.customerPhone}` : null,
         payload.address ? `Address: ${payload.address}` : null,
         payload.serviceType ? `Service: ${payload.serviceType}` : null,
+        payload.notes ? `Notes: ${payload.notes}` : null,
+    ].filter(Boolean).join('\n');
+}
+
+function formatFulfillmentMoveMessage(payload: {
+    title: string;
+    fromList?: string | null;
+    toList?: string | null;
+    orderNumber?: string | null;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    customerEmail?: string | null;
+    address?: string | null;
+    itemsSummary?: string | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
+    notes?: string | null;
+}) {
+    return [
+        `Fulfillment status update`,
+        `Order: ${payload.orderNumber || payload.title}`,
+        payload.fromList ? `From: ${payload.fromList}` : null,
+        payload.toList ? `To: ${payload.toList}` : null,
+        payload.customerName ? `Customer: ${payload.customerName}` : null,
+        payload.customerPhone ? `Phone: ${payload.customerPhone}` : null,
+        payload.customerEmail ? `Email: ${payload.customerEmail}` : null,
+        payload.address ? `Address: ${payload.address}` : null,
+        payload.itemsSummary ? `Items: ${payload.itemsSummary}` : null,
+        payload.trackingNumber ? `Tracking: ${payload.trackingNumber}` : null,
+        payload.trackingUrl ? `Tracking URL: ${payload.trackingUrl}` : null,
         payload.notes ? `Notes: ${payload.notes}` : null,
     ].filter(Boolean).join('\n');
 }
@@ -274,7 +332,13 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
             data: {
                 listId: toListId,
                 rank: newRank,
-                ...(listChanged ? { lastStatusChangedAt: new Date(), serviceDeskOverdueNotifiedAt: null } : {}),
+                ...(listChanged
+                    ? {
+                        lastStatusChangedAt: new Date(),
+                        serviceDeskOverdueNotifiedAt: null,
+                        fulfillmentOverdueNotifiedAt: null,
+                    }
+                    : {}),
             },
             include: { labels: { select: { labelId: true } } },
         });
@@ -355,6 +419,80 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
                             });
                         } catch (err) {
                             console.error('[CardsRoute] Webhook move alert failed', err);
+                        }
+                    }
+                }
+            }
+
+            if (board?.workspaceId && board.type === 'ecommerce_fulfillment') {
+                const entitled = await isFulfillmentEntitled(prisma, board.workspaceId).catch(() => false);
+                if (entitled) {
+                    const cardDetails = await prisma.card.findUnique({
+                        where: { id },
+                        select: {
+                            title: true,
+                            description: true,
+                            orderNumber: true,
+                            customerName: true,
+                            customerPhone: true,
+                            customerEmail: true,
+                            address: true,
+                            itemsSummary: true,
+                            trackingNumber: true,
+                            trackingUrl: true,
+                        },
+                    });
+
+                    const telegram = await getFulfillmentTelegramIntegration(prisma, srcBoardId, board.workspaceId);
+                    if (telegram?.botTokenEncrypted && telegram.chatId) {
+                        try {
+                            const token = decryptSecret(telegram.botTokenEncrypted);
+                            const text = formatFulfillmentMoveMessage({
+                                title: cardDetails?.title || currentCard?.title || 'Order',
+                                fromList: fromList?.name,
+                                toList: toList?.name,
+                                orderNumber: (cardDetails as any)?.orderNumber,
+                                customerName: (cardDetails as any)?.customerName,
+                                customerPhone: (cardDetails as any)?.customerPhone,
+                                customerEmail: (cardDetails as any)?.customerEmail,
+                                address: (cardDetails as any)?.address,
+                                itemsSummary: (cardDetails as any)?.itemsSummary,
+                                trackingNumber: (cardDetails as any)?.trackingNumber,
+                                trackingUrl: (cardDetails as any)?.trackingUrl,
+                                notes: cardDetails?.description,
+                            });
+                            await sendTelegram(token, telegram.chatId, text);
+                        } catch (err) {
+                            console.error('[CardsRoute] Fulfillment telegram move alert failed', err);
+                        }
+                    }
+
+                    const webhook = await getFulfillmentWebhookNotifyIntegration(prisma, srcBoardId, board.workspaceId);
+                    if (webhook?.webhookNotifyUrlEncrypted) {
+                        try {
+                            const url = decryptSecret(webhook.webhookNotifyUrlEncrypted);
+                            await sendWebhookNotify(url, {
+                                event: 'card.moved',
+                                cardId: id,
+                                boardId: srcBoardId,
+                                fromListId: currentCard?.listId,
+                                toListId,
+                                fromListName: fromList?.name,
+                                toListName: toList?.name,
+                                title: cardDetails?.title || currentCard?.title || 'Order',
+                                orderNumber: (cardDetails as any)?.orderNumber ?? null,
+                                customerName: (cardDetails as any)?.customerName ?? null,
+                                customerPhone: (cardDetails as any)?.customerPhone ?? null,
+                                customerEmail: (cardDetails as any)?.customerEmail ?? null,
+                                address: (cardDetails as any)?.address ?? null,
+                                itemsSummary: (cardDetails as any)?.itemsSummary ?? null,
+                                trackingNumber: (cardDetails as any)?.trackingNumber ?? null,
+                                trackingUrl: (cardDetails as any)?.trackingUrl ?? null,
+                                notes: cardDetails?.description ?? null,
+                                movedAt: new Date().toISOString(),
+                            });
+                        } catch (err) {
+                            console.error('[CardsRoute] Fulfillment webhook move alert failed', err);
                         }
                     }
                 }
@@ -475,9 +613,19 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
 
         const bId = await boardIdByCard(prisma, id);
         await ensureBoardAccess(prisma, bId!, user.id);
+        const board = bId
+            ? await prisma.board.findUnique({ where: { id: bId }, select: { type: true } })
+            : null;
+        const boardType = board?.type ?? null;
 
         const body = req.body ?? {};
         const data: Record<string, any> = {};
+        const trimOrNull = (value: unknown) => {
+            if (value === null || value === undefined) return null;
+            if (typeof value !== 'string') return null;
+            const trimmed = value.trim();
+            return trimmed.length ? trimmed : null;
+        };
 
         // Copy simple fields if present
         if (has(body, 'title')) data.title = body.title;
@@ -491,6 +639,65 @@ export async function registerCardRoutes(app: FastifyInstance, prisma: PrismaCli
         // Dates: only touch them if keys are present
         if (has(body, 'startDate')) data.startDate = toDateOrNull(body.startDate as any);
         if (has(body, 'dueDate')) data.dueDate = toDateOrNull(body.dueDate as any);
+        if (has(body, 'paidAt')) {
+            const raw = body.paidAt as any;
+            const parsed = raw ? toDateOrNull(raw) : null;
+            if (raw && !parsed) {
+                const err: any = new Error('paidAt must be ISO date');
+                err.statusCode = 400;
+                throw err;
+            }
+            data.paidAt = parsed;
+        }
+
+        if (has(body, 'customerName')) data.customerName = trimOrNull(body.customerName);
+        if (has(body, 'customerPhone')) data.customerPhone = trimOrNull(body.customerPhone);
+        if (has(body, 'customerEmail')) data.customerEmail = trimOrNull(body.customerEmail);
+        if (has(body, 'address')) data.address = trimOrNull(body.address);
+        if (has(body, 'serviceType')) data.serviceType = trimOrNull(body.serviceType);
+        if (has(body, 'orderNumber')) data.orderNumber = trimOrNull(body.orderNumber);
+        if (has(body, 'itemsSummary')) data.itemsSummary = trimOrNull(body.itemsSummary);
+        if (has(body, 'orderCurrency')) data.orderCurrency = trimOrNull(body.orderCurrency);
+
+        if (has(body, 'orderTotal')) {
+            const raw = (body as any).orderTotal;
+            if (raw === null || raw === '' || typeof raw === 'undefined') {
+                data.orderTotal = null;
+            } else {
+                const num = Number(raw);
+                if (Number.isNaN(num)) {
+                    const err: any = new Error('orderTotal must be number');
+                    err.statusCode = 400;
+                    throw err;
+                }
+                data.orderTotal = num;
+            }
+        }
+
+        let nextCarrier: string | null | undefined;
+        let nextTracking: string | null | undefined;
+        if (has(body, 'shippingCarrier')) {
+            nextCarrier = trimOrNull(body.shippingCarrier);
+            data.shippingCarrier = nextCarrier;
+        }
+        if (has(body, 'trackingNumber')) {
+            nextTracking = trimOrNull(body.trackingNumber);
+            data.trackingNumber = nextTracking;
+        }
+        if (has(body, 'trackingUrl')) {
+            data.trackingUrl = trimOrNull(body.trackingUrl);
+        }
+        if (boardType === 'ecommerce_fulfillment'
+            && !has(body, 'trackingUrl')
+            && (nextCarrier !== undefined || nextTracking !== undefined)) {
+            const current = await prisma.card.findUnique({
+                where: { id },
+                select: { shippingCarrier: true, trackingNumber: true },
+            });
+            const carrier = nextCarrier !== undefined ? nextCarrier : current?.shippingCarrier ?? null;
+            const tracking = nextTracking !== undefined ? nextTracking : current?.trackingNumber ?? null;
+            data.trackingUrl = buildTrackingUrl(carrier, tracking);
+        }
 
         const updated = await prisma.card.update({ where: { id }, data });
 

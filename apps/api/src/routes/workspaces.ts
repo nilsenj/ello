@@ -32,6 +32,12 @@ export async function registerWorkspaceRoutes(app: FastifyInstance, prisma: Pris
                         whoCanCreateBoards: true,
                         whoCanInviteMembers: true,
                         planKey: true,
+                        subscription: {
+                            select: {
+                                status: true,
+                                currentPeriodEnd: true,
+                            },
+                        },
                     }
                 }
             },

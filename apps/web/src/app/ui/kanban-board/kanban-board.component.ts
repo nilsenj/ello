@@ -27,6 +27,7 @@ import { BoardCalendarViewComponent } from "../../components/board-calendar-view
 import { WorkspacesService } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
 import { ServiceDeskService } from '../../data/service-desk.service';
+import { FulfillmentService } from '../../data/fulfillment.service';
 import { KanbanFiltersComponent } from '../kanban-filters/kanban-filters.component';
 
 @Component({
@@ -48,6 +49,7 @@ export class KanbanBoardComponent implements OnInit {
     workspacesApi = inject(WorkspacesService);
     authService = inject(AuthService);
     serviceDeskApi = inject(ServiceDeskService);
+    fulfillmentApi = inject(FulfillmentService);
     route = inject(ActivatedRoute);
     router = inject(Router);
 
@@ -76,6 +78,7 @@ export class KanbanBoardComponent implements OnInit {
     readonly tMenu = $localize`:@@kanban.menu:Menu`;
     readonly tShowMenu = $localize`:@@kanban.showMenu:Show menu`;
     readonly tServiceDeskSettings = $localize`:@@kanban.serviceDeskSettings:Service Desk`;
+    readonly tFulfillmentSettings = $localize`:@@kanban.fulfillmentSettings:Fulfillment`;
     readonly tViewOnlyBanner = $localize`:@@kanban.viewOnlyBanner:You have view-only access to this board. Ask a board admin to add you as a member to edit.`;
     readonly tAddListMobile = $localize`:@@kanban.addListMobile:+ Add list`;
     readonly tAddAnotherList = $localize`:@@kanban.addAnotherList:+ Add another list`;
@@ -91,6 +94,11 @@ export class KanbanBoardComponent implements OnInit {
     readonly tStatusWaitingClient = $localize`:@@kanban.statusWaitingClient:Waiting Client`;
     readonly tStatusDone = $localize`:@@kanban.statusDone:Done`;
     readonly tStatusCanceled = $localize`:@@kanban.statusCanceled:Canceled`;
+    readonly tStatusOrder = $localize`:@@fulfillment.statusOrder:Order`;
+    readonly tStatusPacking = $localize`:@@fulfillment.statusPacking:Packing`;
+    readonly tStatusShipped = $localize`:@@fulfillment.statusShipped:Shipped`;
+    readonly tStatusDelivered = $localize`:@@fulfillment.statusDelivered:Delivered`;
+    readonly tStatusReturned = $localize`:@@fulfillment.statusReturned:Returned`;
 
     readonly serviceDeskStatusOptions = [
         { key: 'inbox', label: this.tStatusInbox },
@@ -100,6 +108,19 @@ export class KanbanBoardComponent implements OnInit {
         { key: 'done', label: this.tStatusDone },
         { key: 'canceled', label: this.tStatusCanceled },
     ] as const;
+    readonly fulfillmentStatusOptions = [
+        { key: 'order', label: this.tStatusOrder },
+        { key: 'packing', label: this.tStatusPacking },
+        { key: 'shipped', label: this.tStatusShipped },
+        { key: 'delivered', label: this.tStatusDelivered },
+        { key: 'returned', label: this.tStatusReturned },
+    ] as const;
+
+    readonly statusOptions = computed(() => {
+        if (this.isServiceDeskBoard()) return this.serviceDeskStatusOptions;
+        if (this.isFulfillmentBoard()) return this.fulfillmentStatusOptions;
+        return [];
+    });
 
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
     @ViewChild(KanbanFiltersComponent) filters?: KanbanFiltersComponent;
@@ -161,6 +182,11 @@ export class KanbanBoardComponent implements OnInit {
         const boardId = this.store.currentBoardId();
         if (!boardId) return false;
         return this.store.boards().find(b => b.id === boardId)?.type === 'service_desk';
+    });
+    isFulfillmentBoard = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        return this.store.boards().find(b => b.id === boardId)?.type === 'ecommerce_fulfillment';
     });
     currentBoardWorkspaceId = computed(() => {
         const boardId = this.store.currentBoardId();
@@ -224,7 +250,17 @@ export class KanbanBoardComponent implements OnInit {
                 this.slaRules.set(new Map());
                 return;
             }
-            this.serviceDeskApi.getSlaRules(boardId)
+            const boardType = this.store.boards().find(b => b.id === boardId)?.type;
+            const api = boardType === 'service_desk'
+                ? this.serviceDeskApi
+                : boardType === 'ecommerce_fulfillment'
+                    ? this.fulfillmentApi
+                    : null;
+            if (!api) {
+                this.slaRules.set(new Map());
+                return;
+            }
+            api.getSlaRules(boardId)
                 .then(res => {
                     const map = new Map<string, number>();
                     for (const r of res?.rules ?? []) map.set(r.listId, r.slaHours);
@@ -444,7 +480,8 @@ export class KanbanBoardComponent implements OnInit {
         const hours = rules.get(c.listId);
         if (!hours) return false;
         const statusKey = this.listStatusKeyById(c.listId);
-        if (statusKey === 'done' || statusKey === 'canceled') return false;
+        if (this.isServiceDeskBoard() && (statusKey === 'done' || statusKey === 'canceled')) return false;
+        if (this.isFulfillmentBoard() && (statusKey === 'delivered' || statusKey === 'returned')) return false;
         const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
         if (!changed || isNaN(changed.getTime())) return false;
         const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
@@ -460,7 +497,9 @@ export class KanbanBoardComponent implements OnInit {
             const statusKey = l.statusKey ?? null;
             for (const c of l.cards ?? []) {
                 const hours = rules.get(l.id);
-                if (!hours || statusKey === 'done' || statusKey === 'canceled') continue;
+                if (!hours) continue;
+                if (this.isServiceDeskBoard() && (statusKey === 'done' || statusKey === 'canceled')) continue;
+                if (this.isFulfillmentBoard() && (statusKey === 'delivered' || statusKey === 'returned')) continue;
                 const changed = c.lastStatusChangedAt ? new Date(c.lastStatusChangedAt) : null;
                 if (!changed || isNaN(changed.getTime())) continue;
                 const overdueAt = changed.getTime() + hours * 60 * 60 * 1000;
@@ -512,8 +551,9 @@ export class KanbanBoardComponent implements OnInit {
     async addList() {
         const name = this.newListTitle?.trim();
         if (!name) return;
-        if (this.isServiceDeskBoard() && !this.newListStatusKey) return;
-        const statusKey = this.isServiceDeskBoard() ? this.newListStatusKey : undefined;
+        const requiresStatus = this.isServiceDeskBoard() || this.isFulfillmentBoard();
+        if (requiresStatus && !this.newListStatusKey) return;
+        const statusKey = requiresStatus ? this.newListStatusKey : undefined;
         await this.listsApi.createList(name, statusKey);
         this.newListTitle = '';
         this.newListStatusKey = '';

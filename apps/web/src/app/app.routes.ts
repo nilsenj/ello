@@ -26,6 +26,17 @@ const guestOnlyGuard = async () => {
     return !auth.isAuthed();
 };
 
+/** Guard: only super admins can access admin console */
+const superAdminGuard = async () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+
+    await auth.ensureBootstrapped();
+    if (auth.isAuthed() && auth.user()?.isSuperAdmin) return true;
+
+    return router.createUrlTree(['/']);
+};
+
 /** Guard: resolve /b/_auto → first board id; otherwise route to login with hint */
 const autoBoardGuard = async () => {
     const boards = inject(BoardsService);
@@ -93,6 +104,16 @@ export const routes: Routes = [
                 title: 'Workspace'
             },
             {
+                path: 'billing/return',
+                loadComponent: () => import('./pages/billing-return.page').then(m => m.BillingReturnPageComponent),
+                title: 'Billing'
+            },
+            {
+                path: 'billing/mock',
+                loadComponent: () => import('./pages/billing-mock.page').then(m => m.BillingMockPageComponent),
+                title: 'Mock Checkout'
+            },
+            {
                 path: 'b/:id/diagram',
                 loadComponent: () => import('./ui/board-diagram/board-diagram.component').then(m => m.BoardDiagramComponent),
                 title: 'Board Diagram'
@@ -107,6 +128,12 @@ export const routes: Routes = [
                 path: 'b/:boardId',
                 loadComponent: () => import('./pages/board-page.component').then(m => m.BoardPageComponent),
                 title: 'Board'
+            },
+            {
+                path: 'admin',
+                canMatch: [superAdminGuard],
+                loadComponent: () => import('./pages/admin.page').then(m => m.AdminPageComponent),
+                title: 'Admin'
             },
             {
                 path: 'w/:workspaceId/service-desk',
@@ -142,6 +169,43 @@ export const routes: Routes = [
                         loadComponent: () => import('./modules/service-desk/service-desk-reports.page')
                             .then(m => m.ServiceDeskReportsPageComponent),
                         title: 'Service Desk Reports'
+                    }
+                ]
+            },
+            {
+                path: 'w/:workspaceId/ecommerce-fulfillment',
+                loadComponent: () => import('./modules/fulfillment/fulfillment.page').then(m => m.FulfillmentPageComponent),
+                children: [
+                    { path: '', pathMatch: 'full', redirectTo: 'overview' },
+                    {
+                        path: 'overview',
+                        loadComponent: () => import('./modules/fulfillment/fulfillment-overview.page')
+                            .then(m => m.FulfillmentOverviewPageComponent),
+                        title: 'E-commerce Fulfillment'
+                    },
+                    {
+                        path: 'orders',
+                        loadComponent: () => import('./modules/fulfillment/fulfillment-orders.page')
+                            .then(m => m.FulfillmentOrdersPageComponent),
+                        title: 'Fulfillment Orders'
+                    },
+                    {
+                        path: 'sla',
+                        loadComponent: () => import('./modules/fulfillment/fulfillment-sla.page')
+                            .then(m => m.FulfillmentSlaPageComponent),
+                        title: 'Fulfillment SLA'
+                    },
+                    {
+                        path: 'integrations',
+                        loadComponent: () => import('./modules/fulfillment/fulfillment-integrations.page')
+                            .then(m => m.FulfillmentIntegrationsPageComponent),
+                        title: 'Fulfillment Integrations'
+                    },
+                    {
+                        path: 'reports',
+                        loadComponent: () => import('./modules/fulfillment/fulfillment-reports.page')
+                            .then(m => m.FulfillmentReportsPageComponent),
+                        title: 'Fulfillment Reports'
                     }
                 ]
             },

@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { mid } from '../utils/rank.js';
 import { ensureUser } from "../utils/ensure-user.js";
 import { SERVICE_DESK_STATUS_KEYS } from '../utils/service-desk.js';
+import { FULFILLMENT_STATUS_KEYS } from '../utils/fulfillment.js';
 
 type JwtPayload = { sub: string; email?: string };
 
@@ -72,8 +73,17 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
                 lastStatusChangedAt: c.lastStatusChangedAt,
                 customerName: c.customerName,
                 customerPhone: c.customerPhone,
+                customerEmail: (c as any).customerEmail ?? null,
                 address: c.address,
                 serviceType: c.serviceType,
+                orderNumber: (c as any).orderNumber ?? null,
+                itemsSummary: (c as any).itemsSummary ?? null,
+                orderTotal: (c as any).orderTotal ?? null,
+                orderCurrency: (c as any).orderCurrency ?? null,
+                paidAt: (c as any).paidAt ?? null,
+                shippingCarrier: (c as any).shippingCarrier ?? null,
+                trackingNumber: (c as any).trackingNumber ?? null,
+                trackingUrl: (c as any).trackingUrl ?? null,
                 labelIds: (c.labels ?? []).map(x => x.labelId),
                 assignees: c.assignees.map(a => ({
                     userId: a.userId,
@@ -108,9 +118,14 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
         const nameOrTitle = req.body?.title ?? req.body?.name ?? 'Untitled';
         const last = await prisma.list.findFirst({ where: { boardId }, orderBy: { rank: 'desc' }, select: { rank: true } });
         const statusKey = req.body?.statusKey;
-        if (board.type === 'service_desk') {
-            if (!statusKey || !SERVICE_DESK_STATUS_KEYS.includes(statusKey as any)) {
-                const err: any = new Error('statusKey required for Service Desk lists');
+        const statusKeys = board.type === 'service_desk'
+            ? SERVICE_DESK_STATUS_KEYS
+            : board.type === 'ecommerce_fulfillment'
+                ? FULFILLMENT_STATUS_KEYS
+                : null;
+        if (statusKeys) {
+            if (!statusKey || !statusKeys.includes(statusKey as any)) {
+                const err: any = new Error('statusKey required for module lists');
                 err.statusCode = 400;
                 throw err;
             }
@@ -121,7 +136,7 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
                 boardId,
                 name: nameOrTitle,
                 rank: mid(last?.rank),
-                statusKey: board.type === 'service_desk' ? (statusKey as any) : undefined,
+                statusKey: statusKeys ? (statusKey as any) : undefined,
                 isSystem: false,
             },
         });
@@ -154,17 +169,22 @@ export async function registerListRoutes(app: FastifyInstance, prisma: PrismaCli
         const title = req.body?.title ?? req.body?.name;
         const { isArchived } = req.body ?? {};
         const statusKey = req.body?.statusKey;
-        if (board.type === 'service_desk' && list?.isSystem && typeof isArchived === 'boolean') {
+        const statusKeys = board.type === 'service_desk'
+            ? SERVICE_DESK_STATUS_KEYS
+            : board.type === 'ecommerce_fulfillment'
+                ? FULFILLMENT_STATUS_KEYS
+                : null;
+        if (statusKeys && list?.isSystem && typeof isArchived === 'boolean') {
             const err: any = new Error('System lists cannot be archived');
             err.statusCode = 400;
             throw err;
         }
-        if (board.type === 'service_desk' && statusKey && !SERVICE_DESK_STATUS_KEYS.includes(statusKey as any)) {
+        if (statusKeys && statusKey && !statusKeys.includes(statusKey as any)) {
             const err: any = new Error('Invalid statusKey');
             err.statusCode = 400;
             throw err;
         }
-        const allowStatusUpdate = board.type === 'service_desk' && !list?.isSystem && statusKey;
+        const allowStatusUpdate = !!statusKeys && !list?.isSystem && statusKey;
 
         return prisma.list.update({
             where: { id },

@@ -27,7 +27,15 @@ import { TemplatesModalService } from '../../components/templates-modal/template
 import { UserHeaderComponent } from '../../ui/user-header/user-header.component';
 import { WorkspaceSidebarComponent } from '../../ui/workspace-sidebar/workspace-sidebar.component';
 import { ServiceDeskService } from '../../data/service-desk.service';
+import { FulfillmentService } from '../../data/fulfillment.service';
+import { BillingPlan, BillingService } from '../../data/billing.service';
 import { UserSettingsModalService } from '../../components/user-settings-modal/user-settings-modal.service';
+
+type ModuleWorkspace = WorkspaceLite & {
+    moduleKey: 'service_desk' | 'ecommerce_fulfillment';
+    status?: string | null;
+    validUntil?: string | null;
+};
 
 @Component({
     standalone: true,
@@ -57,17 +65,22 @@ export class HomePageComponent implements OnInit {
     private membersWorkspaceModal = inject(WorkspaceMembersModalService);
     private templatesModal = inject(TemplatesModalService);
     private serviceDeskApi = inject(ServiceDeskService);
+    private fulfillmentApi = inject(FulfillmentService);
+    private billingApi = inject(BillingService);
     private userSettingsModal = inject(UserSettingsModalService);
 
     // State
     workspaces = signal<WorkspaceLite[]>([]);
-    moduleWorkspaces = signal<WorkspaceLite[]>([]);
+    moduleWorkspaces = signal<ModuleWorkspace[]>([]);
     boards = this.store.boards; // Signal<Board[]>
     loading = signal<boolean>(true);
     sidebarOpen = signal<boolean>(false);
     modulesModalOpen = signal<boolean>(false);
     buyingModule = signal<boolean>(false);
     memberCounts = signal<Record<string, number | null>>({});
+    modulePlans = signal<BillingPlan[]>([]);
+    modulePlansLoading = signal<boolean>(false);
+    modulePlansError = signal<string | null>(null);
 
     toggleSidebar() {
         this.sidebarOpen.update(v => !v);
@@ -111,15 +124,26 @@ export class HomePageComponent implements OnInit {
     readonly tCancel = $localize`:@@home.cancel:Cancel`;
     readonly tArchiveConfirm = $localize`:@@home.archiveConfirm:Archive`;
     readonly tServiceDesk = $localize`:@@home.serviceDesk:Service Desk`;
+    readonly tFulfillment = $localize`:@@home.fulfillment:E-commerce Fulfillment`;
     readonly tModulesTitle = $localize`:@@home.modulesTitle:Available modules`;
     readonly tBuyServiceDesk = $localize`:@@home.buyServiceDesk:Buy Service Desk`;
-    readonly tModulesHint = $localize`:@@home.modulesHint:Create a dedicated workspace for each module.`;
+    readonly tBuyFulfillment = $localize`:@@home.buyFulfillment:Buy Fulfillment`;
+    readonly tModulesHint = $localize`:@@home.modulesHint:Each module runs in its own workspace and is billed separately.`;
     readonly tPurchased = $localize`:@@home.modulePurchased:Purchased`;
+    readonly tModulesLoading = $localize`:@@home.modulesLoading:Loading plans...`;
+    readonly tModulesLoadFailed = $localize`:@@home.modulesLoadFailed:Failed to load module plans.`;
     readonly tPlanLabel = $localize`:@@home.planLabel:Plan`;
     readonly tPlanCoreFree = $localize`:@@home.planCoreFree:Core Free`;
+    readonly tPlanCoreTeam = $localize`:@@home.planCoreTeam:Core Team`;
+    readonly tPlanCoreBusiness = $localize`:@@home.planCoreBusiness:Core Business`;
     readonly tPlanBoards = $localize`:@@home.planBoards:Boards`;
     readonly tPlanMembers = $localize`:@@home.planMembers:Members`;
+    readonly tPlanExpires = $localize`:@@home.planExpires:Expires`;
+    readonly tOpenModule = $localize`:@@home.openModule:Open module`;
+    readonly tServiceDeskPrereq = $localize`:@@home.serviceDeskPrereq:Best for teams handling inbound requests with clear SLAs and status handoffs.`;
+    readonly tFulfillmentPrereq = $localize`:@@home.fulfillmentPrereq:Best for stores that need packing, shipping, tracking, and late delivery visibility.`;
     readonly tPlanLimitReached = $localize`:@@home.planLimitReached:You reached a core plan limit. Upgrade to add more.`;
+    readonly tWorkspaceLimitReached = $localize`:@@home.workspaceLimitReached:This workspace reached its limit.`;
     readonly tManagePlan = $localize`:@@home.managePlan:Manage plan`;
     readonly tViewModules = $localize`:@@home.viewModules:View modules`;
     readonly tModulesActive = $localize`:@@home.modulesActive:Modules active`;
@@ -127,6 +151,8 @@ export class HomePageComponent implements OnInit {
 
     readonly corePlanLimits: Record<string, { maxBoards?: number; maxMembers?: number; label: string }> = {
         core_free: { maxBoards: 3, maxMembers: 5, label: this.tPlanCoreFree },
+        core_team: { maxBoards: 10, maxMembers: 10, label: this.tPlanCoreTeam },
+        core_business: { maxBoards: 50, maxMembers: 50, label: this.tPlanCoreBusiness },
     };
 
     async ngOnInit() {
@@ -217,52 +243,150 @@ export class HomePageComponent implements OnInit {
         this.router.navigate(['/w', id]);
     }
 
-    openServiceDesk(ws: WorkspaceLite) {
+    openModuleWorkspace(ws: ModuleWorkspace) {
         if (!ws?.id) return;
+        if (ws.moduleKey === 'ecommerce_fulfillment') {
+            this.router.navigate(['/w', ws.id, 'ecommerce-fulfillment']);
+            return;
+        }
         this.router.navigate(['/w', ws.id, 'service-desk']);
     }
 
     openModulesModal() {
         this.modulesModalOpen.set(true);
+        void this.loadModulePlans();
     }
 
     closeModulesModal() {
         this.modulesModalOpen.set(false);
     }
 
+    serviceDeskPlans = computed(() => {
+        return this.modulePlans().filter(plan => plan.kind === 'module' && plan.moduleKey === 'service_desk');
+    });
+    fulfillmentPlans = computed(() => {
+        return this.modulePlans().filter(plan => plan.kind === 'module' && plan.moduleKey === 'ecommerce_fulfillment');
+    });
+    serviceDeskPlan = computed(() => this.serviceDeskPlans()[0] ?? null);
+    fulfillmentPlan = computed(() => this.fulfillmentPlans()[0] ?? null);
+
+    serviceDeskSummary = computed(() => this.getModuleSummary('service_desk'));
+    fulfillmentSummary = computed(() => this.getModuleSummary('ecommerce_fulfillment'));
+
     async loadModuleWorkspaces(list: WorkspaceLite[]) {
         const checks = await Promise.all(list.map(async ws => {
-            const res = await this.serviceDeskApi.getEntitlement(ws.id).catch(() => ({ entitled: false }));
-            return { ws, entitled: !!res?.entitled };
+            const [serviceDesk, fulfillment] = await Promise.all([
+                this.serviceDeskApi.getEntitlement(ws.id).catch(() => ({ entitled: false, status: null, validUntil: null })),
+                this.fulfillmentApi.getEntitlement(ws.id).catch(() => ({ entitled: false, status: null, validUntil: null })),
+            ]);
+            return {
+                ws,
+                serviceDesk,
+                fulfillment,
+            };
         }));
-        const moduleWorkspaces = checks
-            .filter(r => r.entitled && r.ws.isPersonal)
-            .map(r => r.ws);
+        const moduleWorkspaces: ModuleWorkspace[] = [];
+        for (const row of checks) {
+            if (row.ws.isPersonal && row.serviceDesk?.entitled) {
+                moduleWorkspaces.push({
+                    ...row.ws,
+                    moduleKey: 'service_desk',
+                    status: row.serviceDesk?.status ?? null,
+                    validUntil: row.serviceDesk?.validUntil ?? null,
+                });
+            }
+            if (row.ws.isPersonal && row.fulfillment?.entitled) {
+                moduleWorkspaces.push({
+                    ...row.ws,
+                    moduleKey: 'ecommerce_fulfillment',
+                    status: row.fulfillment?.status ?? null,
+                    validUntil: row.fulfillment?.validUntil ?? null,
+                });
+            }
+        }
         this.moduleWorkspaces.set(moduleWorkspaces);
     }
 
     hasServiceDeskModule() {
-        return this.moduleWorkspaces().some(ws => (ws.name || '').toLowerCase().includes('service desk'));
+        return this.moduleWorkspaces().some(ws => ws.moduleKey === 'service_desk');
     }
 
-    async buyServiceDeskModule() {
+    hasFulfillmentModule() {
+        return this.moduleWorkspaces().some(ws => ws.moduleKey === 'ecommerce_fulfillment');
+    }
+
+    private getModuleSummary(moduleKey: ModuleWorkspace['moduleKey']) {
+        const items = this.moduleWorkspaces().filter(ws => ws.moduleKey === moduleKey);
+        const expiries = items
+            .map(ws => ws.validUntil)
+            .filter((value): value is string => !!value)
+            .map(value => new Date(value).getTime())
+            .filter(value => Number.isFinite(value));
+        const nextExpiry = expiries.length ? new Date(Math.min(...expiries)).toISOString() : null;
+        return {
+            active: items.length > 0,
+            count: items.length,
+            nextExpiry,
+        };
+    }
+
+    formatModuleDate(value?: string | null) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleDateString();
+    }
+
+    openModuleByKey(moduleKey: ModuleWorkspace['moduleKey']) {
+        const ws = this.moduleWorkspaces().find(item => item.moduleKey === moduleKey);
+        if (ws) {
+            this.openModuleWorkspace(ws);
+        }
+    }
+
+    async buyServiceDeskModule(plan: BillingPlan) {
         if (this.buyingModule()) return;
         this.buyingModule.set(true);
         try {
-            const workspace = await this.workspacesApi.create({
-                name: 'Service Desk',
-                description: 'Service Desk workspace',
-                isPersonal: true,
-            });
-            await this.serviceDeskApi.activateEntitlementMock(workspace.id);
-            await this.serviceDeskApi.bootstrap(workspace.id);
-            await this.boardsApi.loadBoards();
-            await this.loadWorkspaces();
-            this.closeModulesModal();
-            this.router.navigate(['/w', workspace.id, 'service-desk', 'overview']);
+            await this.billingApi.purchasePlan(undefined, plan);
         } finally {
             this.buyingModule.set(false);
         }
+    }
+
+    async buyFulfillmentModule(plan: BillingPlan) {
+        if (this.buyingModule()) return;
+        this.buyingModule.set(true);
+        try {
+            await this.billingApi.purchasePlan(undefined, plan);
+        } finally {
+            this.buyingModule.set(false);
+        }
+    }
+
+    async loadModulePlans() {
+        if (this.modulePlansLoading()) return;
+        this.modulePlansLoading.set(true);
+        this.modulePlansError.set(null);
+        try {
+            const plans = await this.billingApi.listPlans();
+            this.modulePlans.set(plans);
+        } catch {
+            this.modulePlansError.set(this.tModulesLoadFailed);
+        } finally {
+            this.modulePlansLoading.set(false);
+        }
+    }
+
+    formatPlanPrice(plan: BillingPlan): string {
+        const value = plan.priceCents / 100;
+        const formatted = new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: plan.currency,
+            minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+        }).format(value);
+        return `${formatted} /${plan.interval}`;
     }
 
     getBoardsForWorkspace(workspaceId: string) {
@@ -393,8 +517,8 @@ export class HomePageComponent implements OnInit {
         this.templatesModal.open();
     }
 
-    openAccountSettings() {
-        this.userSettingsModal.open();
+    openAccountSettings(tab: 'profile' | 'security' | 'plan' = 'profile', workspaceId?: string) {
+        this.userSettingsModal.open(tab, workspaceId);
     }
 
     canArchiveBoard(ws: WorkspaceLite): boolean {

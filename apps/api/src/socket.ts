@@ -39,10 +39,20 @@ export async function setupSocketIO(app: FastifyInstance, prisma: PrismaClient) 
             if (!userId) {
                 return next(new Error('Invalid token payload'));
             }
-            console.log(`[Socket] User authenticated: ${decoded.email} (${userId})`);
+            const dbUser = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true, email: true, isBanned: true },
+            });
+            if (!dbUser) {
+                return next(new Error('User not found'));
+            }
+            if (dbUser.isBanned) {
+                return next(new Error('Account is disabled'));
+            }
+            console.log(`[Socket] User authenticated: ${dbUser.email} (${userId})`);
 
             // Attach normalized user to socket
-            socket.data.user = { id: userId, email: decoded.email };
+            socket.data.user = { id: userId, email: dbUser.email };
             next();
         } catch (err) {
             console.error('[Socket] Authentication failed:', err);

@@ -53,6 +53,16 @@ import { CardModalDetailsComponent } from './card-modal-details.component';
 import { CardModalAddToCardComponent } from './card-modal-add-to-card.component';
 import { CardModalActionsComponent } from './card-modal-actions.component';
 
+type FulfillmentDraft = {
+    orderNumber: string;
+    itemsSummary: string;
+    orderTotal: string;
+    orderCurrency: string;
+    paidAt: string;
+    shippingCarrier: string;
+    trackingNumber: string;
+};
+
 @Component({
     standalone: true,
     selector: 'card-modal',
@@ -122,6 +132,16 @@ export class CardModalComponent {
     readonly tUnknownSize = $localize`:@@cardModal.unknownSize:—`;
     readonly tActivityCardFallback = $localize`:@@cardModal.activity.cardFallback:this card`;
     readonly tActivityListFallback = $localize`:@@cardModal.activity.listFallback:a list`;
+    readonly tFulfillment = $localize`:@@cardModal.fulfillment:Fulfillment`;
+    readonly tOrderNumber = $localize`:@@cardModal.orderNumber:Order number`;
+    readonly tItemsSummary = $localize`:@@cardModal.itemsSummary:Items summary`;
+    readonly tOrderTotal = $localize`:@@cardModal.orderTotal:Order total`;
+    readonly tOrderCurrency = $localize`:@@cardModal.orderCurrency:Currency`;
+    readonly tPaidAt = $localize`:@@cardModal.paidAt:Paid at`;
+    readonly tShippingCarrier = $localize`:@@cardModal.shippingCarrier:Carrier`;
+    readonly tTrackingNumber = $localize`:@@cardModal.trackingNumber:Tracking number`;
+    readonly tTrackingLink = $localize`:@@cardModal.trackingLink:Tracking link`;
+    readonly tSave = $localize`:@@cardModal.save:Save`;
 
 
     readonly CopyIcon = CopyIcon; // Need to import this
@@ -144,6 +164,8 @@ export class CardModalComponent {
     priorityDraft = signal<'' | 'low' | 'medium' | 'high' | 'urgent'>('');
     riskDraft = signal<'' | 'low' | 'medium' | 'high'>('');
     estimationDraft = signal<string>('');
+    fulfillmentDraft = signal<FulfillmentDraft>(this.buildFulfillmentDraft(null));
+    fulfillmentSaving = signal(false);
 
     attachments = signal<AttachmentDto[]>([]);
     attachUrlDraft = signal('');
@@ -179,6 +201,12 @@ export class CardModalComponent {
     canAdmin = computed(() => {
         const role = this.currentMemberRole();
         return role === 'owner' || role === 'admin';
+    });
+
+    isFulfillmentBoard = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        return this.store.boards().find(b => b.id === boardId)?.type === 'ecommerce_fulfillment';
     });
 
     // side-panels
@@ -262,6 +290,8 @@ export class CardModalComponent {
                 this.priorityDraft.set('');
                 this.riskDraft.set('');
                 this.estimationDraft.set('');
+                this.fulfillmentDraft.set(this.buildFulfillmentDraft(null));
+                this.fulfillmentSaving.set(false);
                 this.openPanelName.set(null);
                 return;
             }
@@ -286,6 +316,7 @@ export class CardModalComponent {
                     this.priorityDraft.set(priority);
                     this.riskDraft.set(risk);
                     this.estimationDraft.set(estimate === 0 || typeof estimate === 'number' ? String(estimate) : '');
+                    this.fulfillmentDraft.set(this.buildFulfillmentDraft(card));
                 } catch {
                     if (this.reqToken !== token) return;
                     this.data.set(null);
@@ -463,6 +494,44 @@ export class CardModalComponent {
         }
     };
 
+    setFulfillmentField = (key: keyof FulfillmentDraft, value: string | number | null) => {
+        const nextValue = value === null || typeof value === 'undefined' ? '' : String(value);
+        this.fulfillmentDraft.update(draft => ({ ...draft, [key]: nextValue }));
+    };
+
+    saveFulfillment = async () => {
+        if (this.fulfillmentSaving()) return;
+        const c = this.data();
+        if (!c || !this.canEdit()) return;
+
+        const draft = this.fulfillmentDraft();
+        const orderTotalRaw = draft.orderTotal.trim();
+        const orderTotal = orderTotalRaw === '' ? null : Number(orderTotalRaw);
+        if (orderTotalRaw && Number.isNaN(orderTotal)) return;
+
+        const payload = {
+            orderNumber: this.trimOrNull(draft.orderNumber),
+            itemsSummary: this.trimOrNull(draft.itemsSummary),
+            orderTotal,
+            orderCurrency: this.trimOrNull(draft.orderCurrency),
+            paidAt: draft.paidAt ? toUtcIso(draft.paidAt) : null,
+            shippingCarrier: this.trimOrNull(draft.shippingCarrier),
+            trackingNumber: this.trimOrNull(draft.trackingNumber),
+        };
+
+        this.fulfillmentSaving.set(true);
+        try {
+            const updated = await this.cardsApi.patchCardExtended(c.id, payload);
+            const merged: any = { ...c, ...updated };
+            this.data.set({ ...merged, labelIds: this.normalizeLabelIds(merged) } as any);
+            this.fulfillmentDraft.set(this.buildFulfillmentDraft(merged));
+        } catch (err) {
+            console.error('Failed to save fulfillment details', err);
+        } finally {
+            this.fulfillmentSaving.set(false);
+        }
+    };
+
     // ------- Dates -------
     setDates = async (kind: 'start' | 'due', val: string | null) => {
         const c = this.data();
@@ -608,6 +677,24 @@ export class CardModalComponent {
     priorityClass() {
         const p = (this.data()?.priority ?? this.priorityDraft()) || '';
         return p ? `pri-${p}` : '';
+    }
+
+    private trimOrNull(value: string): string | null {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : null;
+    }
+
+    private buildFulfillmentDraft(card: Partial<ModalCard> | null): FulfillmentDraft {
+        const orderTotal = card?.orderTotal;
+        return {
+            orderNumber: card?.orderNumber ?? '',
+            itemsSummary: card?.itemsSummary ?? '',
+            orderTotal: orderTotal === 0 || typeof orderTotal === 'number' ? String(orderTotal) : '',
+            orderCurrency: card?.orderCurrency ?? '',
+            paidAt: card?.paidAt ? toLocalInput(card.paidAt) : '',
+            shippingCarrier: card?.shippingCarrier ?? '',
+            trackingNumber: card?.trackingNumber ?? '',
+        };
     }
 
     // ------- Labels helpers / presence checks -------

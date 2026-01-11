@@ -55,6 +55,11 @@ export class ListColumnComponent {
     readonly tStatusWaitingClient = $localize`:@@serviceDesk.statusWaitingClient:Waiting Client`;
     readonly tStatusDone = $localize`:@@serviceDesk.statusDone:Done`;
     readonly tStatusCanceled = $localize`:@@serviceDesk.statusCanceled:Canceled`;
+    readonly tStatusOrder = $localize`:@@fulfillment.statusOrder:Order`;
+    readonly tStatusPacking = $localize`:@@fulfillment.statusPacking:Packing`;
+    readonly tStatusShipped = $localize`:@@fulfillment.statusShipped:Shipped`;
+    readonly tStatusDelivered = $localize`:@@fulfillment.statusDelivered:Delivered`;
+    readonly tStatusReturned = $localize`:@@fulfillment.statusReturned:Returned`;
     readonly tDropCardsHere = $localize`:@@listColumn.dropCardsHere:Drop cards here`;
     readonly tAddCard = $localize`:@@listColumn.addCard:+ Add a card`;
     readonly tCardTitlePlaceholder = $localize`:@@listColumn.cardTitlePlaceholder:Enter a title for this card...`;
@@ -81,21 +86,36 @@ export class ListColumnComponent {
         if (!boardId) return false;
         return this.store.boards().find(b => b.id === boardId)?.type === 'service_desk';
     });
+    isFulfillmentBoard = computed(() => {
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return false;
+        return this.store.boards().find(b => b.id === boardId)?.type === 'ecommerce_fulfillment';
+    });
     isSystemList = computed(() => {
         const l = this._list();
-        return this.isServiceDeskBoard() && !!l.isSystem;
+        return (this.isServiceDeskBoard() || this.isFulfillmentBoard()) && !!l.isSystem;
     });
     canArchiveList = computed(() => this.canEdit && !this.isSystemList());
     statusBadge = computed(() => {
         const l = this._list();
-        if (!this.isServiceDeskBoard() || this.isSystemList() || !l.statusKey) return '';
+        if ((!this.isServiceDeskBoard() && !this.isFulfillmentBoard()) || this.isSystemList() || !l.statusKey) return '';
+        if (this.isServiceDeskBoard()) {
+            const map: Record<string, string> = {
+                inbox: this.tStatusInbox,
+                scheduled: this.tStatusScheduled,
+                in_progress: this.tStatusInProgress,
+                waiting_client: this.tStatusWaitingClient,
+                done: this.tStatusDone,
+                canceled: this.tStatusCanceled,
+            };
+            return map[l.statusKey] ?? l.statusKey;
+        }
         const map: Record<string, string> = {
-            inbox: this.tStatusInbox,
-            scheduled: this.tStatusScheduled,
-            in_progress: this.tStatusInProgress,
-            waiting_client: this.tStatusWaitingClient,
-            done: this.tStatusDone,
-            canceled: this.tStatusCanceled,
+            order: this.tStatusOrder,
+            packing: this.tStatusPacking,
+            shipped: this.tStatusShipped,
+            delivered: this.tStatusDelivered,
+            returned: this.tStatusReturned,
         };
         return map[l.statusKey] ?? l.statusKey;
     });

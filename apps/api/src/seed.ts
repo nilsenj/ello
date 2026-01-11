@@ -10,8 +10,8 @@ async function seedAuthUsers() {
   const rounds = Number(process.env.BCRYPT_ROUNDS || 12);
 
   const users = [
-    { email: 'admin@ello.dev', name: 'Admin',     password: 'admin123', role: 'owner' as Role },
-    { email: 'user@ello.dev',  name: 'Demo User', password: 'user123',  role: 'member' as Role },
+    { email: 'admin@ello.dev', name: 'Admin',     password: 'admin123', role: 'owner' as Role, isSuperAdmin: true },
+    { email: 'user@ello.dev',  name: 'Demo User', password: 'user123',  role: 'member' as Role, isSuperAdmin: false },
   ];
 
   const created: Record<'admin' | 'demo', { id: string; email: string }> = {} as any;
@@ -21,8 +21,8 @@ async function seedAuthUsers() {
 
     const user = await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, password: hash },
-      create: { email: u.email, name: u.name, password: hash },
+      update: { name: u.name, password: hash, isSuperAdmin: u.isSuperAdmin },
+      create: { email: u.email, name: u.name, password: hash, isSuperAdmin: u.isSuperAdmin },
       select: { id: true, email: true },
     });
 

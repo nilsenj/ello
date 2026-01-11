@@ -180,11 +180,24 @@ export class CardsService {
             isArchived: boolean;
             isDone?: boolean;
             isDeleted?: boolean;
+            customerName?: string | null;
+            customerPhone?: string | null;
+            customerEmail?: string | null;
+            address?: string | null;
+            serviceType?: string | null;
+            orderNumber?: string | null;
+            itemsSummary?: string | null;
+            orderTotal?: number | string | null;
+            orderCurrency?: string | null;
+            paidAt?: string | null;
+            shippingCarrier?: string | null;
+            trackingNumber?: string | null;
+            trackingUrl?: string | null;
         }>
     ) {
         // use HttpClient to get Authorization + refresh from interceptor
         const res = await this.api.patch<Card>(`/api/cards/${id}/extended`, body);
-        this.store.patchCardLocally(id, body);
+        this.store.patchCardLocally(id, res);
         return res;
     }
 

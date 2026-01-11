@@ -63,31 +63,13 @@ export class ServiceDeskPageComponent implements OnInit {
                     );
                     return;
                 }
-
-                const created = await this.workspacesApi.create({
-                    name: 'Service Desk',
-                    description: 'Service Desk workspace',
-                    isPersonal: true,
-                });
-                await this.serviceDeskApi.activateEntitlementMock(created.id).catch(() => null);
-                await this.serviceDeskApi.bootstrap(created.id).catch(() => null);
-                await this.boardsApi.loadBoards();
-                await this.router.navigate(
-                    ['/w', created.id, 'service-desk', 'overview'],
-                    { replaceUrl: true }
-                );
+                await this.router.navigate(['/'], { replaceUrl: true });
                 return;
             }
 
-            let entitlement = await this.serviceDeskApi.getEntitlement(workspaceId);
+            const entitlement = await this.serviceDeskApi.getEntitlement(workspaceId).catch(() => null);
             this.workspace.set(ws);
             this.entitled.set(!!entitlement?.entitled);
-
-            if (!entitlement?.entitled) {
-                await this.serviceDeskApi.activateEntitlementMock(workspaceId).catch(() => null);
-                entitlement = await this.serviceDeskApi.getEntitlement(workspaceId).catch(() => entitlement);
-                this.entitled.set(!!entitlement?.entitled);
-            }
 
             if (this.entitled()) {
                 await this.serviceDeskApi.ensureBoards(workspaceId);

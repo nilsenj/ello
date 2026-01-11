@@ -7,6 +7,7 @@ import fastifyJwt from '@fastify/jwt';            // ✅ v8 for Fastify v4
 import { PrismaClient } from '@prisma/client';
 import path from 'node:path';
 import fs from 'node:fs';
+import jwt from 'jsonwebtoken';
 
 import { registerListRoutes } from './routes/lists.js';
 import { registerBoardRoutes } from './routes/boards.js';
@@ -19,16 +20,20 @@ import { registerAttachmentRoutes } from './routes/attachments.js';
 import { registerActivityRoutes } from './routes/activity.js';
 import { registerNotificationRoutes } from './routes/notifications.js';
 import { registerServiceDeskRoutes } from './routes/service-desk.js';
+import { registerFulfillmentRoutes } from './routes/fulfillment.js';
 import { registerPushRoutes } from './routes/push.js';
+import { registerBillingRoutes } from './routes/billing.js';
+import { registerAdminRoutes } from './routes/admin.js';
 import { setupSocketIO } from './socket.js';
 import { NotificationService } from './services/notification-service.js';
 import { startServiceDeskSlaScanner } from './services/service-desk-sla-scanner.js';
+import { startFulfillmentSlaScanner } from './services/fulfillment-sla-scanner.js';
 
 const prisma = new PrismaClient();
 
 async function bootstrap() {
     const app = Fastify({ logger: true });
-    const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+    const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
     const PORT = Number(process.env.PORT || 3000);
     const HOST = process.env.HOST || '0.0.0.0';
     const UPLOAD_DIR =
@@ -42,6 +47,29 @@ async function bootstrap() {
 
     // Register JWT
     await app.register(fastifyJwt, { secret: JWT_SECRET });
+    app.decorate('prisma', prisma);
+
+    // Attach user + enforce bans for any authenticated request
+    app.addHook('preHandler', async (req, reply) => {
+        const auth = req.headers.authorization || '';
+        if (!auth.startsWith('Bearer ')) return;
+        const token = auth.slice(7);
+        if (!token) return;
+        try {
+            const payload = jwt.verify(token, JWT_SECRET) as { sub?: string; email?: string };
+            const userId = payload.sub;
+            if (!userId) return;
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true, email: true, isBanned: true, isSuperAdmin: true },
+            });
+            if (!user) return reply.code(401).send({ error: 'Unauthorized' });
+            if (user.isBanned) return reply.code(403).send({ error: 'Account is disabled' });
+            (req as any).user = { id: user.id, email: user.email, isSuperAdmin: user.isSuperAdmin };
+        } catch {
+            // Ignore invalid tokens here; route handlers will enforce auth as needed.
+        }
+    });
 
     // ❌ remove multipart here (plugin will handle it)
     // await app.register(fastifyMultipart, ...)
@@ -77,6 +105,9 @@ async function bootstrap() {
     await registerActivityRoutes(app, prisma);
     await registerNotificationRoutes(app, prisma);
     await registerServiceDeskRoutes(app, prisma);
+    await registerFulfillmentRoutes(app, prisma);
+    await registerBillingRoutes(app, prisma);
+    await registerAdminRoutes(app, prisma);
     await registerPushRoutes(app, prisma);
 
     // Initialize Socket.IO
@@ -84,6 +115,7 @@ async function bootstrap() {
 
     // Service Desk SLA scanner (overdue alerts)
     startServiceDeskSlaScanner(prisma);
+    startFulfillmentSlaScanner(prisma);
 
     await app.listen({ port: PORT, host: HOST });
     app.log.info(`API on ${PUBLIC_BASE_URL}`);

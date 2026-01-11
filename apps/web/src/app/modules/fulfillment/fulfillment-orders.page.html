@@ -1,0 +1,153 @@
+<div class="space-y-4">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+            <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
+            <select
+                class="ui-select w-full sm:w-auto"
+                [ngModel]="selectedBoardId()"
+                (ngModelChange)="selectedBoardId.set($event); loadBoardLists($event)"
+            >
+                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
+            </select>
+            <div class="flex items-center rounded-md border border-slate-200 bg-white text-xs w-full sm:w-auto">
+                <button class="px-2 py-1 font-semibold flex-1 sm:flex-none"
+                        [class.text-slate-900]="!showAll()" [class.text-slate-400]="showAll()"
+                        (click)="showAll.set(false)">
+                    {{ tOrdersOnly }}
+                </button>
+                <button class="px-2 py-1 font-semibold border-l border-slate-200 flex-1 sm:flex-none"
+                        [class.text-slate-900]="showAll()" [class.text-slate-400]="!showAll()"
+                        (click)="showAll.set(true)">
+                    {{ tAll }}
+                </button>
+            </div>
+            <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                    (click)="openModal()">{{ tNewOrder }}</button>
+        </div>
+    </div>
+
+    <div *ngIf="loading()" class="text-sm text-slate-500">Loading orders…</div>
+
+    <div *ngIf="!loading()" class="sm:hidden space-y-3">
+        <div *ngFor="let c of cards()" class="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <div class="text-sm font-semibold text-slate-900">{{ c.orderNumber || c.title }}</div>
+                <div *ngIf="showAll()" class="text-xs text-slate-500">{{ c.listName }}</div>
+            </div>
+            <div class="text-xs text-slate-500">{{ tCustomerName }}: {{ c.customerName || '—' }}</div>
+            <div class="text-xs text-slate-500">{{ tItems }}: {{ c.itemsSummary || '—' }}</div>
+            <div class="text-xs text-slate-500">{{ tTotal }}: {{ c.orderTotal ? (c.orderTotal + ' ' + (c.orderCurrency || '')) : '—' }}</div>
+            <div class="text-xs text-slate-500">{{ tTrackingNumber }}: {{ c.trackingNumber || '—' }}</div>
+        </div>
+        <div *ngIf="cards().length === 0" class="text-sm text-slate-500 text-center py-6">
+            No orders yet.
+        </div>
+    </div>
+
+    <div *ngIf="!loading()" class="hidden sm:block overflow-x-auto">
+        <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+            <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                    <th class="text-left px-3 py-2">{{ tOrderNumber }}</th>
+                    <th class="text-left px-3 py-2">{{ tCustomerName }}</th>
+                    <th class="text-left px-3 py-2">{{ tItems }}</th>
+                    <th class="text-left px-3 py-2">{{ tTotal }}</th>
+                    <th class="text-left px-3 py-2">{{ tTrackingNumber }}</th>
+                    <th *ngIf="showAll()" class="text-left px-3 py-2">{{ tStatus }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let c of cards()" class="border-t">
+                    <td class="px-3 py-2 font-medium text-slate-900">{{ c.orderNumber || c.title }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ c.customerName || '—' }}</td>
+                    <td class="px-3 py-2 text-slate-600">{{ c.itemsSummary || '—' }}</td>
+                    <td class="px-3 py-2 text-slate-600">
+                        {{ c.orderTotal ? (c.orderTotal + ' ' + (c.orderCurrency || '')) : '—' }}
+                    </td>
+                    <td class="px-3 py-2 text-slate-600">
+                        <a *ngIf="c.trackingUrl" class="text-blue-600 underline" [href]="c.trackingUrl" target="_blank" rel="noreferrer">
+                            {{ c.trackingNumber || c.trackingUrl }}
+                        </a>
+                        <span *ngIf="!c.trackingUrl">{{ c.trackingNumber || '—' }}</span>
+                    </td>
+                    <td *ngIf="showAll()" class="px-3 py-2 text-slate-600">{{ c.listName }}</td>
+                </tr>
+                <tr *ngIf="cards().length === 0">
+                    <td [attr.colspan]="showAll() ? 6 : 5" class="px-3 py-6 text-center text-slate-500">No orders yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <section *ngIf="modalOpen()" class="fixed inset-0 z-[1000] grid place-items-center bg-black/40"
+             (mousedown)="closeModal()">
+        <div class="w-[min(92vw,520px)] rounded-xl bg-white shadow-xl p-6 space-y-4"
+            (mousedown)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">{{ tNewOrder }}</h3>
+                <button class="text-slate-400 hover:text-slate-600" (click)="closeModal()">✕</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tOrderNumber }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.orderNumber" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCustomerName }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.customerName" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCustomerPhone }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.customerPhone" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCustomerEmail }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.customerEmail" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tAddress }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.address" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tItems }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.itemsSummary" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tTotal }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.totalAmount" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCurrency }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.currency" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tPaidAt }}</span>
+                    <input type="datetime-local" class="ui-input w-full" [(ngModel)]="order.paidAt" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700">
+                    <span>{{ tCarrier }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.carrier" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tTrackingNumber }}</span>
+                    <input class="ui-input w-full" [(ngModel)]="order.trackingNumber" />
+                </label>
+                <label class="space-y-1 text-sm text-slate-700 sm:col-span-2">
+                    <span>{{ tNotes }}</span>
+                    <textarea class="ui-textarea w-full" rows="3" [(ngModel)]="order.notes"></textarea>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+                <button class="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-slate-100"
+                        (click)="closeModal()">{{ tCancel }}</button>
+                <button class="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
+                        (click)="submitOrder()" [disabled]="submitting()">
+                    {{ tSubmit }}
+                </button>
+            </div>
+        </div>
+    </section>
+</div>

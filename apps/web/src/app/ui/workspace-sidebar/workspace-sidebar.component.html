@@ -47,7 +47,7 @@
             </div>
             <button
                     *ngFor="let ws of moduleWorkspaces()"
-                    (click)="openServiceDesk.emit(ws)"
+                    (click)="openModule.emit(ws)"
                     class="
           w-full flex items-center gap-2
           px-3 py-2.5
@@ -59,7 +59,10 @@
         "
             >
                 <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
-                {{ ws.name || tServiceDesk }}
+                <span class="truncate">{{ ws.name || moduleLabel(ws.moduleKey) }}</span>
+                <span class="ml-auto text-[10px] uppercase tracking-wide text-slate-400">
+                    {{ moduleLabel(ws.moduleKey) }}
+                </span>
             </button>
             <button
                     (click)="openModulesModal.emit()"

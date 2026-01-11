@@ -1,0 +1,159 @@
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { FulfillmentService, FulfillmentBoardLite } from '../../data/fulfillment.service';
+import { FulfillmentWeeklyReportWidgetComponent } from './fulfillment-weekly-report.widget';
+import { ClickOutsideDirective } from '../../ui/click-outside.directive';
+import { FlatpickrDirective } from '../../ui/flatpickr.directive';
+
+@Component({
+    standalone: true,
+    selector: 'fulfillment-reports-page',
+    imports: [
+        CommonModule,
+        FormsModule,
+        FulfillmentWeeklyReportWidgetComponent,
+        ClickOutsideDirective,
+        FlatpickrDirective,
+    ],
+    templateUrl: './fulfillment-reports.page.html',
+})
+export class FulfillmentReportsPageComponent implements OnInit {
+    private route = inject(ActivatedRoute);
+    private fulfillmentApi = inject(FulfillmentService);
+
+    boards = signal<FulfillmentBoardLite[]>([]);
+    selectedBoardId = signal('');
+    boardMenuOpen = signal(false);
+    boardQuery = signal('');
+    from = signal('');
+    to = signal('');
+    loading = signal(false);
+    rangePreset = signal<'this' | null>(null);
+    report = signal<{
+        created: number;
+        shipped: number;
+        delivered: number;
+        returned: number;
+        overdue: number;
+        backlog: number;
+        avgFulfillmentHours: number | null;
+        daily: {
+            created: Array<{ date: string; count: number }>;
+            shipped: Array<{ date: string; count: number }>;
+        };
+    } | null>(null);
+    readonly tTitle = $localize`:@@fulfillment.reports.title:Weekly report`;
+    readonly tBoardLabel = $localize`:@@fulfillment.boardLabel:Board`;
+    readonly tFrom = $localize`:@@fulfillment.reports.from:From`;
+    readonly tTo = $localize`:@@fulfillment.reports.to:To`;
+    readonly tRun = $localize`:@@fulfillment.reports.run:Run report`;
+    readonly tCreated = $localize`:@@fulfillment.reports.created:Created`;
+    readonly tShipped = $localize`:@@fulfillment.reports.shipped:Shipped`;
+    readonly tDelivered = $localize`:@@fulfillment.reports.delivered:Delivered`;
+    readonly tReturned = $localize`:@@fulfillment.reports.returned:Returned`;
+    readonly tOverdue = $localize`:@@fulfillment.reports.overdue:Overdue`;
+    readonly tThisWeek = $localize`:@@fulfillment.reports.thisWeek:This week`;
+    readonly tBoardSelect = $localize`:@@fulfillment.reports.boardSelect:Select board`;
+    readonly tBoardSearch = $localize`:@@fulfillment.reports.boardSearch:Search boards`;
+    readonly tNoBoards = $localize`:@@fulfillment.reports.noBoards:No boards found`;
+
+    workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+    selectedBoardName = computed(() => {
+        const id = this.selectedBoardId();
+        const board = this.boards().find(b => b.id === id);
+        return board?.name || this.tBoardSelect;
+    });
+    filteredBoards = computed(() => {
+        const q = this.boardQuery().trim().toLowerCase();
+        const boards = this.boards();
+        if (!q) return boards;
+        return boards.filter(b => b.name.toLowerCase().includes(q));
+    });
+
+    async ngOnInit() {
+        const workspaceId = this.workspaceId();
+        if (!workspaceId) return;
+        const boards = await this.fulfillmentApi.ensureBoards(workspaceId);
+        this.boards.set(boards);
+        if (boards.length) {
+            this.selectedBoardId.set(boards[0].id);
+        }
+        this.setThisWeek();
+        if (this.selectedBoardId()) {
+            await this.runReport();
+        }
+    }
+
+    async runReport() {
+        const boardId = this.selectedBoardId();
+        if (!boardId || !this.from() || !this.to()) return;
+        this.loading.set(true);
+        try {
+            const res = await this.fulfillmentApi.getWeeklyReport(boardId, this.from(), this.to());
+            this.report.set(res);
+        } finally {
+            this.loading.set(false);
+        }
+    }
+
+    onBoardChange(boardId: string) {
+        this.selectedBoardId.set(boardId);
+        this.runReport();
+    }
+
+    toggleBoardMenu() {
+        this.boardMenuOpen.update(v => !v);
+    }
+
+    closeBoardMenu() {
+        this.boardMenuOpen.set(false);
+    }
+
+    selectBoard(boardId: string) {
+        this.onBoardChange(boardId);
+        this.boardMenuOpen.set(false);
+        this.boardQuery.set('');
+    }
+
+    onFromChange(value: string) {
+        this.from.set(value);
+        this.rangePreset.set(null);
+        this.runReport();
+    }
+
+    onToChange(value: string) {
+        this.to.set(value);
+        this.rangePreset.set(null);
+        this.runReport();
+    }
+
+    setThisWeek() {
+        const { start, end } = this.getWeekRange(new Date());
+        this.from.set(start);
+        this.to.set(end);
+        this.rangePreset.set('this');
+    }
+
+    // last week preset removed for now
+
+    private getWeekRange(date: Date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        const day = (d.getDay() + 6) % 7; // Monday = 0
+        const start = new Date(d);
+        start.setDate(d.getDate() - day);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return { start: this.formatLocalDate(start), end: this.formatLocalDate(end) };
+    }
+
+    private formatLocalDate(date: Date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+}

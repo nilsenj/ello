@@ -53,6 +53,93 @@
                                 [PaperclipIcon]="PaperclipIcon" (openPanel)="openPanel($event)"/>
 
             <div class="cm-side-stack space-y-6">
+                <div class="cm-block cm-block-fulfillment rounded-xl border border-slate-200 bg-white p-4 space-y-3"
+                     *ngIf="isFulfillmentBoard()">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ tFulfillment }}</div>
+                        <button class="cm-btn-primary inline-flex items-center gap-1"
+                                (click)="saveFulfillment()"
+                                [disabled]="!canEdit() || fulfillmentSaving()">
+                            <lucide-icon [img]="SaveIcon"></lucide-icon>
+                            {{ tSave }}
+                        </button>
+                    </div>
+
+                    <label class="block space-y-1">
+                        <span class="text-xs font-medium text-slate-500">{{ tOrderNumber }}</span>
+                        <input class="cm-input"
+                               [ngModel]="fulfillmentDraft().orderNumber"
+                               (ngModelChange)="setFulfillmentField('orderNumber', $event)"
+                               [readonly]="!canEdit()"
+                               [class.cursor-not-allowed]="!canEdit()"/>
+                    </label>
+
+                    <label class="block space-y-1">
+                        <span class="text-xs font-medium text-slate-500">{{ tItemsSummary }}</span>
+                        <textarea class="cm-textarea"
+                                  [ngModel]="fulfillmentDraft().itemsSummary"
+                                  (ngModelChange)="setFulfillmentField('itemsSummary', $event)"
+                                  [readonly]="!canEdit()"
+                                  [class.cursor-not-allowed]="!canEdit()"></textarea>
+                    </label>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-slate-500">{{ tOrderTotal }}</span>
+                            <input class="cm-input" type="number" step="0.01" inputmode="decimal"
+                                   [ngModel]="fulfillmentDraft().orderTotal"
+                                   (ngModelChange)="setFulfillmentField('orderTotal', $event)"
+                                   [readonly]="!canEdit()"
+                                   [class.cursor-not-allowed]="!canEdit()"/>
+                        </label>
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-slate-500">{{ tOrderCurrency }}</span>
+                            <input class="cm-input"
+                                   [ngModel]="fulfillmentDraft().orderCurrency"
+                                   (ngModelChange)="setFulfillmentField('orderCurrency', $event)"
+                                   [readonly]="!canEdit()"
+                                   [class.cursor-not-allowed]="!canEdit()"/>
+                        </label>
+                    </div>
+
+                    <label class="block space-y-1">
+                        <span class="text-xs font-medium text-slate-500">{{ tPaidAt }}</span>
+                        <input class="cm-input" type="datetime-local"
+                               [ngModel]="fulfillmentDraft().paidAt"
+                               (ngModelChange)="setFulfillmentField('paidAt', $event)"
+                               [readonly]="!canEdit()"
+                               [class.cursor-not-allowed]="!canEdit()"/>
+                    </label>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-slate-500">{{ tShippingCarrier }}</span>
+                            <input class="cm-input"
+                                   [ngModel]="fulfillmentDraft().shippingCarrier"
+                                   (ngModelChange)="setFulfillmentField('shippingCarrier', $event)"
+                                   [readonly]="!canEdit()"
+                                   [class.cursor-not-allowed]="!canEdit()"/>
+                        </label>
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-slate-500">{{ tTrackingNumber }}</span>
+                            <input class="cm-input"
+                                   [ngModel]="fulfillmentDraft().trackingNumber"
+                                   (ngModelChange)="setFulfillmentField('trackingNumber', $event)"
+                                   [readonly]="!canEdit()"
+                                   [class.cursor-not-allowed]="!canEdit()"/>
+                        </label>
+                    </div>
+
+                    <div class="space-y-1 text-xs text-slate-600" *ngIf="data()?.trackingUrl">
+                        <div class="text-xs font-medium text-slate-500">{{ tTrackingLink }}</div>
+                        <a class="inline-flex items-center gap-1 text-blue-600 break-all"
+                           [href]="data()?.trackingUrl" target="_blank" rel="noreferrer">
+                            <lucide-icon [img]="ExternalLinkIcon"></lucide-icon>
+                            {{ data()?.trackingUrl }}
+                        </a>
+                    </div>
+                </div>
+
                 <card-modal-add-to-card class="cm-block cm-block-add" [openPanel]="openPanel"
                                         [closePanel]="closePanel" [isPanelOpen]="isPanelOpen"
                                         [labels]="store.labels() || []" [selectedLabelIds]="selectedLabelIds()"

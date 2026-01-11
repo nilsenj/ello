@@ -120,7 +120,11 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } });
         setRefreshCookie(reply, refreshToken, REFRESH_TTL_MS);
 
-        return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name ?? undefined } };
+        return {
+            accessToken,
+            refreshToken,
+            user: { id: user.id, email: user.email, name: user.name ?? undefined, isSuperAdmin: user.isSuperAdmin ?? false },
+        };
     });
 
     // POST /api/auth/login
@@ -130,6 +134,7 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         if (!user) return reply.code(401).send({ error: 'Invalid credentials' });
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) return reply.code(401).send({ error: 'Invalid credentials' });
+        if (user.isBanned) return reply.code(403).send({ error: 'Account is disabled' });
 
         const accessToken = signAccess(user);
         const refreshToken = `rt_${user.id}_${Date.now()}`;
@@ -137,7 +142,17 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         await prisma.refreshToken.create({ data: { token: refreshToken, userId: user.id, expiresAt } });
         setRefreshCookie(reply, refreshToken, REFRESH_TTL_MS);
 
-        return { accessToken, refreshToken, user: { id: user.id, email: user.email, name: user.name ?? undefined, avatar: user.avatar ?? undefined } };
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name ?? undefined,
+                avatar: user.avatar ?? undefined,
+                isSuperAdmin: user.isSuperAdmin ?? false,
+            },
+        };
     });
 
     // POST /api/auth/logout
@@ -161,6 +176,10 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
         if (!row || !row.user || row.expiresAt < new Date()) {
             return reply.code(400).send({ error: 'Invalid refresh token' });
         }
+        if (row.user.isBanned) {
+            await prisma.refreshToken.deleteMany({ where: { userId: row.user.id } });
+            return reply.code(403).send({ error: 'Account is disabled' });
+        }
         const accessToken = signAccess(row.user);
         return { accessToken };
     });
@@ -174,7 +193,14 @@ export async function registerAuthRoutes(app: FastifyInstance, prisma: PrismaCli
             const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
             const user = await prisma.user.findUnique({ where: { id: payload.sub } });
             if (!user) return reply.code(401).send({ error: 'User not found' });
-            return { id: user.id, email: user.email, name: user.name ?? undefined, avatar: user.avatar ?? undefined };
+            if (user.isBanned) return reply.code(403).send({ error: 'Account is disabled' });
+            return {
+                id: user.id,
+                email: user.email,
+                name: user.name ?? undefined,
+                avatar: user.avatar ?? undefined,
+                isSuperAdmin: user.isSuperAdmin ?? false,
+            };
         } catch {
             return reply.code(401).send({ error: 'Invalid token' });
         }

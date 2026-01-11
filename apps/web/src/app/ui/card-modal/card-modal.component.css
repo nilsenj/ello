@@ -193,7 +193,7 @@
         display: contents;
     }
 
-    /* Mobile order: 1.Description 2.CardDetails 3.AddToCard 4.Actions 5.Comments 6.Activity */
+    /* Mobile order: 1.Description 2.CardDetails 3.Fulfillment 4.AddToCard 5.Actions 6.Comments 7.Activity */
     .cm-col-main>.cm-block-description {
         order: 1;
     }
@@ -203,24 +203,29 @@
         order: 2;
     }
 
+    /* Fulfillment */
+    .cm-col-side>.cm-side-stack>.cm-block-fulfillment {
+        order: 3;
+    }
+
     /* Add to Card */
     .cm-col-side>.cm-side-stack>.cm-block-add {
-        order: 3;
+        order: 4;
     }
 
     /* Actions */
     .cm-col-side>.cm-side-stack>.cm-block-actions {
-        order: 4;
+        order: 5;
     }
 
     /* Comments */
     .cm-col-main>.cm-block-comments {
-        order: 5;
+        order: 6;
     }
 
     /* Activity */
     .cm-col-main>.cm-block-activity {
-        order: 6;
+        order: 7;
     }
 
     /* Also need to flatten the space-y-6 container */

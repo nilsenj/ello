@@ -13,6 +13,10 @@ export type WorkspaceLite = {
     whoCanCreateBoards?: 'admins' | 'members';
     whoCanInviteMembers?: 'admins' | 'members';
     planKey?: string;
+    subscription?: {
+        status?: string;
+        currentPeriodEnd?: string | null;
+    } | null;
     role?: 'owner' | 'admin' | 'member' | 'viewer';
 };
 

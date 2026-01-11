@@ -3,6 +3,11 @@ import { ApiBaseService } from './api-base.service';
 
 export type ServiceDeskBoardLite = { id: string; name: string; workspaceId: string };
 export type ServiceDeskSlaRule = { listId: string; slaHours: number };
+export type ServiceDeskEntitlement = {
+    entitled: boolean;
+    status: string | null;
+    validUntil: string | null;
+};
 export type ServiceDeskIntegrationSource = 'workspace' | 'board' | 'none';
 export type ServiceDeskTelegramStatus = {
     configured: boolean;
@@ -20,7 +25,7 @@ export type ServiceDeskWebhookStatus = {
 export class ServiceDeskService {
     constructor(private api: ApiBaseService) { }
 
-    getEntitlement(workspaceId: string): Promise<{ entitled: boolean }> {
+    getEntitlement(workspaceId: string): Promise<ServiceDeskEntitlement> {
         return this.api.get(`/api/modules/service-desk/workspaces/${workspaceId}/entitlement`);
     }
 

@@ -96,8 +96,20 @@ export async function registerServiceDeskRoutes(app: FastifyInstance, prisma: Pr
         const user = ensureUser(req);
         const { workspaceId } = req.params;
         await ensureWorkspaceMember(prisma, workspaceId, user.id);
-        const entitled = await isWorkspaceEntitled(prisma, workspaceId);
-        return { entitled };
+        const client = prisma as PrismaClient & { workspaceEntitlement?: { findUnique: Function } };
+        if (!client.workspaceEntitlement?.findUnique) {
+            return { entitled: false, status: null, validUntil: null };
+        }
+        const now = new Date();
+        const row = await client.workspaceEntitlement.findUnique({
+            where: { workspaceId_moduleKey: { workspaceId, moduleKey: SERVICE_DESK_MODULE_KEY } },
+            select: { status: true, validUntil: true },
+        });
+        if (!row) {
+            return { entitled: false, status: null, validUntil: null };
+        }
+        const entitled = row.status === 'active' && (!row.validUntil || row.validUntil >= now);
+        return { entitled, status: row.status, validUntil: row.validUntil };
     });
 
     // Mock purchase endpoint (dev-only UX)

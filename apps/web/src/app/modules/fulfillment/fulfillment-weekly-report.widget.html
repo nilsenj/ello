@@ -1,0 +1,77 @@
+<div class="rounded-xl border border-slate-200 bg-white p-5">
+    <div *ngIf="loading" class="text-sm text-slate-500">{{ tLoading }}</div>
+
+    <div *ngIf="!loading && report" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tCreated }}</div>
+                <div class="text-2xl font-semibold text-slate-900">{{ report.created }}</div>
+                <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div class="h-full bg-slate-600" [style.width]="barWidth(report.created)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-blue-700">{{ tShipped }}</div>
+                <div class="text-2xl font-semibold text-blue-900">{{ report.shipped }}</div>
+                <div class="h-2 rounded-full bg-blue-100 overflow-hidden">
+                    <div class="h-full bg-blue-600" [style.width]="barWidth(report.shipped)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-emerald-700">{{ tDelivered }}</div>
+                <div class="text-2xl font-semibold text-emerald-900">{{ report.delivered }}</div>
+                <div class="h-2 rounded-full bg-emerald-100 overflow-hidden">
+                    <div class="h-full bg-emerald-600" [style.width]="barWidth(report.delivered)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-rose-200 bg-rose-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-rose-700">{{ tReturned }}</div>
+                <div class="text-2xl font-semibold text-rose-900">{{ report.returned }}</div>
+                <div class="h-2 rounded-full bg-rose-100 overflow-hidden">
+                    <div class="h-full bg-rose-600" [style.width]="barWidth(report.returned)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
+                <div class="text-xs uppercase text-amber-700">{{ tOverdue }}</div>
+                <div class="text-2xl font-semibold text-amber-900">{{ report.overdue }}</div>
+                <div class="h-2 rounded-full bg-amber-100 overflow-hidden">
+                    <div class="h-full bg-amber-600" [style.width]="barWidth(report.overdue)"></div>
+                </div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tBacklog }}</div>
+                <div class="text-2xl font-semibold text-slate-900">{{ report.backlog }}</div>
+                <div class="text-xs text-slate-400">Open orders</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
+                <div class="text-xs uppercase text-slate-500">{{ tAvgFulfillment }}</div>
+                <div class="text-2xl font-semibold text-slate-900">
+                    {{ report.avgFulfillmentHours === null ? '—' : report.avgFulfillmentHours }}
+                </div>
+                <div class="text-xs text-slate-400">Shipped orders</div>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div class="text-xs uppercase text-slate-500 mb-2">Volume mix</div>
+                <div class="flex h-3 rounded-full overflow-hidden">
+                    <div class="bg-slate-600" [style.width]="barWidth(report.created)"></div>
+                    <div class="bg-blue-600" [style.width]="barWidth(report.shipped)"></div>
+                    <div class="bg-emerald-600" [style.width]="barWidth(report.delivered)"></div>
+                    <div class="bg-rose-600" [style.width]="barWidth(report.returned)"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-slate-200 bg-white p-4">
+            <div class="text-xs uppercase text-slate-500 mb-2">Weekly trend</div>
+            <fulfillment-weekly-report-chart
+                [created]="report.daily.created"
+                [shipped]="report.daily.shipped">
+            </fulfillment-weekly-report-chart>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && !report" class="text-sm text-slate-500">{{ tEmpty }}</div>
+</div>
