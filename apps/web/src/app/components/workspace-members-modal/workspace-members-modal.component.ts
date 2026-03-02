@@ -7,11 +7,12 @@ import { WorkspaceMembersModalService } from './workspace-members-modal.service'
 import { WorkspacesService, WorkspaceMember } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
 import { firstValueFrom } from 'rxjs';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'workspace-members-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent],
     templateUrl: './workspace-members-modal.component.html',
 })
 export class WorkspaceMembersModalComponent {
@@ -68,6 +69,13 @@ export class WorkspaceMembersModalComponent {
         member: this.tRoleMember,
         viewer: this.tRoleViewer
     };
+
+    roleOptions = computed<ElloSelectOption[]>(() => {
+        return this.availableRoles().map(role => ({
+            value: role,
+            label: this.roleLabels[role]
+        }));
+    });
 
     // UI State
     toastMessage = signal<string | null>(null);

@@ -13,18 +13,6 @@ import { ClickOutsideDirective } from '../../click-outside.directive';
             border-radius: .375rem;
             padding: .25rem .5rem;
         }
-        .menu-content {
-            position: absolute;
-            left: 0;
-            top: 100%;
-            min-width: 220px;
-            background: #fff;
-            color: #172b4d;
-            border-radius: .5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
-            padding: .5rem;
-            z-index: 100;
-        }
     `]
 })
 export class HeaderBoardSwitcherComponent {
@@ -43,13 +31,6 @@ export class HeaderBoardSwitcherComponent {
 
     close() {
         this.isOpen.set(false);
-    }
-
-    onBlur(ev: FocusEvent) {
-        const next = ev.relatedTarget as HTMLElement | null;
-        if (!next || !(ev.currentTarget as HTMLElement).contains(next)) {
-            this.close();
-        }
     }
 
     getBoardBackgroundClass(bg: string | null | undefined): string {

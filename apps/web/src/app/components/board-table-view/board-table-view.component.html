@@ -49,16 +49,17 @@
 
             <!-- List -->
             <div class="w-40 px-2 py-2 border-r">
-                <select (change)="updateCardList(card, $event)"
-                    [disabled]="!canEdit"
-                    class="w-full text-xs border-gray-200 rounded bg-white py-1 pl-2 pr-6 focus:ring-blue-500 focus:border-blue-500">
-                    <option *ngFor="let l of lists()" [value]="l.id" [selected]="l.id === card.listId">{{ l.title ||
-                        l.name }}</option>
-                </select>
+                <ello-select
+                        class="w-full"
+                        [ngModel]="card.listId"
+                        (ngModelChange)="updateCardListHandler(card, $event)"
+                        [disabled]="!canEdit"
+                        [options]="listOptions()"
+                ></ello-select>
             </div>
 
             <!-- Labels -->
-            <div class="w-48 px-4 py-2 border-r overflow-hidden">
+            <div class="w-48 px-4 py-2 border-r">
                 <div class="flex flex-wrap gap-1">
                     <!-- Add label button -->
                     <button
@@ -117,9 +118,11 @@
                     class="flex-1 border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
                     [placeholder]="tCardTitlePlaceholder" (keydown.enter)="createCard()"
                     (keydown.escape)="showNewCardRow = false">
-                <select [(ngModel)]="newCardListId" class="border-gray-300 rounded px-2 py-1 text-sm">
-                    <option *ngFor="let l of lists()" [value]="l.id">{{ l.title }}</option>
-                </select>
+                <ello-select
+                        class="w-32"
+                        [(ngModel)]="newCardListId"
+                        [options]="listOptions()"
+                ></ello-select>
                 <button (click)="createCard()"
                     class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-bold">{{ tAdd }}</button>
                 <button (click)="showNewCardRow = false"

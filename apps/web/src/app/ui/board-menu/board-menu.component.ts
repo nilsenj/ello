@@ -23,11 +23,12 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { WorkspacesService, WorkspaceMember } from '../../data/workspaces.service';
 import { Router } from '@angular/router';
+import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'board-menu',
-    imports: [CommonModule, LucideAngularModule, FormsModule],
+    imports: [CommonModule, LucideAngularModule, FormsModule, ElloSelectComponent],
     templateUrl: './board-menu.component.html',
     styleUrls: ['./board-menu.component.css']
 })
@@ -245,6 +246,22 @@ export class BoardMenuComponent {
         }
         return [];
     }
+
+    getAvailableRoleOptions(): ElloSelectOption[] {
+        return this.getAvailableRoles().map(r => ({ value: r, label: this.roleLabel(r) as string }));
+    }
+
+    inviteRoleOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: 'member', label: this.tRoleMember },
+            { value: 'admin', label: this.tRoleAdmin },
+            { value: 'viewer', label: this.tRoleViewer }
+        ];
+    });
+
+    importWorkspaceOptions = computed<ElloSelectOption[]>(() => {
+        return this.myWorkspaces().map(ws => ({ value: ws.id, label: ws.name }));
+    });
 
     roleLabel(role: MemberRole) {
         switch (role) {

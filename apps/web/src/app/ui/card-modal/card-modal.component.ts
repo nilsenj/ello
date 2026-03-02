@@ -1,5 +1,5 @@
 // apps/web/src/app/components/card-modal/card-modal.component.ts
-import { Component, computed, effect, HostListener, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, signal, untracked, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -65,6 +65,7 @@ type FulfillmentDraft = {
 
 @Component({
     standalone: true,
+    encapsulation: ViewEncapsulation.None,
     selector: 'card-modal',
     imports: [
         CommonModule,

@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, XIcon, LayoutTemplateIcon, ChevronDownIcon } from 'lucide-angular';
 import { TemplatesModalService } from './templates-modal.service';
 import { WorkspacesService, WorkspaceLite } from '../../data/workspaces.service';
 import { Router } from '@angular/router';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 type Template = {
     id: string;
@@ -26,7 +27,7 @@ type Template = {
 @Component({
     standalone: true,
     selector: 'templates-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent],
     templateUrl: './templates-modal.component.html',
 })
 export class TemplatesModalComponent {
@@ -52,6 +53,10 @@ export class TemplatesModalComponent {
     showBusiness = signal(true);
     selectedTemplate = signal<Template | null>(null);
     boardNameDraft = signal<string>('');
+
+    workspaceOptions = computed<ElloSelectOption[]>(() => {
+        return this.workspaces().map(ws => ({ value: ws.id, label: ws.name }));
+    });
 
     templates: Template[] = [
         {

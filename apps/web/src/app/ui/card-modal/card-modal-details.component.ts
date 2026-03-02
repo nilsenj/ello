@@ -9,7 +9,6 @@ import type { PanelName } from './card-modal.service';
     selector: 'card-modal-details',
     imports: [CommonModule, LucideAngularModule],
     templateUrl: './card-modal-details.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalDetailsComponent {
     readonly tCardDetails = $localize`:@@cardModalDetails.title:Card details`;

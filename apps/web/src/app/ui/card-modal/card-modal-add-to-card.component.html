@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6 relative">
     <section>
         <div class="cm-section-title">{{ tAddToCard }}</div>
         <div class="grid grid-cols-2 gap-2">
@@ -38,7 +38,7 @@
         </div>
     </section>
 
-    <section *ngIf="isPanelOpen('labels')" data-panel="labels">
+    <section *ngIf="isPanelOpen('labels')" data-panel="labels" class="cm-popover">
         <ng-container *ngIf="!isEditingLabel(); else editLabelTpl">
             <div class="cm-section-title flex items-center gap-2">
                 <span class="inline-flex items-center">
@@ -116,7 +116,7 @@
         </ng-template>
     </section>
 
-    <section *ngIf="isPanelOpen('dates')" data-panel="dates">
+    <section *ngIf="isPanelOpen('dates')" data-panel="dates" class="cm-popover">
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="CalendarIcon" class="mr-1"></lucide-icon>
@@ -150,7 +150,7 @@
         </ng-container>
     </ng-container>
 
-    <section *ngIf="isPanelOpen('checklists')" data-panel="checklists">
+    <section *ngIf="isPanelOpen('checklists')" data-panel="checklists" class="cm-popover">
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">{{ tChecklists }}</span>
             <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel()">
@@ -159,11 +159,12 @@
             </button>
         </div>
 
-        <div class="cm-checklist" *ngFor="let cl of checklists">
+        <div class="cm-checklist" *ngFor="let cl of checklists; trackBy: trackByChecklist">
             <div class="cm-checklist-header flex items-center gap-2">
                 <input class="cm-input flex-1 font-semibold" [ngModel]="cl.title"
                     [readonly]="!canEdit"
-                    (ngModelChange)="renameChecklist(cl.id, $event)" />
+                    (blur)="renameChecklist(cl.id, $any($event.target).value)" 
+                    (keydown.enter)="$any($event.target).blur()" />
                 <button *ngIf="canEdit" class="cm-icon-btn text-gray-400 hover:text-red-600" (click)="deleteChecklist(cl.id)"
                     [attr.title]="tDeleteChecklist">
                     <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
@@ -181,7 +182,7 @@
             </div>
 
             <ul class="cm-checklist-items space-y-1">
-                <li *ngFor="let it of cl.items"
+                <li *ngFor="let it of cl.items; trackBy: trackByItem"
                     class="cm-checklist-item group flex items-start gap-2 hover:bg-gray-50 p-1 rounded -mx-1">
                     <input type="checkbox" class="mt-1" [checked]="it.done" [disabled]="!canEdit"
                         (change)="toggleChecklistItem(cl.id, it.id, $any($event.target).checked)" />
@@ -209,7 +210,7 @@
         </button>
     </section>
 
-    <section *ngIf="isPanelOpen('attachments')" data-panel="attachments">
+    <section *ngIf="isPanelOpen('attachments')" data-panel="attachments" class="cm-popover">
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="PaperclipIcon" class="mr-1"></lucide-icon>
@@ -392,7 +393,7 @@
         </ng-template>
     </section>
 
-    <section *ngIf="isPanelOpen('planning')" data-panel="planning">
+    <section *ngIf="isPanelOpen('planning')" data-panel="planning" class="cm-popover">
         <div class="cm-section-title flex items-center gap-2">
             <span class="inline-flex items-center">
                 <lucide-icon [img]="GaugeIcon" class="mr-1"></lucide-icon>
@@ -406,25 +407,22 @@
 
                 <label class="cm-field">
                     <span class="cm-field-label">{{ tPriority }}</span>
-                    <select class="cm-input" [ngModel]="priorityDraft()" (ngModelChange)="savePriority($event)"
-                        [disabled]="!canEdit">
-                        <option value="">{{ tNone }}</option>
-                        <option value="low">{{ tLow }}</option>
-                        <option value="medium">{{ tMedium }}</option>
-                        <option value="high">{{ tHigh }}</option>
-                        <option value="urgent">{{ tUrgent }}</option>
-                    </select>
+                    <ello-select class="block w-full"
+                        [ngModel]="priorityDraft()"
+                        (ngModelChange)="savePriority($event)"
+                        [disabled]="!canEdit"
+                        [options]="priorityOptions()">
+                    </ello-select>
                 </label>
 
                 <label class="cm-field">
                     <span class="cm-field-label">{{ tRisk }}</span>
-                    <select class="cm-input" [ngModel]="riskDraft()" (ngModelChange)="saveRisk($event)"
-                        [disabled]="!canEdit">
-                        <option value="">{{ tNone }}</option>
-                        <option value="low">{{ tLow }}</option>
-                        <option value="medium">{{ tMedium }}</option>
-                        <option value="high">{{ tHigh }}</option>
-                    </select>
+                    <ello-select class="block w-full"
+                        [ngModel]="riskDraft()"
+                        (ngModelChange)="saveRisk($event)"
+                        [disabled]="!canEdit"
+                        [options]="riskOptions()">
+                    </ello-select>
                 </label>
 
                 <label class="cm-field">

@@ -21,7 +21,6 @@ import { IgnoreUploadsStrategy } from "./app/shared/ignore-uploads.strategy";
 import { environment } from "@env";
 import { APP_CONFIG } from "./app/core/app-config";
 import { applyLocale, getStoredLocale } from './app/i18n/i18n';
-import { registerSW } from 'virtual:pwa-register';
 import { Capacitor } from '@capacitor/core';
 
 // Run auth bootstrap before the app starts & before initial navigation.
@@ -30,7 +29,9 @@ function bootstrapAuth(auth: AuthService) {
 }
 
 const locale = applyLocale(getStoredLocale());
-registerSW({ immediate: true });
+if (environment.production) {
+    import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+}
 
 const platform = Capacitor.getPlatform();
 const isNative = platform !== 'web';

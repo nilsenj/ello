@@ -8,6 +8,7 @@ import { BoardStore } from '../../store/board-store.service';
 import { BoardsService } from '../../data/boards.service';
 import { CardsService } from '../../data/cards.service';
 import { UserHeaderComponent } from '../user-header/user-header.component';
+import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-select.component';
 
 interface DiagramNode extends d3.SimulationNodeDatum {
     id: string;
@@ -26,7 +27,7 @@ interface DiagramLink extends d3.SimulationLinkDatum<DiagramNode> {
 @Component({
     standalone: true,
     selector: 'board-diagram',
-    imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, UserHeaderComponent],
+    imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, UserHeaderComponent, ElloSelectComponent],
     templateUrl: './board-diagram.component.html',
     styleUrls: ['./board-diagram.component.css']
 })
@@ -57,6 +58,12 @@ export class BoardDiagramComponent implements OnInit, AfterViewInit, OnDestroy {
     // Computed
     board = computed(() => this.store.boards().find(b => b.id === this.boardId()));
     lists = computed(() => this.store.lists());
+
+    listSelectOptions = computed<ElloSelectOption[]>(() => {
+        const base = this.lists().map(l => ({ label: l.name || 'Unknown', value: l.id }));
+        return [{ label: 'All Lists', value: 'all' }, ...base];
+    });
+
     filteredNodes = computed(() => {
         const listId = this.selectedListId();
         if (listId === 'all') return this.nodes();

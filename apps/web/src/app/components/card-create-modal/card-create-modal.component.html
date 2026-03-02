@@ -18,26 +18,22 @@
             <div class="grid gap-4">
                 <label class="grid gap-1">
                     <span class="text-sm font-medium text-slate-700">{{ tWorkspaceLabel }}</span>
-                    <select
-                        class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
+                    <ello-select
+                        class="w-full"
                         [ngModel]="selectedWorkspaceId()"
                         (ngModelChange)="onWorkspaceChange($event)"
-                    >
-                        <option [ngValue]="null" disabled>{{ tWorkspacePlaceholder }}</option>
-                        <option *ngFor="let ws of workspaces()" [value]="ws.id">{{ ws.name }}</option>
-                    </select>
+                        [options]="workspaceOptions()"
+                    ></ello-select>
                 </label>
 
                 <label class="grid gap-1">
                     <span class="text-sm font-medium text-slate-700">{{ tBoardLabel }}</span>
-                    <select
-                        class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
+                    <ello-select
+                        class="w-full"
                         [ngModel]="selectedBoardId()"
                         (ngModelChange)="onBoardChange($event)"
-                    >
-                        <option [ngValue]="null" disabled>{{ tBoardPlaceholder }}</option>
-                        <option *ngFor="let b of availableBoards()" [value]="b.id">{{ b.name }}</option>
-                    </select>
+                        [options]="boardOptions()"
+                    ></ello-select>
                 </label>
 
                 <label class="grid gap-1">
@@ -53,12 +49,12 @@
                         <lucide-icon [img]="ColumnsIcon" class="h-4 w-4 text-slate-500"></lucide-icon>
                         {{ tListLabel }}
                     </span>
-                    <select
-                        class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 focus:border-slate-400"
-                        [ngModel]="listId()" (ngModelChange)="listId.set($event)">
-                        <option [ngValue]="null" disabled>{{ tListPlaceholder }}</option>
-                        <option *ngFor="let l of lists()" [value]="l.id">{{ l.name }}</option>
-                    </select>
+                    <ello-select
+                        class="w-full"
+                        [ngModel]="listId()" 
+                        (ngModelChange)="listId.set($event)"
+                        [options]="listSelectOptions()">
+                    </ello-select>
                 </label>
             </div>
         </div>

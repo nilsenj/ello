@@ -5,11 +5,12 @@ import { ActivatedRoute } from '@angular/router';
 import { ServiceDeskService, ServiceDeskBoardLite } from '../../data/service-desk.service';
 import { ListsService } from '../../data/lists.service';
 import type { ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'service-desk-sla-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './service-desk-sla.page.html',
 })
 export class ServiceDeskSlaPageComponent implements OnInit {
@@ -47,16 +48,23 @@ export class ServiceDeskSlaPageComponent implements OnInit {
     readonly tStatusDone = $localize`:@@serviceDesk.statusDone:Done`;
     readonly tStatusCanceled = $localize`:@@serviceDesk.statusCanceled:Canceled`;
 
-    readonly statusOptions = [
-        { key: 'inbox', label: this.tStatusInbox },
-        { key: 'scheduled', label: this.tStatusScheduled },
-        { key: 'in_progress', label: this.tStatusInProgress },
-        { key: 'waiting_client', label: this.tStatusWaitingClient },
-        { key: 'done', label: this.tStatusDone },
-        { key: 'canceled', label: this.tStatusCanceled },
-    ] as const;
+    statusOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tSelectStatus },
+            { value: 'inbox', label: this.tStatusInbox },
+            { value: 'scheduled', label: this.tStatusScheduled },
+            { value: 'in_progress', label: this.tStatusInProgress },
+            { value: 'waiting_client', label: this.tStatusWaitingClient },
+            { value: 'done', label: this.tStatusDone },
+            { value: 'canceled', label: this.tStatusCanceled },
+        ];
+    });
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

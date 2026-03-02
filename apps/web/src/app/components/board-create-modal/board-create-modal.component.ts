@@ -8,13 +8,14 @@ import { BoardCreateModalService } from './board-create-modal.service';
 import { BoardsService } from '../../data/boards.service';
 import { BoardStore } from '../../store/board-store.service';
 import { WorkspacesService, WorkspaceLite } from '../../data/workspaces.service';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 type Visibility = 'private' | 'workspace' | 'public';
 
 @Component({
     standalone: true,
     selector: 'board-create-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent],
     styleUrls: ['./board-create-modal.component.css'],
     templateUrl: './board-create-modal.component.html',
 })
@@ -85,6 +86,21 @@ export class BoardCreateModalComponent {
     canSubmit = computed(() => this.name().trim().length > 1);
     workspaces = signal<WorkspaceLite[]>([]);
     selectedWorkspaceId = signal<string | null>(null);
+
+    workspaceOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: null as any, label: this.tWorkspacePlaceholder, disabled: true },
+            ...this.workspaces().map(ws => ({ value: ws.id, label: ws.name }))
+        ];
+    });
+
+    visibilityOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: 'private', label: this.tVisibilityPrivate },
+            { value: 'workspace', label: this.tVisibilityWorkspace },
+            { value: 'public', label: this.tVisibilityPublic }
+        ];
+    });
 
     constructor() {
         effect(() => {

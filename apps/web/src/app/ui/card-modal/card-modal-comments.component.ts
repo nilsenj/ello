@@ -11,7 +11,6 @@ import { CardsService } from '../../data/cards.service';
     selector: 'card-modal-comments',
     imports: [CommonModule, FormsModule, LucideAngularModule],
     templateUrl: './card-modal-comments.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalCommentsComponent implements OnChanges {
     private cardsApi = inject(CardsService);

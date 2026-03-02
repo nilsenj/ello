@@ -1,7 +1,7 @@
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
-@import '@angular/cdk/overlay-prebuilt.css';
-@import 'flatpickr/dist/flatpickr.min.css';
-
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
+@import "@angular/cdk/overlay-prebuilt.css";
+@import "flatpickr/dist/flatpickr.min.css";
+@import "./app/ui/card-modal/card-modal.component.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,90 +12,73 @@
 
 /* Your app tokens / small overrides */
 :root {
-    --board-bg: #0f6ad4;
+  --board-bg: #0f6ad4;
 }
 
-html, body {
-    height: 100%;
-    background: #f1f2f4;
-    overflow-x: hidden;
+html,
+body {
+  height: 100%;
+  background: #f1f2f4;
+  overflow-x: hidden;
 }
 
 html {
-    text-size-adjust: 100%;
-    -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 .native-safe-area body {
-    -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 .ios-safe-area body {
-    -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ios-safe-area input,
 .ios-safe-area textarea,
 .ios-safe-area select {
-    font-size: 16px;
+  font-size: 16px;
 }
 
 .native-safe-area .native-safe-header {
-    padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
 }
 
 .native-safe-area .native-safe-top {
-    padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
 }
 
 .native-safe-area .native-safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .native-safe-area .native-hide {
-    display: none;
+  display: none;
 }
 
-.native-safe-area .cm-panel {
-    top: 24px;
-    bottom: 24px;
-    left: 24px;
-    right: 24px;
-    min-height: calc(100vh - 48px);
-}
-
-@media (max-width: 1024px) {
-    .native-safe-area .cm-panel {
-        top: 12px;
-        bottom: 12px;
-        left: 12px;
-        right: 12px;
-        min-height: calc(100vh - 24px);
-    }
-}
 
 .native-safe-area .cm-header {
-    padding-top: calc(28px + env(safe-area-inset-top));
+  padding-top: calc(28px + env(safe-area-inset-top));
 }
 
 .board-header {
-    background: var(--board-bg);
+  background: var(--board-bg);
 }
-
 
 /* Trello-ish scrollbar */
 * {
-    scrollbar-width: thin;
-    scrollbar-color: #c2c7d0 transparent;
+  scrollbar-width: thin;
+  scrollbar-color: #c2c7d0 transparent;
 }
 
 *::-webkit-scrollbar {
-    height: 10px;
-    width: 10px;
+  height: 10px;
+  width: 10px;
 }
 
 *::-webkit-scrollbar-thumb {
-    background: #c2c7d0;
-    border-radius: 8px;
+  background: #c2c7d0;
+  border-radius: 8px;
 }

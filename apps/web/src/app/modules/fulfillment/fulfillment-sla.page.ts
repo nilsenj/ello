@@ -5,11 +5,12 @@ import { ActivatedRoute } from '@angular/router';
 import { FulfillmentService, FulfillmentBoardLite } from '../../data/fulfillment.service';
 import { ListsService } from '../../data/lists.service';
 import type { ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'fulfillment-sla-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './fulfillment-sla.page.html',
 })
 export class FulfillmentSlaPageComponent implements OnInit {
@@ -46,15 +47,22 @@ export class FulfillmentSlaPageComponent implements OnInit {
     readonly tStatusDelivered = $localize`:@@fulfillment.statusDelivered:Delivered`;
     readonly tStatusReturned = $localize`:@@fulfillment.statusReturned:Returned`;
 
-    readonly statusOptions = [
-        { key: 'order', label: this.tStatusOrder },
-        { key: 'packing', label: this.tStatusPacking },
-        { key: 'shipped', label: this.tStatusShipped },
-        { key: 'delivered', label: this.tStatusDelivered },
-        { key: 'returned', label: this.tStatusReturned },
-    ] as const;
+    statusOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tSelectStatus },
+            { value: 'order', label: this.tStatusOrder },
+            { value: 'packing', label: this.tStatusPacking },
+            { value: 'shipped', label: this.tStatusShipped },
+            { value: 'delivered', label: this.tStatusDelivered },
+            { value: 'returned', label: this.tStatusReturned },
+        ];
+    });
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

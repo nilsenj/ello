@@ -12,7 +12,6 @@ import { BoardStore } from '../../store/board-store.service';
     selector: 'card-modal-description',
     imports: [CommonModule, FormsModule, LucideAngularModule, SafeHtmlPipe],
     templateUrl: './card-modal-description.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalDescriptionComponent implements OnChanges {
     private cardsApi = inject(CardsService);

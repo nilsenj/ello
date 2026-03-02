@@ -3,13 +3,12 @@
         <h2 class="text-lg font-semibold text-slate-900">{{ tOverview }}</h2>
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
-            <select
-                class="ui-select w-full sm:w-auto"
+            <ello-select
+                class="w-full sm:w-auto min-w-[200px]"
                 [ngModel]="selectedBoardId()"
                 (ngModelChange)="selectedBoardId.set($event); loadBoard($event)"
-            >
-                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
-            </select>
+                [options]="boardOptions()"
+            ></ello-select>
         </div>
     </div>
 

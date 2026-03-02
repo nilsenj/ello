@@ -3,13 +3,12 @@
         <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
-            <select
-                class="ui-select w-full sm:w-auto"
+            <ello-select
+                class="w-full sm:w-auto min-w-[200px]"
                 [ngModel]="selectedBoardId()"
                 (ngModelChange)="selectedBoardId.set($event); loadBoard($event)"
-            >
-                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
-            </select>
+                [options]="boardOptions()"
+            ></ello-select>
         </div>
     </div>
 
@@ -60,14 +59,12 @@
             <div *ngFor="let l of customLists()" class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
                 <div class="text-sm font-semibold text-slate-900 truncate">{{ l.title || l.name }}</div>
                 <label class="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">{{ tStatusLabel }}</label>
-                <select
-                    class="ui-select w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm"
+                <ello-select
+                    class="w-full"
                     [ngModel]="statusMap()[l.id] || ''"
                     (ngModelChange)="setStatus(l.id, $event)"
-                >
-                    <option value="">{{ tSelectStatus }}</option>
-                    <option *ngFor="let opt of statusOptions" [value]="opt.key">{{ opt.label }}</option>
-                </select>
+                    [options]="statusOptions()"
+                ></ello-select>
                 <div *ngIf="!(statusMap()[l.id] || '')" class="text-xs text-amber-600">
                     {{ tStatusMappingRequired }}
                 </div>

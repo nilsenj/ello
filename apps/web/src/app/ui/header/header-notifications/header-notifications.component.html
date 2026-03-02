@@ -1,4 +1,4 @@
-<div class="relative" (focusout)="onBlur($event)" clickOutside (clickOutside)="close()">
+<div class="relative" clickOutside (clickOutside)="close()">
     <button class="h-8 w-8 p-0 flex items-center justify-center hover:bg-white/30 transition-colors relative" [attr.title]="tNotifications" (click)="toggle()">
         <lucide-icon [img]="BellIcon" [size]="20" [strokeWidth]="2" class="text-white"></lucide-icon>
         <span *ngIf="unreadCount() > 0"
@@ -7,7 +7,7 @@
         </span>
     </button>
 
-    <div class="menu-content mt-1 w-80 origin-top-right max-h-[500px] overflow-y-auto" *ngIf="isOpen()">
+    <div class="absolute right-0 top-full mt-1 w-80 origin-top-right bg-white text-slate-800 rounded-lg shadow-xl border border-gray-200 z-[100] max-h-[500px] overflow-y-auto mobile-dropdown" *ngIf="isOpen()">
         <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
             <div class="text-sm font-semibold text-gray-700">{{ tNotifications }}</div>
             <button *ngIf="unreadCount() > 0" class="text-xs text-blue-600 hover:underline"

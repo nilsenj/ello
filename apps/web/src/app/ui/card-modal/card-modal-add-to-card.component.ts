@@ -1,4 +1,4 @@
-import { Component, Input, Signal, WritableSignal } from '@angular/core';
+import { Component, Input, Signal, WritableSignal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -10,13 +10,14 @@ import type { PanelName } from './card-modal.service';
 
 import { MembersPanelComponent } from '../../components/members-panel/members-panel.component';
 import { FilterByPipe } from '../../shared/filter-by.pipe';
+import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-select.component';
+import { ClickOutsideDirective } from '../../shared/click-outside.directive';
 
 @Component({
     standalone: true,
     selector: 'card-modal-add-to-card',
-    imports: [CommonModule, FormsModule, LucideAngularModule, MembersPanelComponent, FilterByPipe],
+    imports: [CommonModule, FormsModule, LucideAngularModule, MembersPanelComponent, FilterByPipe, ElloSelectComponent, ClickOutsideDirective],
     templateUrl: './card-modal-add-to-card.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalAddToCardComponent {
     readonly tAddToCard = $localize`:@@cardModalAddToCard.addToCard:Add to card`;
@@ -75,6 +76,25 @@ export class CardModalAddToCardComponent {
     readonly tUploadAria = $localize`:@@cardModalAddToCard.uploadAria:Upload files. You can also drag and drop.`;
     readonly tAttachUrlPlaceholder = $localize`:@@cardModalAddToCard.attachUrlPlaceholder:https://example.com/file.png`;
     readonly tPdfPreview = $localize`:@@cardModalAddToCard.pdfPreview:PDF preview`;
+
+    priorityOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tNone },
+            { value: 'low', label: this.tLow },
+            { value: 'medium', label: this.tMedium },
+            { value: 'high', label: this.tHigh },
+            { value: 'urgent', label: this.tUrgent }
+        ];
+    });
+
+    riskOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tNone },
+            { value: 'low', label: this.tLow },
+            { value: 'medium', label: this.tMedium },
+            { value: 'high', label: this.tHigh }
+        ];
+    });
     @Input({ required: true }) canEdit!: boolean;
     @Input({ required: true }) openPanel!: (name: PanelName) => void;
     @Input({ required: true }) closePanel!: () => void;

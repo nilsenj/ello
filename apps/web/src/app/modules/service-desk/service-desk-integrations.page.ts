@@ -9,11 +9,12 @@ import {
     ServiceDeskTelegramStatus,
     ServiceDeskWebhookStatus,
 } from '../../data/service-desk.service';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'service-desk-integrations-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './service-desk-integrations.page.html',
 })
 export class ServiceDeskIntegrationsPageComponent implements OnInit {
@@ -81,6 +82,13 @@ export class ServiceDeskIntegrationsPageComponent implements OnInit {
     });
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tAllBoards },
+            ...this.boards().map(b => ({ value: b.id, label: b.name }))
+        ];
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

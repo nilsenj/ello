@@ -60,14 +60,10 @@ export class CardModalService {
         this._isOpen.set(true);
 
         // Update URL for deep-linking without relying on fragment.
-        // (The board view updates query params frequently; fragments can get cleared.)
         this.ignoreNext = true;
-        this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { card: id },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-        });
+        const currentUrl = this.router.parseUrl(this.router.url);
+        currentUrl.queryParams['card'] = id;
+        this.router.navigateByUrl(currentUrl, { replaceUrl: true });
     }
 
     close() {
@@ -76,12 +72,9 @@ export class CardModalService {
         this._initialPanel.set(null);
 
         this.ignoreNext = true;
-        this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { card: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-        });
+        const currentUrl = this.router.parseUrl(this.router.url);
+        delete currentUrl.queryParams['card'];
+        this.router.navigateByUrl(currentUrl, { replaceUrl: true });
     }
 
     private readCardFromUrl(): string | null {

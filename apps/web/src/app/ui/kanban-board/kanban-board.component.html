@@ -160,7 +160,7 @@
 
 <!-- Table View -->
 <board-table-view *ngIf="currentView() === 'table'" [cards]="getAllFilteredCards()" [canEdit]="canEditBoard()"
-                  class="flex-1 overflow-hidden bg-slate-50"></board-table-view>
+                  class="flex-1 overflow-visible bg-slate-50"></board-table-view>
 
 <!-- Calendar View -->
 <board-calendar-view *ngIf="currentView() === 'calendar'" [cards]="getAllFilteredCards()" [canEdit]="canEditBoard()"
@@ -213,14 +213,11 @@
                        [(ngModel)]="newListTitle" (keydown.enter)="addList()" [placeholder]="tListTitlePlaceholder"/>
                 <div *ngIf="isServiceDeskBoard() || isFulfillmentBoard()" class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">{{ tListStatusLabel }}</label>
-                    <select
-                            class="ui-select w-full rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-800 outline-none focus:border-blue-400"
-                            [(ngModel)]="newListStatusKey">
-                        <option value="">{{ tSelectStatus }}</option>
-                        <option *ngFor="let opt of statusOptions()" [value]="opt.key">
-                            {{ opt.label }}
-                        </option>
-                    </select>
+                    <ello-select
+                            class="block w-full"
+                            [(ngModel)]="newListStatusKey"
+                            [options]="listSelectStatusOptions()">
+                    </ello-select>
                 </div>
                 <div class="flex gap-2">
                     <button class="rounded-md bg-blue-600 text-white px-3 py-1 text-sm"

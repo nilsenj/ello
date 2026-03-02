@@ -1,13 +1,11 @@
-import {
-    Component,
+import { Component,
     EventEmitter,
     Input,
     Output,
     OnChanges,
     SimpleChanges,
     inject,
-    signal,
-} from '@angular/core';
+    signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -21,6 +19,7 @@ import {
     UserCheck as UserCheckIcon,
     Briefcase as BriefcaseIcon,
     ChevronDown as ChevronDownIcon,
+    ChevronRight as ChevronRightIcon,
     Tag as TagIcon,
     Check as CheckIcon,
     UserPlus as UserPlusIcon,
@@ -38,11 +37,12 @@ import { BoardsService } from '../../data/boards.service';
 import { WorkspacesService } from '../../data/workspaces.service';
 import { BoardStore } from '../../store/board-store.service';
 import {CardAssignee} from "../../types";
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'members-panel',
-    imports: [CommonModule, FormsModule, LucideAngularModule, CdkObserveContent],
+    imports: [CommonModule, FormsModule, LucideAngularModule, CdkObserveContent, ElloSelectComponent],
     templateUrl: './members-panel.component.html',
     styleUrls: ['./members-panel.component.css'],
 })
@@ -62,6 +62,7 @@ export class MembersPanelComponent implements OnChanges {
     readonly UserCheckIcon = UserCheckIcon;
     readonly BriefcaseIcon = BriefcaseIcon;
     readonly ChevronDownIcon = ChevronDownIcon;
+    readonly ChevronRightIcon = ChevronRightIcon;
     readonly CheckIcon = CheckIcon;
     readonly UserPlusIcon = UserPlusIcon;
     readonly SearchIcon = SearchIcon;
@@ -81,6 +82,10 @@ export class MembersPanelComponent implements OnChanges {
     private _assignees = signal<CardAssignee[]>([]);
     assignees = this._assignees;
 
+    // View state
+    assignedOpen = signal(true);
+    findPeopleOpen = signal(true);
+
     // Search state
     searchScope = signal<'board' | 'workspace'>('board');
     memberQuery = signal('');
@@ -95,6 +100,19 @@ export class MembersPanelComponent implements OnChanges {
             this._assignees.set(this.assigneesInput ?? []);
         }
     }
+
+    roleOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: '—' },
+            { value: 'developer', label: 'Developer' },
+            { value: 'designer', label: 'Designer' },
+            { value: 'qa', label: 'QA' },
+            { value: 'analyst', label: 'Analyst' },
+            { value: 'pm', label: 'PM' },
+            { value: 'devops', label: 'DevOps' },
+            { value: 'other', label: 'Other…' }
+        ];
+    });
 
     // Helpers
     idOf(a: CardAssignee): string {

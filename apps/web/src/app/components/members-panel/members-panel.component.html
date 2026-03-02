@@ -1,4 +1,4 @@
-<section class="mp-wrap" (cdkObserveContent)="onPanelOpen()">
+<section class="mp-wrap cm-popover" (cdkObserveContent)="onPanelOpen()">
     <!-- Header -->
     <div class="cm-section-title flex items-center gap-2 mb-3">
     <span class="inline-flex items-center">
@@ -11,18 +11,19 @@
     </div>
 
     <!-- Assigned -->
-    <details class="cm-accordion" [attr.open]="currentMemberIds().length ? '' : null">
-        <summary class="cm-accordion-summary">
-      <span class="inline-flex items-center font-medium">
-        <lucide-icon [img]="UserCheckIcon" class="mr-2"></lucide-icon>
-        Assigned
-      </span>
+    <div class="cm-accordion" [class.is-open]="assignedOpen()">
+        <div class="cm-accordion-summary flex items-center cursor-pointer select-none" (click)="assignedOpen.set(!assignedOpen())">
+            <lucide-icon [img]="assignedOpen() ? ChevronDownIcon : ChevronRightIcon" class="w-4 h-4 mr-1 text-slate-400"></lucide-icon>
+            <span class="inline-flex items-center font-medium">
+                <lucide-icon [img]="UserCheckIcon" class="mr-2"></lucide-icon>
+                Assigned
+            </span>
             <span class="cm-badge ml-2 inline-flex items-center">
                 {{ currentMemberIds().length }}
-      </span>
-        </summary>
+            </span>
+        </div>
 
-        <div class="cm-accordion-body">
+        <div class="cm-accordion-body" *ngIf="assignedOpen()">
             <div *ngIf="currentMemberIds().length; else noAssigneesTpl" class="cm-members">
                 <div *ngFor="let a of assignees()" class="cm-member is-selected">
                     <img *ngIf="a.user?.avatar" [src]="a.user.avatar" class="cm-avatar" alt=""/>
@@ -40,20 +41,12 @@
                                     <div class="cm-member-name inline-flex items-center gap-2">
                                         {{ a.user?.name || a.user?.email || 'User' }}
                                     </div>
-                                    <select
-                                            class="inline-flex cm-input cm-select pr-10"
+                                    <ello-select
+                                            class="inline-flex cm-select w-32"
                                             [ngModel]="assigneeRole(idOf(a)).role || ''"
                                             (ngModelChange)="setAssigneeRole(idOf(a), $event)"
-                                    >
-                                        <option value="">—</option>
-                                        <option value="developer">Developer</option>
-                                        <option value="designer">Designer</option>
-                                        <option value="qa">QA</option>
-                                        <option value="analyst">Analyst</option>
-                                        <option value="pm">PM</option>
-                                        <option value="devops">DevOps</option>
-                                        <option value="other">Other…</option>
-                                    </select>
+                                            [options]="roleOptions()">
+                                    </ello-select>
                                 </div>
                             </label>
 
@@ -85,46 +78,45 @@
                 </div>
             </ng-template>
         </div>
-    </details>
+    </div>
 
     <!-- Search -->
-    <details class="cm-accordion mt-3" open>
-        <summary class="cm-accordion-summary">
-      <span class="inline-flex items-center font-medium">
-        Find people
-      </span>
-        </summary>
+    <div class="cm-accordion mt-3" [class.is-open]="findPeopleOpen()">
+        <div class="cm-accordion-summary flex items-center cursor-pointer select-none" (click)="findPeopleOpen.set(!findPeopleOpen())">
+            <lucide-icon [img]="findPeopleOpen() ? ChevronDownIcon : ChevronRightIcon" class="w-4 h-4 mr-1 text-slate-400"></lucide-icon>
+            <span class="inline-flex items-center font-medium">
+                Find people
+            </span>
+        </div>
 
-        <div class="cm-accordion-body">
+        <div class="cm-accordion-body" *ngIf="findPeopleOpen()">
             <div class="cm-search-row">
-                <div class="cm-segment">
-                    <label class="cm-seg-opt">
+                <div class="flex items-center gap-4 mb-2">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
                         <input
                                 type="radio"
                                 name="mem-scope"
+                                class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                                 [checked]="searchScope() === 'board'"
                                 (change)="searchScope.set('board'); queueSearch()"
                         />
-                        <span class="inline-flex items-center gap-1">
-              <lucide-icon [img]="LayoutIcon"></lucide-icon>
-              Board
-            </span>
+                        <lucide-icon [img]="LayoutIcon" class="w-4 h-4 text-slate-500"></lucide-icon>
+                        Board
                     </label>
-                    <label class="cm-seg-opt">
+                    <label class="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
                         <input
                                 type="radio"
                                 name="mem-scope"
+                                class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                                 [checked]="searchScope() === 'workspace'"
                                 (change)="searchScope.set('workspace'); queueSearch()"
                         />
-                        <span class="inline-flex items-center gap-1">
-              <lucide-icon [img]="Building2Icon"></lucide-icon>
-              Workspace
-            </span>
+                        <lucide-icon [img]="Building2Icon" class="w-4 h-4 text-slate-500"></lucide-icon>
+                        Workspace
                     </label>
                 </div>
 
-                <div class="cm-search w-full max-w-md">
+                <div class="cm-search w-full">
                     <div class="relative">
                         <input
                                 class="cm-input w-full pl-9 pr-3"
@@ -186,5 +178,5 @@
                 </div>
             </ng-template>
         </div>
-    </details>
+    </div>
 </section>

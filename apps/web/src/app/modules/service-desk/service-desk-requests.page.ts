@@ -5,11 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ServiceDeskService, ServiceDeskBoardLite } from '../../data/service-desk.service';
 import { ListsService } from '../../data/lists.service';
 import type { Card, ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'service-desk-requests-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './service-desk-requests.page.html',
 })
 export class ServiceDeskRequestsPageComponent implements OnInit {
@@ -53,6 +54,10 @@ export class ServiceDeskRequestsPageComponent implements OnInit {
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
 
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
+
     async ngOnInit() {
         const workspaceId = this.workspaceId();
         if (!workspaceId) return;
@@ -86,12 +91,12 @@ export class ServiceDeskRequestsPageComponent implements OnInit {
             return lists.flatMap(list => (list.cards || []).map(c => ({
                 ...c,
                 listId: list.id,
-                listName: list.name,
+                listName: list.name || 'Unknown List',
             })));
         }
         const inbox = lists.find(l => l.statusKey === 'inbox');
         if (!inbox?.cards) return [];
-        return inbox.cards.map(c => ({ ...c, listId: inbox.id, listName: inbox.name }));
+        return inbox.cards.map(c => ({ ...c, listId: inbox.id, listName: inbox.name || 'Unknown List' }));
     }
 
     openModal() {

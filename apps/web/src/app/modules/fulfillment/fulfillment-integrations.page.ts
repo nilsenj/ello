@@ -9,11 +9,12 @@ import {
     FulfillmentTelegramStatus,
     FulfillmentWebhookStatus,
 } from '../../data/fulfillment.service';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'fulfillment-integrations-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './fulfillment-integrations.page.html',
 })
 export class FulfillmentIntegrationsPageComponent implements OnInit {
@@ -81,6 +82,13 @@ export class FulfillmentIntegrationsPageComponent implements OnInit {
     });
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: '', label: this.tAllBoards },
+            ...this.boards().map(b => ({ value: b.id, label: b.name }))
+        ];
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

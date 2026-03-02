@@ -1,17 +1,18 @@
-import { Component, Input, Signal, WritableSignal } from '@angular/core';
+import { Component, Input, Signal, WritableSignal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 
 import type { Board, ListDto } from '../../types';
 import type { PanelName } from './card-modal.service';
+import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-select.component';
+import { ClickOutsideDirective } from '../../shared/click-outside.directive';
 
 @Component({
     standalone: true,
     selector: 'card-modal-actions',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent, ClickOutsideDirective],
     templateUrl: './card-modal-actions.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalActionsComponent {
     readonly tActions = $localize`:@@cardModalActions.title:Actions`;
@@ -60,4 +61,19 @@ export class CardModalActionsComponent {
     @Input({ required: true }) CopyIcon!: any;
     @Input({ required: true }) Trash2Icon!: any;
     @Input({ required: true }) XIcon!: any;
+
+    availableBoardsOptions = computed<ElloSelectOption[]>(() => {
+        return (this.availableBoards || []).map(b => ({ value: b.id, label: b.name }));
+    });
+
+    targetListsOptions = computed<ElloSelectOption[]>(() => {
+        return (this.targetLists || []).map(l => ({ value: l.id, label: l.title || l.name || 'Unknown' }));
+    });
+
+    targetPositionOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: 'top', label: this.tTop },
+            { value: 'bottom', label: this.tBottom }
+        ];
+    });
 }

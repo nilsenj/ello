@@ -5,11 +5,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FulfillmentService, FulfillmentBoardLite } from '../../data/fulfillment.service';
 import { ListsService } from '../../data/lists.service';
 import type { Card, ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'fulfillment-overview-page',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, ElloSelectComponent],
     templateUrl: './fulfillment-overview.page.html',
 })
 export class FulfillmentOverviewPageComponent implements OnInit {
@@ -39,6 +40,10 @@ export class FulfillmentOverviewPageComponent implements OnInit {
     readonly tNoBoards = $localize`:@@fulfillment.overview.noBoards:No fulfillment boards yet.`;
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

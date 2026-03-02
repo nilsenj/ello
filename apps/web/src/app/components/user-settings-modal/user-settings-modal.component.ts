@@ -10,6 +10,7 @@ import { BoardStore } from '../../store/board-store.service';
 import { BillingPlan, BillingService } from '../../data/billing.service';
 import { ServiceDeskEntitlement, ServiceDeskService } from '../../data/service-desk.service';
 import { FulfillmentEntitlement, FulfillmentService } from '../../data/fulfillment.service';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 type ModuleKey = 'service_desk' | 'ecommerce_fulfillment';
 type ModuleEntitlement = ServiceDeskEntitlement | FulfillmentEntitlement;
@@ -18,7 +19,7 @@ type ModuleEntitlements = Record<string, Partial<Record<ModuleKey, ModuleEntitle
 @Component({
     standalone: true,
     selector: 'user-settings-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent],
     templateUrl: './user-settings-modal.component.html',
     styleUrls: ['./user-settings-modal.component.css'],
 })
@@ -132,6 +133,17 @@ export class UserSettingsModalComponent {
         core_business: { maxBoards: 50, maxMembers: 50, label: this.tPlanCoreBusiness },
     };
     availablePlans = computed(() => this.plans().filter(plan => plan.kind !== 'module'));
+
+    languageOptions = computed<ElloSelectOption[]>(() => {
+        return this.supportedLocales.map(lang => ({
+            value: lang,
+            label: this.localeLabels[lang] || lang
+        }));
+    });
+
+    workspaceOptions = computed<ElloSelectOption[]>(() => {
+        return this.workspaces().map(ws => ({ value: ws.id, label: ws.name }));
+    });
 
     currentWorkspace = computed(() => {
         const list = this.workspaces();

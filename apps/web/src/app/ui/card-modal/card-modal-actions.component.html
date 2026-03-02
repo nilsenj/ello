@@ -1,4 +1,4 @@
-<section *ngIf="canArchive || canMoveCopy || canDelete">
+<section *ngIf="canArchive || canMoveCopy || canDelete" class="relative">
     <div class="cm-section-title">{{ tActions }}</div>
     <div class="grid grid-cols-2 gap-2">
         <button *ngIf="canArchive" class="cm-add inline-flex items-center" (click)="archiveCard()">
@@ -21,7 +21,7 @@
     </div>
 </section>
 
-<section *ngIf="isPanelOpen('move')" data-panel="move">
+<section *ngIf="isPanelOpen('move')" data-panel="move" class="cm-popover" (clickOutside)="closePanel()">
     <div class="cm-section-title flex items-center gap-2">
         <span class="inline-flex items-center">
             <lucide-icon [img]="MoveIcon" class="mr-1"></lucide-icon>
@@ -36,26 +36,31 @@
     <div class="space-y-3">
         <label class="cm-field">
             <span class="cm-field-label">{{ tBoard }}</span>
-            <select class="cm-input" [ngModel]="targetBoardId()" (ngModelChange)="onTargetBoardChange($event)">
-                <option *ngFor="let b of availableBoards" [value]="b.id">{{ b.name }}</option>
-            </select>
+            <ello-select class="block w-full"
+                [ngModel]="targetBoardId()" 
+                (ngModelChange)="onTargetBoardChange($event)"
+                [options]="availableBoardsOptions()">
+            </ello-select>
         </label>
 
         <label class="cm-field">
             <span class="cm-field-label">{{ tList }}</span>
             <div *ngIf="isBusyAction()" class="cm-muted text-xs mb-1">{{ tLoadingLists }}</div>
-            <select class="cm-input" [ngModel]="targetListId()" (ngModelChange)="targetListId.set($event)"
-                [disabled]="isBusyAction()">
-                <option *ngFor="let l of targetLists" [value]="l.id">{{ l.title || l.name }}</option>
-            </select>
+            <ello-select class="block w-full"
+                [ngModel]="targetListId()" 
+                (ngModelChange)="targetListId.set($event)"
+                [disabled]="isBusyAction()"
+                [options]="targetListsOptions()">
+            </ello-select>
         </label>
 
         <label class="cm-field">
             <span class="cm-field-label">{{ tPosition }}</span>
-            <select class="cm-input" [ngModel]="targetPosition()" (ngModelChange)="targetPosition.set($event)">
-                <option value="top">{{ tTop }}</option>
-                <option value="bottom">{{ tBottom }}</option>
-            </select>
+            <ello-select class="block w-full"
+                [ngModel]="targetPosition()" 
+                (ngModelChange)="targetPosition.set($event)"
+                [options]="targetPositionOptions()">
+            </ello-select>
         </label>
 
         <button class="cm-btn-primary w-full justify-center" (click)="doMove()"
@@ -65,7 +70,7 @@
     </div>
 </section>
 
-<section *ngIf="isPanelOpen('copy')" data-panel="copy">
+<section *ngIf="isPanelOpen('copy')" data-panel="copy" class="cm-popover" (clickOutside)="closePanel()">
     <div class="cm-section-title flex items-center gap-2">
         <span class="inline-flex items-center">
             <lucide-icon [img]="CopyIcon" class="mr-1"></lucide-icon>
@@ -86,18 +91,22 @@
 
         <label class="cm-field">
             <span class="cm-field-label">{{ tBoard }}</span>
-            <select class="cm-input" [ngModel]="targetBoardId()" (ngModelChange)="onTargetBoardChange($event)">
-                <option *ngFor="let b of availableBoards" [value]="b.id">{{ b.name }}</option>
-            </select>
+            <ello-select class="block w-full"
+                [ngModel]="targetBoardId()" 
+                (ngModelChange)="onTargetBoardChange($event)"
+                [options]="availableBoardsOptions()">
+            </ello-select>
         </label>
 
         <label class="cm-field">
             <span class="cm-field-label">{{ tList }}</span>
             <div *ngIf="isBusyAction()" class="cm-muted text-xs mb-1">{{ tLoadingLists }}</div>
-            <select class="cm-input" [ngModel]="targetListId()" (ngModelChange)="targetListId.set($event)"
-                [disabled]="isBusyAction()">
-                <option *ngFor="let l of targetLists" [value]="l.id">{{ l.title || l.name }}</option>
-            </select>
+            <ello-select class="block w-full"
+                [ngModel]="targetListId()" 
+                (ngModelChange)="targetListId.set($event)"
+                [disabled]="isBusyAction()"
+                [options]="targetListsOptions()">
+            </ello-select>
         </label>
 
         <button class="cm-btn-primary w-full justify-center" (click)="doCopy()"
@@ -107,7 +116,7 @@
     </div>
 </section>
 
-<section *ngIf="isPanelOpen('delete')" data-panel="delete">
+<section *ngIf="isPanelOpen('delete')" data-panel="delete" class="cm-popover" (clickOutside)="closePanel()">
     <div class="cm-section-title flex items-center gap-2 text-red-700">
         <span class="inline-flex items-center">
             <lucide-icon [img]="Trash2Icon" class="mr-1"></lucide-icon>

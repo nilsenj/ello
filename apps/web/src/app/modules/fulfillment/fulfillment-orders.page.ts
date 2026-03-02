@@ -5,11 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FulfillmentService, FulfillmentBoardLite } from '../../data/fulfillment.service';
 import { ListsService } from '../../data/lists.service';
 import type { Card, ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'fulfillment-orders-page',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './fulfillment-orders.page.html',
 })
 export class FulfillmentOrdersPageComponent implements OnInit {
@@ -65,6 +66,10 @@ export class FulfillmentOrdersPageComponent implements OnInit {
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
 
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
+
     async ngOnInit() {
         const workspaceId = this.workspaceId();
         if (!workspaceId) return;
@@ -98,12 +103,12 @@ export class FulfillmentOrdersPageComponent implements OnInit {
             return lists.flatMap(list => (list.cards || []).map(c => ({
                 ...c,
                 listId: list.id,
-                listName: list.name,
+                listName: list.name || 'Unknown List',
             })));
         }
         const orders = lists.find(l => l.statusKey === 'order');
         if (!orders?.cards) return [];
-        return orders.cards.map(c => ({ ...c, listId: orders.id, listName: orders.name }));
+        return orders.cards.map(c => ({ ...c, listId: orders.id, listName: orders.name || 'Unknown List' }));
     }
 
     openModal() {

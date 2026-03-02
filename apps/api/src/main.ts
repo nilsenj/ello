@@ -110,6 +110,9 @@ async function bootstrap() {
     await registerAdminRoutes(app, prisma);
     await registerPushRoutes(app, prisma);
 
+    const { assistantRoutes } = await import('./routes/assistant.js');
+    await app.register(assistantRoutes, { prisma });
+
     // Initialize Socket.IO
     await setupSocketIO(app, prisma);
 

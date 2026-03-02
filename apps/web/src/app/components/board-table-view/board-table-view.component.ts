@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BoardStore } from '../../store/board-store.service';
@@ -6,11 +6,12 @@ import type { Card } from '../../types';
 import { CardModalService, PanelName } from "../../ui/card-modal/card-modal.service";
 import { CardsService } from '../../data/cards.service';
 import { ListsService } from '../../data/lists.service';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     selector: 'board-table-view',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ElloSelectComponent],
     templateUrl: './board-table-view.component.html',
     styleUrls: ['./board-table-view.component.css']
 })
@@ -58,6 +59,13 @@ export class BoardTableViewComponent {
 
     lists = () => this.store.lists().filter(l => !l.isArchived);
     labels = () => this.store.labels();
+
+    listOptions = computed<ElloSelectOption[]>(() => {
+        return this.lists().map(l => ({
+            value: l.id,
+            label: l.title || l.name || 'Unknown List'
+        }));
+    });
 
     getAllCards(): Card[] {
         let allCards = [...this.cards];
@@ -158,29 +166,14 @@ export class BoardTableViewComponent {
         }
     }
 
-    async updateCardList(card: Card, event: Event) {
+    updateCardListHandler(card: Card, newListId: string) {
         if (!this.canEdit) return;
-        const select = event.target as HTMLSelectElement;
-        const newListId = select.value;
         if (!newListId || newListId === card.listId) return;
-        await this.cardsApi.moveCard(card.id, newListId, null, null);
+        void this.cardsApi.moveCard(card.id, newListId, null, null);
     }
 
     async updateDueDate(card: Card, dateStr: string | null) {
         if (!this.canEdit) return;
-        await this.cardsApi.patchCardExtended(card.id, { dueDate: dateStr || null });
-    }
-
-    async updateCardList(card: Card, event: Event) {
-        const select = event.target as HTMLSelectElement;
-        const newListId = select.value;
-        if (newListId && newListId !== card.listId) {
-            // we need rank... simplified move for now
-            await this.cardsApi.moveCard(card.id, newListId, null, null);
-        }
-    }
-
-    async updateDueDate(card: Card, dateStr: string) {
         await this.cardsApi.patchCardExtended(card.id, { dueDate: dateStr || null });
     }
 

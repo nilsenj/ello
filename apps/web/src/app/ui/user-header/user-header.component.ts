@@ -22,6 +22,7 @@ import { HeaderBoardSwitcherComponent } from '../header/header-board-switcher/he
 import { HeaderCreateMenuComponent } from '../header/header-create-menu/header-create-menu.component';
 import { HeaderNotificationsComponent } from '../header/header-notifications/header-notifications.component';
 import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-menu.component';
+import { VoiceOverlayComponent } from '../voice-overlay/voice-overlay.component';
 
 @Component({
     // Force rebuild
@@ -37,20 +38,16 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
         HeaderBoardSwitcherComponent,
         HeaderCreateMenuComponent,
         HeaderNotificationsComponent,
-        HeaderUserMenuComponent
+        HeaderUserMenuComponent,
+        VoiceOverlayComponent
     ],
     styles: [`
         :host {
             display: block;
         }
-
-        .hdr {
-            background: var(--board-header, #026AA7);
-            color: #fff;
-        }
     `],
     template: `
-        <header class="hdr native-safe-header w-full relative z-50">
+        <header class="native-safe-header w-full relative z-50 bg-[var(--board-header,#026AA7)] text-white">
             <div class="mx-auto max-w-full px-2 sm:px-4 py-2 flex items-center justify-between relative min-h-[52px]">
 
                 <!-- Left: Logo & Board Switcher -->
@@ -73,7 +70,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </a>
 
                     <header-board-switcher
-                        class="min-w-0"
+                        class="min-w-0 relative z-[100]"
                         [currentBoardName]="currentBoardName()"
                         [currentBoardId]="store.currentBoardId()"
                         [boardsByWorkspace]="boardsByWorkspace()"
@@ -93,7 +90,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </button>
 
                     <header-create-menu
-                        class="hidden md:block"
+                        class="hidden md:block relative z-[100]"
                         (createBoard)="onCreateBoardClick()"
                         (createCard)="onAddCardClick()">
                     </header-create-menu>
@@ -116,7 +113,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                         
                         <!-- Results Dropdown -->
                         <div *ngIf="query().trim().length > 0 && showResults()" 
-                             class="absolute top-full left-0 w-full mt-1 bg-white rounded-md shadow-xl border border-gray-200 overflow-hidden z-20 max-h-[80vh] overflow-y-auto">
+                             class="absolute top-full left-0 w-full mt-1 bg-white text-slate-800 rounded-md shadow-xl border border-gray-200 overflow-hidden z-[100] max-h-[80vh] overflow-y-auto">
                              
                             <div *ngIf="filteredBoards().length === 0" class="p-3 text-sm text-gray-500 text-center">
                                 {{ tNoBoardsFound }}
@@ -140,6 +137,12 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
 
                 <!-- Right: Notifications, Search Toggle (Mobile), User -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0" [class.hidden]="mobileSearchOpen()">
+                    <!-- Voice Assistant Trigger -->
+                    <button class="pill p-1.5 sm:p-2 text-indigo-100 hover:text-white hover:bg-white/20 transition-colors rounded-md shrink-0 flex items-center justify-center relative group" (click)="voiceOverlay.open()">
+                       <svg class="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                       <span class="absolute -bottom-8 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Voice Assistant</span>
+                    </button>
+
                     <!-- Mobile Search Toggle -->
                     <button class="md:hidden pill p-1.5 sm:p-2 text-white hover:bg-white/20 transition-colors rounded-md shrink-0" (click)="toggleMobileSearch()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -151,7 +154,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </button>
 
                     <header-notifications
-                        class="shrink-0"
+                        class="shrink-0 relative z-[100]"
                         [unreadCount]="unreadCount()"
                         [notifications]="notifications()"
                         (markAsRead)="markNotificationAsRead($event)"
@@ -160,7 +163,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
                     </header-notifications>
 
                     <header-user-menu
-                        class="shrink-0"
+                        class="shrink-0 relative z-[100]"
                         [user]="user()"
                         [initials]="initials()"
                         (logout)="logout()"
@@ -175,6 +178,7 @@ import { HeaderUserMenuComponent } from '../header/header-user-menu/header-user-
             <board-create-modal></board-create-modal>
             <card-create-modal></card-create-modal>
             <user-settings-modal></user-settings-modal>
+            <ello-voice-overlay #voiceOverlay></ello-voice-overlay>
         </header>
     `
 })
@@ -215,6 +219,7 @@ export class UserHeaderComponent {
     });
 
     private routeUrl = signal(this.router.url);
+    private initialBoardsFetch = false;
 
     // Group boards by workspace (show module boards only within module routes)
     boardsByWorkspace = computed(() => {
@@ -259,7 +264,8 @@ export class UserHeaderComponent {
         effect(() => {
             this.auth.isAuthed();
             this.store.currentBoardId();
-            if (this.auth.isAuthed() && this.store.boards().length === 0) {
+            if (this.auth.isAuthed() && !this.initialBoardsFetch && this.store.boards().length === 0) {
+                this.initialBoardsFetch = true;
                 void this.boardsApi.loadBoards().catch(() => null);
             }
         });

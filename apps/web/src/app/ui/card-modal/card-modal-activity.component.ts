@@ -7,7 +7,6 @@ import { LucideAngularModule } from 'lucide-angular';
     selector: 'card-modal-activity',
     imports: [CommonModule, LucideAngularModule],
     templateUrl: './card-modal-activity.component.html',
-    styleUrls: ['./card-modal.component.css'],
 })
 export class CardModalActivityComponent {
     @Input({ required: true }) activities!: any[];

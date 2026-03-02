@@ -14,12 +14,12 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <!-- List Filter -->
-            <select [(ngModel)]="selectedListId" (ngModelChange)="onListFilterChange()"
-                    class="px-3 py-1.5 text-sm border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="all">All Lists</option>
-                <option *ngFor="let list of lists()" [value]="list.id">{{ list.name }}</option>
-            </select>
+            <ello-select
+                [(ngModel)]="selectedListId" 
+                (ngModelChange)="onListFilterChange()"
+                [options]="listSelectOptions()"
+                class="w-48">
+            </ello-select>
 
             <div class="h-6 w-px bg-slate-200"></div>
 

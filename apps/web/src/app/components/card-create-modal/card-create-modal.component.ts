@@ -12,11 +12,12 @@ import { CardsService } from '../../data/cards.service';
 import { WorkspacesService, WorkspaceLite } from '../../data/workspaces.service';
 import { ListsService } from '../../data/lists.service';
 import type { ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'card-create-modal',
-    imports: [CommonModule, FormsModule, LucideAngularModule],
+    imports: [CommonModule, FormsModule, LucideAngularModule, ElloSelectComponent],
     styleUrls: ['./card-create-modal.component.css'],
     templateUrl: './card-create-modal.component.html',
 })
@@ -59,6 +60,27 @@ export class CardCreateModalComponent {
     availableBoards = computed(() => {
         const wsId = this.selectedWorkspaceId();
         return this.store.boards().filter(b => !b.isArchived && (!wsId || b.workspaceId === wsId));
+    });
+
+    workspaceOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: null as any, label: this.tWorkspacePlaceholder, disabled: true },
+            ...this.workspaces().map(ws => ({ value: ws.id, label: ws.name }))
+        ];
+    });
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: null as any, label: this.tBoardPlaceholder, disabled: true },
+            ...this.availableBoards().map(b => ({ value: b.id, label: b.name }))
+        ];
+    });
+
+    listSelectOptions = computed<ElloSelectOption[]>(() => {
+        return [
+            { value: null as any, label: this.tListPlaceholder, disabled: true },
+            ...this.lists().map(l => ({ value: l.id, label: l.name || 'Unknown List' }))
+        ];
     });
 
     constructor() {

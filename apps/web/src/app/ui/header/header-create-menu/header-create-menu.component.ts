@@ -1,10 +1,11 @@
 import { Component, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ClickOutsideDirective } from '../../click-outside.directive';
 
 @Component({
     standalone: true,
     selector: 'header-create-menu',
-    imports: [CommonModule],
+    imports: [CommonModule, ClickOutsideDirective],
     templateUrl: './header-create-menu.component.html',
     styles: [`
         .btn {
@@ -13,18 +14,6 @@ import { CommonModule } from '@angular/common';
             border-radius: .375rem;
             padding: .375rem .625rem;
             font-size: .875rem;
-        }
-        .menu-content {
-            position: absolute;
-            left: 0;
-            top: 100%;
-            min-width: 220px;
-            background: #fff;
-            color: #172b4d;
-            border-radius: .5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
-            padding: .5rem;
-            z-index: 100;
         }
     `]
 })
@@ -45,12 +34,5 @@ export class HeaderCreateMenuComponent {
 
     close() {
         this.isOpen.set(false);
-    }
-
-    onBlur(ev: FocusEvent) {
-        const next = ev.relatedTarget as HTMLElement | null;
-        if (!next || !(ev.currentTarget as HTMLElement).contains(next)) {
-            this.close();
-        }
     }
 }

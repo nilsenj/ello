@@ -3,13 +3,12 @@
         <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
             <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
-            <select
-                class="ui-select w-full sm:w-auto"
+            <ello-select
+                class="w-full sm:w-auto min-w-[200px]"
                 [ngModel]="selectedBoardId()"
                 (ngModelChange)="selectedBoardId.set($event); loadBoardLists($event)"
-            >
-                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
-            </select>
+                [options]="boardOptions()"
+            ></ello-select>
             <div class="flex items-center rounded-md border border-slate-200 bg-white text-xs w-full sm:w-auto">
                 <button class="px-2 py-1 font-semibold flex-1 sm:flex-none"
                         [class.text-slate-900]="!showAll()" [class.text-slate-400]="showAll()"

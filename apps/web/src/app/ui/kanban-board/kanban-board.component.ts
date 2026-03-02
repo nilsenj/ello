@@ -29,11 +29,12 @@ import { AuthService } from '../../auth/auth.service';
 import { ServiceDeskService } from '../../data/service-desk.service';
 import { FulfillmentService } from '../../data/fulfillment.service';
 import { KanbanFiltersComponent } from '../kanban-filters/kanban-filters.component';
+import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-select.component';
 
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, KanbanFiltersComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, KanbanFiltersComponent, ElloSelectComponent], // ⬅️ include group
 
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],
@@ -120,6 +121,11 @@ export class KanbanBoardComponent implements OnInit {
         if (this.isServiceDeskBoard()) return this.serviceDeskStatusOptions;
         if (this.isFulfillmentBoard()) return this.fulfillmentStatusOptions;
         return [];
+    });
+
+    readonly listSelectStatusOptions = computed<ElloSelectOption[]>(() => {
+        const base = this.statusOptions().map(o => ({ label: o.label, value: o.key }));
+        return [{ label: this.tSelectStatus, value: '' }, ...base];
     });
 
     @ViewChild('newListInput') newListInput!: ElementRef<HTMLInputElement>;
@@ -232,8 +238,6 @@ export class KanbanBoardComponent implements OnInit {
 
             const isOpen = this.modal.isOpen();
             const id = this.modal.cardId();
-            // const qp = isOpen && id ? { card: id } : {}; // Original line
-            this.router.navigate([], { queryParams: { card: id || undefined }, queryParamsHandling: 'merge' });
         });
 
         // Real-time board updates

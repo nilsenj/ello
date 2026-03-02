@@ -5,11 +5,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ServiceDeskService, ServiceDeskBoardLite } from '../../data/service-desk.service';
 import { ListsService } from '../../data/lists.service';
 import type { Card, ListDto } from '../../types';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 
 @Component({
     standalone: true,
     selector: 'service-desk-overview-page',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, ElloSelectComponent],
     templateUrl: './service-desk-overview.page.html',
 })
 export class ServiceDeskOverviewPageComponent implements OnInit {
@@ -38,6 +39,10 @@ export class ServiceDeskOverviewPageComponent implements OnInit {
     readonly tNoBoards = $localize`:@@serviceDesk.overview.noBoards:No Service Desk boards yet.`;
 
     workspaceId = computed(() => this.route.parent?.snapshot.paramMap.get('workspaceId') || '');
+
+    boardOptions = computed<ElloSelectOption[]>(() => {
+        return this.boards().map(b => ({ value: b.id, label: b.name }));
+    });
 
     async ngOnInit() {
         const workspaceId = this.workspaceId();

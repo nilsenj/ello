@@ -2,15 +2,13 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 class="text-lg font-semibold text-slate-900">{{ tTitle }}</h2>
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-            <label class="text-sm text-slate-600">{{ tBoardLabel }}</label>
-            <select
-                class="ui-select w-full sm:w-auto"
+            <label class="text-sm font-medium text-slate-700 w-full sm:w-auto mt-1">{{ tBoardLabel }}</label>
+        <ello-select
+                class="w-full sm:w-64"
                 [ngModel]="selectedBoardId()"
                 (ngModelChange)="updateBoardSelection($event)"
-            >
-                <option value="">{{ tAllBoards }}</option>
-                <option *ngFor="let b of boards()" [value]="b.id">{{ b.name }}</option>
-            </select>
+                [options]="boardOptions()"
+        ></ello-select>
         </div>
     </div>
 

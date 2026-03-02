@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
                 tsconfig: resolve(__dirname, 'tsconfig.app.json'),
             }) as any,
             tsconfigPaths() as any,
-            VitePWA({
+            ...(mode === 'production' ? [VitePWA({
                 registerType: 'autoUpdate',
                 includeAssets: ['favicon.svg', 'assets/logo.svg'],
                 manifest: {
@@ -35,13 +35,16 @@ export default defineConfig(({ mode }) => {
                         }
                     ]
                 }
-            })
+            })] : [])
         ],
         resolve: {
             alias: {
                 '@env': mode === 'production'
                     ? resolve(__dirname, 'src/environments/environment.prod.ts')
                     : resolve(__dirname, 'src/environments/environment.ts'),
+                'virtual:pwa-register': mode === 'production'
+                    ? 'virtual:pwa-register'
+                    : resolve(__dirname, 'src/pwa-mock.ts'),
             }
         },
         server: {
