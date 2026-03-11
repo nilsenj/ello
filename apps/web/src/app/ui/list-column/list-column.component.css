@@ -11,22 +11,33 @@
     background: rgba(255,255,255,.55);
 }
 
-/* Hint text */
+.dropzone {
+    min-height: 48px;
+    padding: 6px;
+}
+
+/* Explicitly more grey background and clear dashed border */
+.dropzone.empty {
+    outline: 2px dashed rgba(0, 0, 0, 0.2);
+    outline-offset: -2px;
+    border-radius: 8px;
+    background-color: rgba(240, 242, 245, 0.8); /* Nice grey color */
+    transition: background-color 0.2s, outline-color 0.2s;
+}
+
+/* Make it highlight subtly when something hovers over the dropzone */
+.cdk-drop-list-receiving .dropzone.empty {
+    outline-color: rgba(99, 102, 241, 0.6); /* Indigo highlight */
+    background-color: rgba(240, 242, 245, 1);
+}
+
 .empty-placeholder {
     height: 40px;
     display: grid;
     place-items: center;
-    font-size: 12px;
-    color: rgba(0,0,0,.45);
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(100, 116, 139, 0.8); /* Slate softer color for text */
     user-select: none;
-}
-
-.dropzone {
-    min-height: 40px;
-    padding: 4px;
-}
-.dropzone.empty {
-    outline: 2px dashed rgba(255,255,255,0.35);
-    outline-offset: -2px;
-    border-radius: 8px;
+    pointer-events: none;
 }

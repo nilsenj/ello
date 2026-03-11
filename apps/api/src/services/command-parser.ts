@@ -25,7 +25,31 @@ export class CommandParserService {
    * @returns The resolved command action or UNKNOWN.
    */
   public parseCommand(text: string): CommandAction {
-    const cleanText = text.trim();
+    // Correct common speech-to-text homophones before processing
+    let cleanText = text.trim().toLowerCase();
+    
+    const homophones: Record<string, string> = {
+      'at least': 'add list',
+      'bad list': 'add list',
+      'ad list': 'add list',
+      'out list': 'add list',
+      'at list': 'add list',
+      'redwoods': 'add list',
+      'red woods': 'add list',
+      
+      'great board': 'create board',
+      'rate board': 'create board',
+      'trade board': 'create board',
+      
+      'rate task': 'create task',
+      'great task': 'create task',
+      'rate card': 'create card',
+      'great card': 'create card'
+    };
+
+    for (const [wrong, right] of Object.entries(homophones)) {
+      cleanText = cleanText.replace(new RegExp(`^${wrong}\\b`, 'i'), right);
+    }
 
     // 1. Create Board
     // regex: (create|make|add) (a )?board (called|named )?(.*)
@@ -37,11 +61,18 @@ export class CommandParserService {
     }
 
     // 2. Add List to Board
-    // regex: (add|create) (a )?list (called|named )?(.*) to (the )?board (called|named )?(.*)
-    const listMatch = cleanText.match(/^(?:add|create)\s+(?:a\s+)?list\s+(?:called\s+|named\s+)?(.+?)\s+to\s+(?:the\s+)?board\s+(?:called\s+|named\s+)?(.+)$/i);
-    if (listMatch && listMatch[1] && listMatch[2]) {
-      const name = listMatch[1].trim();
-      const boardName = listMatch[2].replace(/[.!?]+$/, '').trim();
+    // Pattern A: "to the board called X"
+    const listMatchA = cleanText.match(/^(?:add|create)\s+(?:a\s+)?list\s+(?:called\s+|named\s+)?(.+?)\s+to\s+(?:the\s+)?board\s+(?:called\s+|named\s+)?(.+)$/i);
+    // Pattern B: "to the X board"
+    const listMatchB = cleanText.match(/^(?:add|create)\s+(?:a\s+)?list\s+(?:called\s+|named\s+)?(.+?)\s+to\s+(?:the\s+)?(.+?)\s+board[.!?]*$/i);
+    
+    if (listMatchA && listMatchA[1] && listMatchA[2]) {
+      const name = listMatchA[1].trim();
+      const boardName = listMatchA[2].replace(/[.!?]+$/, '').trim();
+      return { action: 'CREATE_LIST', payload: { name, boardName } };
+    } else if (listMatchB && listMatchB[1] && listMatchB[2]) {
+      const name = listMatchB[1].trim();
+      const boardName = listMatchB[2].trim();
       return { action: 'CREATE_LIST', payload: { name, boardName } };
     }
 

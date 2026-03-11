@@ -365,7 +365,7 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
 
         const labelSeeds = Array.isArray(labels) && labels.length > 0 ? labels : DEFAULT_LABELS;
         let prevLabelRank: string | null = null;
-        const labelData = labelSeeds.map(l => {
+        const labelData = labelSeeds.map((l: any) => {
             prevLabelRank = l.rank ?? mid(prevLabelRank);
             return {
                 boardId: createdBoard.id,
@@ -492,6 +492,39 @@ export async function registerBoardRoutes(app: FastifyInstance, prisma: PrismaCl
         }
 
         return prisma.board.update({ where: { id }, data });
+    });
+
+    // Delete board
+    app.delete('/api/boards/:id', async (
+        req: FastifyRequest<{ Params: { id: string } }>,
+        reply
+    ) => {
+        const user = ensureUser(req);
+        const { id } = req.params;
+
+        // Check permissions
+        const [boardMember, board] = await Promise.all([
+            prisma.boardMember.findUnique({
+                where: { userId_boardId: { userId: user.id, boardId: id } }
+            }),
+            prisma.board.findUnique({
+                where: { id },
+                include: { workspace: { include: { members: { where: { userId: user.id } } } } }
+            })
+        ]);
+
+        if (!board) return reply.code(404).send({ error: 'Board not found' });
+
+        const isBoardAdmin = boardMember && (boardMember.role === 'owner' || boardMember.role === 'admin');
+        const workspaceRole = board.workspace?.members?.[0]?.role;
+        const isWorkspaceAdmin = workspaceRole === 'owner' || workspaceRole === 'admin';
+
+        if (!isBoardAdmin && !isWorkspaceAdmin) {
+            return reply.code(403).send({ error: 'Only admins can delete this board' });
+        }
+
+        await prisma.board.delete({ where: { id } });
+        return reply.send({ ok: true });
     });
 
     // 🔥 Reorder all lists in a board

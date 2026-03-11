@@ -127,6 +127,9 @@ export class BoardMenuComponent {
     readonly tBackgroundSunset = $localize`:@@boardMenu.backgroundSunset:Sunset`;
     readonly tBackgroundForest = $localize`:@@boardMenu.backgroundForest:Forest`;
     readonly tBackgroundDeepOcean = $localize`:@@boardMenu.backgroundDeepOcean:Deep Ocean`;
+    
+    readonly tDeleteBoard = $localize`:@@boardMenu.deleteBoard:Delete Board`;
+    readonly tDeleteBoardHint = $localize`:@@boardMenu.deleteBoardHint:This action cannot be undone. All lists, cards, and activity on this board will be permanently deleted.`;
 
     workspacesApi = inject(WorkspacesService); // Inject WorkspacesService
     router = inject(Router);
@@ -146,6 +149,10 @@ export class BoardMenuComponent {
     renaming = signal(false);
     renameDraft = signal('');
     renameSaving = signal(false);
+    
+    showDeleteModal = signal(false);
+    deleteConfirmName = signal('');
+    isDeleting = signal(false);
 
     // Check if current user can edit board (owner or admin)
     currentUserRole = computed(() => {
@@ -200,6 +207,16 @@ export class BoardMenuComponent {
         return role === 'owner' || role === 'admin';
     });
 
+    canDeleteBoard = computed(() => {
+        const role = this.currentUserRole();
+        if (role === 'owner' || role === 'admin') return true;
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        if (!board?.workspaceId) return false;
+        const ws = this.myWorkspaces().find(w => w.id === board.workspaceId);
+        return ws?.role === 'owner' || ws?.role === 'admin';
+    });
+
     canImportWorkspace = computed(() => {
         const boardId = this.store.currentBoardId();
         const board = this.store.boards().find(b => b.id === boardId);
@@ -213,6 +230,12 @@ export class BoardMenuComponent {
         const boardId = this.store.currentBoardId();
         const board = this.store.boards().find(b => b.id === boardId);
         return board?.background || null;
+    });
+
+    currentBoardName = computed(() => {
+        const boardId = this.store.currentBoardId();
+        const board = this.store.boards().find(b => b.id === boardId);
+        return board?.name || '';
     });
 
     canManageMember(member: BoardMemberLite): boolean {
@@ -434,6 +457,41 @@ export class BoardMenuComponent {
             URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Failed to export board', err);
+        }
+    }
+    
+    openDeleteModal() {
+        if (!this.canDeleteBoard()) return;
+        this.deleteConfirmName.set('');
+        this.isDeleting.set(false);
+        this.showDeleteModal.set(true);
+    }
+    
+    closeDeleteModal() {
+        if (this.isDeleting()) return;
+        this.showDeleteModal.set(false);
+    }
+    
+    async deleteBoard() {
+        if (this.deleteConfirmName() !== this.currentBoardName() || !this.canDeleteBoard()) return;
+        
+        const boardId = this.store.currentBoardId();
+        if (!boardId) return;
+
+        // Redirect to parent workspace before deletion to avoid 404 race conditions in UI
+        const currentBoard = this.store.boards().find(b => b.id === boardId);
+        const redirectUrl = currentBoard?.workspaceId ? ['/w', currentBoard.workspaceId] : ['/'];
+        
+        this.isDeleting.set(true);
+        try {
+            await this.boardsApi.deleteBoard(boardId);
+            this.closeDeleteModal();
+            this.close();
+            this.router.navigate(redirectUrl);
+        } catch (err) {
+            console.error('Failed to delete board', err);
+            this.isDeleting.set(false);
+            alert('Failed to delete board');
         }
     }
 

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { BoardStore } from '../../store/board-store.service';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'ello-voice-overlay',
@@ -42,10 +43,16 @@ import { FormsModule } from '@angular/forms';
               </span>
               <span class="text-sm font-medium animate-pulse">Listening...</span>
            </div>
+
+           <!-- Transcribing indicator -->
+           <div class="absolute bottom-4 right-4 flex items-center gap-2 text-amber-400" *ngIf="isTranscribing">
+              <span class="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
+              <span class="text-sm font-medium animate-pulse">Transcribing...</span>
+           </div>
         </div>
 
         <div class="mt-8 flex gap-4">
-          <button *ngIf="!voice.isListening()" (click)="startListening()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition flex items-center gap-2">
+          <button *ngIf="!voice.isListening() && !isTranscribing" (click)="startListening()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
             Start Listening
           </button>
@@ -55,7 +62,7 @@ import { FormsModule } from '@angular/forms';
             Stop
           </button>
           
-          <button (click)="executeCommand()" [disabled]="!editableText.trim() || isSubmitting" class="px-8 py-3 bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition flex items-center gap-2">
+          <button (click)="executeCommand()" [disabled]="!editableText.trim() || isSubmitting || isTranscribing || voice.isListening()" class="px-8 py-3 bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold transition flex items-center gap-2">
              <span *ngIf="isSubmitting" class="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></span>
              {{ isSubmitting ? 'Executing...' : 'Execute Command' }}
           </button>
@@ -121,9 +128,11 @@ export class VoiceOverlayComponent implements OnInit, OnDestroy {
   voice = inject(VoiceService);
   http = inject(HttpClient);
   store = inject(BoardStore); // Assuming we have access to active workspace/board context
+  router = inject(Router);
 
   isOpen = false;
   editableText = '';
+  isTranscribing = false;
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
@@ -131,17 +140,11 @@ export class VoiceOverlayComponent implements OnInit, OnDestroy {
   private injector = inject(Injector);
 
   ngOnInit() {
-    // Sync textarea with voice transcript
-    effect(() => {
-       const t = this.voice.transcript();
-       if (t && this.voice.isListening()) {
-         this.editableText = t;
-       }
-    }, { injector: this.injector });
+     // No longer automatically syncing transcript since we wait for backend Whisper response
   }
 
   ngOnDestroy() {
-    this.stopListening();
+    this.voice.stopListening();
   }
 
   open() {
@@ -149,7 +152,6 @@ export class VoiceOverlayComponent implements OnInit, OnDestroy {
     this.editableText = '';
     this.errorMessage = '';
     this.successMessage = '';
-    this.startListening();
   }
 
   close() {
@@ -164,8 +166,34 @@ export class VoiceOverlayComponent implements OnInit, OnDestroy {
     this.voice.startListening();
   }
 
-  stopListening() {
-    this.voice.stopListening();
+  async stopListening() {
+    this.isTranscribing = true;
+    const audioBlob = await this.voice.stopListening();
+    
+    if (audioBlob) {
+       this.transcribeAudio(audioBlob);
+    } else {
+       this.isTranscribing = false;
+    }
+  }
+
+  async transcribeAudio(blob: Blob) {
+    this.errorMessage = '';
+    try {
+      const formData = new FormData();
+      formData.append('file', blob, 'recording.webm');
+      
+      const response = await firstValueFrom(
+        this.http.post<{text: string}>('/api/assistant/transcribe', formData)
+      );
+      
+      this.editableText = response.text || '';
+    } catch (err: any) {
+      console.error(err);
+      this.errorMessage = err.error?.error || 'Failed to transcribe audio.';
+    } finally {
+      this.isTranscribing = false;
+    }
   }
 
   async executeCommand() {
@@ -195,7 +223,11 @@ export class VoiceOverlayComponent implements OnInit, OnDestroy {
       // Optionally trigger a refresh of boards/lists based on action
       setTimeout(() => {
           this.close();
-          window.location.reload(); // Simple refresh for prototype
+          if (response.action === 'CREATE_BOARD' && response.data?.id) {
+             this.router.navigate(['/b', response.data.id]);
+          } else {
+             window.location.reload(); // Simple refresh for prototype
+          }
       }, 1500);
 
     } catch (err: any) {

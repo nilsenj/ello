@@ -1,182 +1,271 @@
 <section class="mp-wrap cm-popover" (cdkObserveContent)="onPanelOpen()">
-    <!-- Header -->
-    <div class="cm-section-title flex items-center gap-2 mb-3">
-    <span class="inline-flex items-center">
-      Members
-    </span>
-        <button class="cm-link inline-flex items-center ml-auto" (click)="closePanel.emit()">
-            <lucide-icon [img]="XIcon" class="mr-1"></lucide-icon>
-            Close
-        </button>
+  <!-- Header -->
+  <div class="cm-section-title flex items-center gap-2 mb-3">
+    <span class="inline-flex items-center"> Members </span>
+    <button
+      class="cm-link inline-flex items-center ml-auto"
+      (click)="closePanel.emit()"
+    >
+      <lucide-icon [img]="XIcon" class="mr-1"></lucide-icon>
+      Close
+    </button>
+  </div>
+
+  <!-- Assigned -->
+  <div class="cm-accordion" [class.is-open]="assignedOpen()">
+    <div
+      class="cm-accordion-summary flex items-center cursor-pointer select-none"
+      (click)="assignedOpen.set(!assignedOpen())"
+    >
+      <lucide-icon
+        [img]="assignedOpen() ? ChevronDownIcon : ChevronRightIcon"
+        class="w-4 h-4 mr-1 text-slate-400"
+      ></lucide-icon>
+      <span class="inline-flex items-center font-medium">
+        <lucide-icon [img]="UserCheckIcon" class="mr-2"></lucide-icon>
+        Assigned
+      </span>
+      <span class="cm-badge ml-2 inline-flex items-center">
+        {{ currentMemberIds().length }}
+      </span>
     </div>
 
-    <!-- Assigned -->
-    <div class="cm-accordion" [class.is-open]="assignedOpen()">
-        <div class="cm-accordion-summary flex items-center cursor-pointer select-none" (click)="assignedOpen.set(!assignedOpen())">
-            <lucide-icon [img]="assignedOpen() ? ChevronDownIcon : ChevronRightIcon" class="w-4 h-4 mr-1 text-slate-400"></lucide-icon>
-            <span class="inline-flex items-center font-medium">
-                <lucide-icon [img]="UserCheckIcon" class="mr-2"></lucide-icon>
-                Assigned
-            </span>
-            <span class="cm-badge ml-2 inline-flex items-center">
-                {{ currentMemberIds().length }}
-            </span>
-        </div>
+    <div class="cm-accordion-body" *ngIf="assignedOpen()">
+      <div
+        *ngIf="currentMemberIds().length; else noAssigneesTpl"
+        class="cm-members"
+      >
+        <div
+          *ngFor="let a of assignees(); trackBy: idOf"
+          class="flex items-center gap-3 w-full p-2 rounded-lg mb-1.5"
+        >
+          <!-- Avatar -->
+          <div class="flex-shrink-0">
+            <img
+              *ngIf="a.user?.avatar"
+              [src]="a.user.avatar"
+              class="w-8 h-8 rounded-full border border-slate-200"
+              alt=""
+            />
+            <div
+              *ngIf="!a.user?.avatar"
+              class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs shadow-sm"
+            >
+              {{ (a.user?.name || a.user?.email || "U")?.[0] || "U" }}
+            </div>
+          </div>
 
-        <div class="cm-accordion-body" *ngIf="assignedOpen()">
-            <div *ngIf="currentMemberIds().length; else noAssigneesTpl" class="cm-members">
-                <div *ngFor="let a of assignees()" class="cm-member is-selected">
-                    <img *ngIf="a.user?.avatar" [src]="a.user.avatar" class="cm-avatar" alt=""/>
-                    <span *ngIf="!a.user?.avatar" class="cm-avatar cm-avatar-fallback">
-            {{ (a.user?.name || a.user?.email || 'U')?.[0] || 'U' }}
-          </span>
-
-                    <div class="cm-member-col">
-                        <div class="cm-role-row mt-2">
-                            <label class="cm-field w-full">
-<!--                <span class="cm-field-label inline-flex items-center gap-2">-->
-<!--                  Card role-->
-<!--                </span>-->
-                                <div class="relative">
-                                    <div class="cm-member-name inline-flex items-center gap-2">
-                                        {{ a.user?.name || a.user?.email || 'User' }}
-                                    </div>
-                                    <ello-select
-                                            class="inline-flex cm-select w-32"
-                                            [ngModel]="assigneeRole(idOf(a)).role || ''"
-                                            (ngModelChange)="setAssigneeRole(idOf(a), $event)"
-                                            [options]="roleOptions()">
-                                    </ello-select>
-                                </div>
-                            </label>
-
-                            <div *ngIf="(assigneeRole(idOf(a)).role || '') === 'other'" class="flex-1 ml-2">
-                                <div class="relative">
-                                    <input
-                                            class="cm-input cm-select pl-9"
-                                            placeholder="Custom role"
-                                            [ngModel]="assigneeRole(idOf(a)).customRole || ''"
-                                            (ngModelChange)="setAssigneeRole(idOf(a), 'other', $event)"
-                                    />
-                                    <lucide-icon [img]="TagIcon"
-                                                 class="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"></lucide-icon>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+          <!-- Info & Actions -->
+          <div
+            class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+          >
+            <div
+              class="text-sm font-semibold text-slate-800 truncate mb-1 sm:mb-0"
+            >
+              {{ a.user?.name || a.user?.email || "User" }}
             </div>
 
-            <ng-template #noAssigneesTpl>
-                <div class="cm-empty mt-2">
-                    <div class="cm-empty-icon">
-                        <lucide-icon [img]="UserPlusIcon"></lucide-icon>
-                    </div>
-                    <div class="cm-empty-text">No one is assigned yet.</div>
-                    <div class="cm-empty-sub">Search below and click a person to assign.</div>
-                </div>
-            </ng-template>
+            <div
+              class="flex items-center gap-2 w-full sm:w-auto flex-1 justify-end"
+            >
+              <ello-select
+                class="inline-flex w-32 flex-shrink-0 text-xs border border-slate-200 bg-white rounded-md shadow-sm hidden-arrow"
+                [ngModel]="assigneeRole(idOf(a)).role || ''"
+                (ngModelChange)="
+                  queueRoleUpdate(
+                    idOf(a),
+                    $event,
+                    assigneeRole(idOf(a)).customRole
+                  )
+                "
+                [options]="roleOptions()"
+              >
+              </ello-select>
+
+              <div
+                *ngIf="(assigneeRole(idOf(a)).role || '') === 'other'"
+                class="relative flex-1 min-w-[100px] max-w-[140px]"
+              >
+                <input
+                  class="w-full min-h-[40px] bg-white border border-slate-200 text-sm text-slate-800 rounded-md pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 shadow-sm transition-all placeholder:text-slate-400"
+                  placeholder="Custom role"
+                  [ngModel]="assigneeRole(idOf(a)).customRole || ''"
+                  (ngModelChange)="queueRoleUpdate(idOf(a), 'other', $event)"
+                />
+                <lucide-icon
+                  [img]="TagIcon"
+                  class="absolute left-1.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                ></lucide-icon>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <ng-template #noAssigneesTpl>
+        <div class="cm-empty mt-2">
+          <div class="cm-empty-icon">
+            <lucide-icon [img]="UserPlusIcon"></lucide-icon>
+          </div>
+          <div class="cm-empty-text">No one is assigned yet.</div>
+          <div class="cm-empty-sub">
+            Search below and click a person to assign.
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="cm-accordion mt-3" [class.is-open]="findPeopleOpen()">
+    <div
+      class="cm-accordion-summary flex items-center cursor-pointer select-none"
+      (click)="findPeopleOpen.set(!findPeopleOpen())"
+    >
+      <lucide-icon
+        [img]="findPeopleOpen() ? ChevronDownIcon : ChevronRightIcon"
+        class="w-4 h-4 mr-1 text-slate-400"
+      ></lucide-icon>
+      <span class="inline-flex items-center font-medium"> Find people </span>
     </div>
 
-    <!-- Search -->
-    <div class="cm-accordion mt-3" [class.is-open]="findPeopleOpen()">
-        <div class="cm-accordion-summary flex items-center cursor-pointer select-none" (click)="findPeopleOpen.set(!findPeopleOpen())">
-            <lucide-icon [img]="findPeopleOpen() ? ChevronDownIcon : ChevronRightIcon" class="w-4 h-4 mr-1 text-slate-400"></lucide-icon>
-            <span class="inline-flex items-center font-medium">
-                Find people
-            </span>
+    <div class="cm-accordion-body" *ngIf="findPeopleOpen()">
+      <div class="cm-search-row">
+        <div
+          class="flex items-center bg-slate-100 p-1 rounded-lg mb-3 shadow-inner"
+        >
+          <label class="flex-1 text-center cursor-pointer">
+            <input
+              type="radio"
+              name="mem-scope"
+              class="hidden peer"
+              [checked]="searchScope() === 'board'"
+              (change)="searchScope.set('board'); queueSearch()"
+            />
+            <div
+              class="flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium text-slate-500 peer-checked:bg-white peer-checked:text-indigo-700 peer-checked:shadow-sm transition-all"
+            >
+              <lucide-icon [img]="LayoutIcon" class="w-4 h-4"></lucide-icon>
+              Board
+            </div>
+          </label>
+          <label class="flex-1 text-center cursor-pointer">
+            <input
+              type="radio"
+              name="mem-scope"
+              class="hidden peer"
+              [checked]="searchScope() === 'workspace'"
+              (change)="searchScope.set('workspace'); queueSearch()"
+            />
+            <div
+              class="flex items-center justify-center gap-1.5 py-1.5 rounded-md text-sm font-medium text-slate-500 peer-checked:bg-white peer-checked:text-indigo-700 peer-checked:shadow-sm transition-all"
+            >
+              <lucide-icon [img]="Building2Icon" class="w-4 h-4"></lucide-icon>
+              Workspace
+            </div>
+          </label>
         </div>
 
-        <div class="cm-accordion-body" *ngIf="findPeopleOpen()">
-            <div class="cm-search-row">
-                <div class="flex items-center gap-4 mb-2">
-                    <label class="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-                        <input
-                                type="radio"
-                                name="mem-scope"
-                                class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
-                                [checked]="searchScope() === 'board'"
-                                (change)="searchScope.set('board'); queueSearch()"
-                        />
-                        <lucide-icon [img]="LayoutIcon" class="w-4 h-4 text-slate-500"></lucide-icon>
-                        Board
-                    </label>
-                    <label class="flex items-center gap-1.5 cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-                        <input
-                                type="radio"
-                                name="mem-scope"
-                                class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
-                                [checked]="searchScope() === 'workspace'"
-                                (change)="searchScope.set('workspace'); queueSearch()"
-                        />
-                        <lucide-icon [img]="Building2Icon" class="w-4 h-4 text-slate-500"></lucide-icon>
-                        Workspace
-                    </label>
-                </div>
+        <div class="w-full relative">
+          <input
+            class="w-full bg-slate-50 border border-slate-200 text-sm text-slate-800 rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+            placeholder="Search people by name or email…"
+            [ngModel]="memberQuery()"
+            (ngModelChange)="memberQuery.set($event); queueSearch()"
+            (keydown.enter)="$event.preventDefault(); searchMembersNow()"
+          />
+          <lucide-icon
+            [img]="SearchIcon"
+            class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+          ></lucide-icon>
+          <lucide-icon
+            *ngIf="memberSearching()"
+            [img]="Loader2Icon"
+            class="animate-spin absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-500"
+          ></lucide-icon>
+        </div>
+      </div>
 
-                <div class="cm-search w-full">
-                    <div class="relative">
-                        <input
-                                class="cm-input w-full pl-9 pr-3"
-                                placeholder="Search people by name or email…"
-                                [ngModel]="memberQuery()"
-                                (ngModelChange)="memberQuery.set($event); queueSearch()"
-                                (keydown.enter)="$event.preventDefault(); searchMembersNow()"
-                        />
-                        <lucide-icon [img]="SearchIcon"
-                                     class="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-60"></lucide-icon>
-                        <lucide-icon *ngIf="memberSearching()" [img]="Loader2Icon"
-                                     class="animate-spin absolute right-3 top-1/2 -translate-y-1/2 opacity-60"></lucide-icon>
-                    </div>
-                </div>
+      <ng-container *ngIf="memberQuery().trim().length >= 2; else typeHintTpl">
+        <div
+          class="flex flex-col gap-1 mt-3"
+          *ngIf="memberResults()?.length; else noResultsTpl"
+        >
+          <button
+            *ngFor="let m of memberResults()"
+            class="flex items-center gap-3 w-full p-2 text-left rounded-lg transition-all border border-transparent hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            [class.!bg-indigo-50]="hasMember(m.id)"
+            [class.!border-indigo-100]="hasMember(m.id)"
+            (click)="toggleMember(m.id)"
+          >
+            <!-- Avatar -->
+            <div class="flex-shrink-0">
+              <img
+                *ngIf="m.avatar"
+                [src]="m.avatar"
+                class="w-8 h-8 rounded-full border border-slate-200"
+                alt=""
+              />
+              <div
+                *ngIf="!m.avatar"
+                class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs"
+              >
+                {{ m.name?.[0] || "U" }}
+              </div>
             </div>
 
-            <ng-container *ngIf="memberQuery().trim().length >= 2; else typeHintTpl">
-                <div class="cm-members mt-3" *ngIf="memberResults()?.length; else noResultsTpl">
-                    <button
-                            *ngFor="let m of memberResults()"
-                            class="cm-member"
-                            [class.is-selected]="hasMember(m.id)"
-                            (click)="toggleMember(m.id)"
-                    >
-                        <img *ngIf="m.avatar" [src]="m.avatar" class="cm-avatar" alt=""/>
-                        <span *ngIf="!m.avatar" class="cm-avatar cm-avatar-fallback">{{ m.name?.[0] || 'U' }}</span>
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div
+                class="text-sm font-semibold text-slate-800 truncate"
+                [class.text-indigo-900]="hasMember(m.id)"
+              >
+                {{ m.name || "User" }}
+              </div>
+              <div
+                class="text-xs text-slate-500 truncate mt-0.5 flex items-center group"
+              >
+                <lucide-icon
+                  *ngIf="m.role"
+                  [img]="ShieldIcon"
+                  class="w-3 h-3 mr-1 opacity-50"
+                ></lucide-icon>
+                {{ m.role ? "Board " + m.role : m.id }}
+              </div>
+            </div>
 
-                        <div class="cm-member-col">
-                            <div class="cm-member-name inline-flex items-center gap-2">
-                                <lucide-icon [img]="UserIcon" class="opacity-70"></lucide-icon>
-                                {{ m.name || 'User' }}
-                            </div>
-                            <div class="cm-member-sub" *ngIf="m.role">
-                                <lucide-icon [img]="ShieldIcon" class="mr-1 opacity-60"></lucide-icon>
-                                Board: {{ m.role }}
-                            </div>
-                        </div>
-
-                    </button>
-                </div>
-            </ng-container>
-
-            <ng-template #typeHintTpl>
-                <div class="cm-empty mt-3">
-                    <div class="cm-empty-text">Type at least 2 characters to search.</div>
-                    <div class="cm-empty-sub">
-                        Scope: <strong>{{ searchScope() }}</strong>. Switch scope or refine your query.
-                    </div>
-                </div>
-            </ng-template>
-
-            <ng-template #noResultsTpl>
-                <div class="cm-empty mt-3">
-                    <div class="cm-empty-icon">
-                        <lucide-icon [img]="SearchXIcon"></lucide-icon>
-                    </div>
-                    <div class="cm-empty-text">No results.</div>
-                    <div class="cm-empty-sub">Try a different name or email, or change scope.</div>
-                </div>
-            </ng-template>
+            <!-- Trailing Checkmark -->
+            <div
+              *ngIf="hasMember(m.id)"
+              class="flex-shrink-0 mr-1 text-indigo-600"
+            >
+              <lucide-icon [img]="CheckIcon" class="w-5 h-5"></lucide-icon>
+            </div>
+          </button>
         </div>
+      </ng-container>
+
+      <ng-template #typeHintTpl>
+        <div class="cm-empty mt-3">
+          <div class="cm-empty-text">Type at least 2 characters to search.</div>
+          <div class="cm-empty-sub">
+            Scope: <strong>{{ searchScope() }}</strong
+            >. Switch scope or refine your query.
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template #noResultsTpl>
+        <div class="cm-empty mt-3">
+          <div class="cm-empty-icon">
+            <lucide-icon [img]="SearchXIcon"></lucide-icon>
+          </div>
+          <div class="cm-empty-text">No results.</div>
+          <div class="cm-empty-sub">
+            Try a different name or email, or change scope.
+          </div>
+        </div>
+      </ng-template>
     </div>
+  </div>
 </section>

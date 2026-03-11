@@ -24,6 +24,7 @@ import { CardModalComponent } from "../card-modal/card-modal.component";
 import { BoardMenuComponent } from "../board-menu/board-menu.component";
 import { BoardTableViewComponent } from "../../components/board-table-view/board-table-view.component";
 import { BoardCalendarViewComponent } from "../../components/board-calendar-view/board-calendar-view.component";
+import { CardCreateModalComponent } from "../../components/card-create-modal/card-create-modal.component";
 import { WorkspacesService } from '../../data/workspaces.service';
 import { AuthService } from '../../auth/auth.service';
 import { ServiceDeskService } from '../../data/service-desk.service';
@@ -34,7 +35,7 @@ import { ElloSelectComponent, ElloSelectOption } from '../ello-select/ello-selec
 @Component({
     selector: 'kanban-board',
     standalone: true,
-    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, KanbanFiltersComponent, ElloSelectComponent], // ⬅️ include group
+    imports: [NgFor, NgIf, FormsModule, ListColumnComponent, CardModalComponent, CdkDropList, CdkDrag, CdkDragPreview, CdkDragPlaceholder, NgClass, BoardMenuComponent, RouterLink, BoardTableViewComponent, BoardCalendarViewComponent, KanbanFiltersComponent, ElloSelectComponent, CardCreateModalComponent], // ⬅️ include group
 
     templateUrl: './kanban-board.component.html',
     styleUrls: ['./kanban-board.component.css'],

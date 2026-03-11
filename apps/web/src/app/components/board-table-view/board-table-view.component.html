@@ -21,8 +21,8 @@
         </div>
     </div>
 
-    <!-- Scrollable Body -->
-    <div class="flex-1 overflow-y-auto">
+    <!-- Scrollable Body with bottom padding to prevent dropdown cutoff -->
+    <div class="flex-1 overflow-y-auto pb-56">
         <!-- Rows -->
         <div *ngFor="let card of getAllCards(); trackBy: trackCard"
             class="group flex items-center border-b hover:bg-gray-50 transition-colors">

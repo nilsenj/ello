@@ -5,84 +5,72 @@ import { Injectable, signal } from '@angular/core';
 })
 export class VoiceService {
   isListening = signal<boolean>(false);
-  transcript = signal<string>('');
+  transcript = signal<string>(''); // Not used for live streaming anymore, populated after processing
   error = signal<string | null>(null);
 
-  private recognition: any;
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private mediaStream: MediaStream | null = null;
 
-  constructor() {
-    this.initRecognition();
-  }
+  constructor() {}
 
-  private initRecognition() {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      this.error.set('Speech Recognition API is not supported in this browser.');
-      return;
-    }
-
-    this.recognition = new SpeechRecognition();
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true; 
-    this.recognition.lang = 'en-US';
-
-    this.recognition.onstart = () => {
-      this.isListening.set(true);
-      this.error.set(null);
-    };
-
-    this.recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
-        }
-      }
-      
-      // Update signal primarily with final transcript, or interim if still speaking
-      // In a real app we might combine these or just show interim live and wait for final.
-      this.transcript.update(curr => {
-         const combined = curr + (finalTranscript ? ' ' + finalTranscript : '');
-         return combined.trim(); // Just persist final transcript changes
-      });
-      
-      // If we just have interim, we might want to display it differently, 
-      // but for simplicity we will just append final results to our state.
-      if (!finalTranscript && interimTranscript) {
-         // Optionally you could have a separate signal for `interimTranscript` 
-         // but appending directly is easier for the textarea sync.
-      }
-    };
-
-    this.recognition.onerror = (event: any) => {
-      console.error('Speech recognition error', event.error);
-      this.error.set(event.error);
-      this.isListening.set(false);
-    };
-
-    this.recognition.onend = () => {
-      this.isListening.set(false);
-    };
-  }
-
-  startListening() {
-    if (!this.recognition) return;
+  async startListening() {
     this.transcript.set('');
     this.error.set(null);
+    this.audioChunks = [];
+
     try {
-      this.recognition.start();
-    } catch (e) {
-      // already started
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(this.mediaStream, { mimeType: 'audio/webm' });
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.onstart = () => {
+         this.isListening.set(true);
+      };
+
+      this.mediaRecorder.onerror = (event: any) => {
+         console.error('MediaRecorder error', event.error);
+         this.error.set('Failed to record audio. Please check your microphone permissions.');
+         this.cleanup();
+      };
+
+      this.mediaRecorder.start(250); // Record in small ms chunks
+    } catch (err) {
+      console.error('Failed to get user media', err);
+      this.error.set('Microphone access denied or unavailable.');
+      this.isListening.set(false);
     }
   }
 
-  stopListening() {
-    if (!this.recognition) return;
-    this.recognition.stop();
-    this.isListening.set(false);
+  stopListening(): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+         this.cleanup();
+         resolve(null);
+         return;
+      }
+
+      this.mediaRecorder.onstop = () => {
+         const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+         this.cleanup();
+         resolve(audioBlob);
+      };
+
+      this.mediaRecorder.stop();
+    });
+  }
+
+  private cleanup() {
+      if (this.mediaStream) {
+         this.mediaStream.getTracks().forEach(track => track.stop());
+         this.mediaStream = null;
+      }
+      this.mediaRecorder = null;
+      this.isListening.set(false);
   }
 }

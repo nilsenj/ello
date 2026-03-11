@@ -160,4 +160,13 @@ export class BoardsService {
     async importBoard(workspaceId: string, payload: any): Promise<Board> {
         return this.api.post<Board>(`/api/boards/import`, { workspaceId, ...payload });
     }
+
+    async deleteBoard(boardId: string): Promise<void> {
+        await this.api.delete(`/api/boards/${boardId}`);
+        const boards = this.store.boards().filter(b => b.id !== boardId);
+        this.store.setBoards(boards);
+        if (this.store.currentBoardId() === boardId) {
+            this.store.setCurrentBoardId(null);
+        }
+    }
 }

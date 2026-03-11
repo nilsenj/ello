@@ -3,9 +3,14 @@ import { Component,
     Input,
     Output,
     OnChanges,
+    OnInit,
+    OnDestroy,
     SimpleChanges,
     inject,
     signal, computed } from '@angular/core';
+
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -46,7 +51,7 @@ import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello
     templateUrl: './members-panel.component.html',
     styleUrls: ['./members-panel.component.css'],
 })
-export class MembersPanelComponent implements OnChanges {
+export class MembersPanelComponent implements OnChanges, OnInit, OnDestroy {
     // Inputs/Outputs
     @Input({ required: true }) cardId!: string;
     @Input() assigneesInput: CardAssignee[] = [];
@@ -95,6 +100,19 @@ export class MembersPanelComponent implements OnChanges {
     private _searchDebounce!: number | undefined;
     private _searchToken = 0;
 
+    // Role Debounce
+    private roleUpdate$ = new Subject<{ userId: string, role: string, customRole?: string }>();
+
+    ngOnInit() {
+        this.roleUpdate$.pipe(debounceTime(500)).subscribe(payload => {
+            this.setAssigneeRole(payload.userId, payload.role as any, payload.customRole);
+        });
+    }
+
+    ngOnDestroy() {
+        this.roleUpdate$.complete();
+    }
+
     ngOnChanges(changes: SimpleChanges) {
         if (changes['assigneesInput']) {
             this._assignees.set(this.assigneesInput ?? []);
@@ -115,8 +133,8 @@ export class MembersPanelComponent implements OnChanges {
     });
 
     // Helpers
-    idOf(a: CardAssignee): string {
-        return (a.userId ?? a.id) as string;
+    idOf(a: any): string {
+        return (a?.userId ?? a?.id) as string;
     }
 
     currentMemberIds(): string[] {
@@ -181,6 +199,19 @@ export class MembersPanelComponent implements OnChanges {
         );
         this._assignees.set(next);
         this.assigneesChange.emit(next);
+    }
+
+    queueRoleUpdate(userId: string, role: string, customRole?: string) {
+        // Fast optimistic update for the local model so the input doesn't revert while typing
+        const next = this.assignees().map(a => 
+            this.idOf(a) === userId
+                ? { ...a, role: role as any, customRole: customRole as any }
+                : a
+        );
+        this._assignees.set(next);
+        
+        // Push to debounced stream for the API
+        this.roleUpdate$.next({ userId, role, customRole });
     }
 
     // Search

@@ -7,11 +7,12 @@ import { Card } from '../../types';
 import { CardModalService } from "../../ui/card-modal/card-modal.service";
 import { CardCreateModalService } from "../../components/card-create-modal/card-create-modal.service";
 import { CardsService } from '../../data/cards.service';
-
+import { FormsModule } from '@angular/forms';
+import { ElloSelectComponent, ElloSelectOption } from '../../ui/ello-select/ello-select.component';
 @Component({
     selector: 'board-calendar-view',
     standalone: true,
-    imports: [CommonModule, DragDropModule],
+    imports: [CommonModule, DragDropModule, FormsModule, ElloSelectComponent],
     templateUrl: './board-calendar-view.component.html',
     styles: [`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
@@ -32,7 +33,6 @@ import { CardsService } from '../../data/cards.service';
 export class BoardCalendarViewComponent {
     store = inject(BoardStore);
     modal = inject(CardModalService);
-    createModal = inject(CardCreateModalService);
     cardsApi = inject(CardsService);
 
     readonly tToday = $localize`:@@boardCalendar.today:Today`;
@@ -58,8 +58,20 @@ export class BoardCalendarViewComponent {
     @Input() set cards(value: Card[]) {
         this._cards.set(value);
     }
+    
+    trackIso(_: number, day: any) { return day.isoDate; }
+    trackId(_: number, item: any) { return item.id; }
 
     lists = this.store.lists;
+    
+    // Inline Creation State
+    addingToDate = signal<string | null>(null);
+    newCardTitle = '';
+    newCardListId = '';
+
+    listOptions = computed<ElloSelectOption[]>(() => {
+        return this.lists().map(l => ({ value: l.id, label: l.name || 'List' }));
+    });
 
     // Computed calendar days
     calendarDays = computed(() => {
@@ -156,16 +168,43 @@ export class BoardCalendarViewComponent {
         this.modal.open(card.id);
     }
 
-    addCard(date: Date, event?: Event) {
+    addCard(day: any, event?: Event) {
         if (event) event.stopPropagation();
         if (!this.canEdit) return;
-        // date is Local Midnight. We want to save it as UTC Midnight.
-        // Convert to UTC-aligned date
-        const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        this.addingToDate.set(day.isoDate);
+        this.newCardTitle = '';
+        this.newCardListId = this.lists()[0]?.id || '';
+        
+        // Focus the input next tick
+        setTimeout(() => {
+            const input = document.getElementById(`new-card-input-${day.isoDate}`);
+            if (input) input.focus();
+        }, 50);
+    }
 
-        this.createModal.open({
-            dueDate: utcDate,
-        });
+    cancelAddCard(event?: Event) {
+        if (event) event.stopPropagation();
+        this.addingToDate.set(null);
+        this.newCardTitle = '';
+    }
+
+    async saveNewCard(day: any) {
+        const title = this.newCardTitle.trim();
+        const listId = this.newCardListId;
+        if (!title || !listId) return;
+
+        // Use UTC date alignment
+        const utcDate = new Date(Date.UTC(day.date.getFullYear(), day.date.getMonth(), day.date.getDate()));
+
+        try {
+            const created = await this.cardsApi.createCardInList(listId, title);
+            await this.cardsApi.patchCardExtended(created.id, {
+                dueDate: utcDate.toISOString()
+            });
+        } finally {
+            this.addingToDate.set(null);
+            this.newCardTitle = '';
+        }
     }
 
     async drop(event: CdkDragDrop<any>) {

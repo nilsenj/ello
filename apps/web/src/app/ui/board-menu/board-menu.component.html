@@ -89,6 +89,13 @@
             </button>
             <hr class="my-2 border-slate-200">
             <button
+                *ngIf="canDeleteBoard()"
+                class="w-full text-left px-3 py-2 rounded-md bg-red-50 hover:bg-red-100 text-sm font-medium text-red-700 flex items-center gap-2 transition-colors"
+                (click)="openDeleteModal()">
+                <lucide-icon [img]="XIcon" [size]="18" class="text-red-500"></lucide-icon>
+                {{ tDeleteBoard }}
+            </button>
+            <button
                 *ngIf="canExportBoard() || canImportWorkspace()"
                 class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 text-sm font-medium text-slate-700 flex items-center gap-2"
                 (click)="openImportExport()">
@@ -375,6 +382,54 @@
                 </p>
                 <p *ngIf="importError()" class="text-xs text-red-600 mt-2">{{ importError() }}</p>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Board Modal -->
+<div *ngIf="showDeleteModal()" class="fixed inset-0 z-[2010] flex items-center justify-center p-4">
+    <!-- Backdrop inside modal so it covers the menu panel -->
+    <div class="absolute inset-0 bg-black/50" (click)="closeDeleteModal()"></div>
+    
+    <div class="bg-white rounded-lg shadow-2xl relative z-10 w-full max-w-sm overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-900">{{ tDeleteBoard }}</h3>
+            <button (click)="closeDeleteModal()" class="text-gray-400 hover:text-gray-600 rounded p-1">
+                <lucide-icon [img]="XIcon" [size]="20"></lucide-icon>
+            </button>
+        </div>
+        
+        <div class="p-5">
+            <p class="text-sm text-gray-600 mb-4">{{ tDeleteBoardHint }}</p>
+            <div class="bg-gray-50 border border-gray-200 rounded p-3 mb-4 select-all text-center">
+                 <span class="font-bold text-gray-900 break-words">{{ currentBoardName() }}</span>
+            </div>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="delete-confirm">Type the board name to confirm</label>
+            <input 
+                id="delete-confirm"
+                type="text" 
+                class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                [ngModel]="deleteConfirmName()"
+                (ngModelChange)="deleteConfirmName.set($event)"
+                autocomplete="off"
+            >
+        </div>
+        
+        <div class="px-5 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+             <button 
+                 (click)="closeDeleteModal()" 
+                 class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                 [disabled]="isDeleting()">
+                 {{ tCancel }}
+             </button>
+             <button 
+                 (click)="deleteBoard()"
+                 class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                 [disabled]="isDeleting() || deleteConfirmName() !== currentBoardName()">
+                 <span *ngIf="isDeleting()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                 {{ isDeleting() ? 'Deleting...' : 'Delete Forever' }}
+             </button>
         </div>
     </div>
 </div>

@@ -21,7 +21,7 @@
         (cdkDropListDropped)="onDrop($event)">
 
         <!-- Visible target when there are no cards -->
-        <div *ngIf="cards().length === 0" class="empty-placeholder">
+        <div *ngIf="cards().length === 0" class="empty-placeholder h-12 flex items-center justify-center text-[13px] font-medium text-slate-500 bg-slate-100/80 border-2 border-dashed border-slate-300 rounded-lg mx-1 my-1">
             {{ tDropCardsHere }}
         </div>
 
